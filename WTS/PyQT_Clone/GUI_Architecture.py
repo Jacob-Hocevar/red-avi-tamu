@@ -182,7 +182,7 @@ class GUI_COM_WINDOW(QtWidgets.QWidget):
         ports = serial.tools.list_ports.comports()
         if len(ports) > 0:
             for port, desc, hwid in sorted(ports):
-                print("COM PORT FOUND:", "[{}][{}][{}]".format(port, desc, hwid))
+                print("COM PORT FOUND:", f"[{port}][{desc}][{hwid}]")
                 if "13960230" or "14200900" in hwid:
                     self.teensy_ports.append(port)
                 # Virtual port used for testing
