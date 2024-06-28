@@ -5,6 +5,7 @@ import pyqtgraph as pg
 import serial.tools.list_ports
 import time
 import sys
+import os
 
 # Included here to simplify imports in the Master File
 class GUI_APP(QtWidgets.QApplication):
@@ -28,8 +29,8 @@ class GUI_Main_Window(QtWidgets.QMainWindow):
         # Enables shutdown confirmation
         self.enable_shutdown_confirmation = True
 
-        # TODO: Add a light theme as well.
-        # Sets the background to black
+        # TODO: Add a dark theme as well.
+        # Sets the background to white
         self.set_color(self, "white")
 
         # Attaches the Layout to a widget and attaches to the window
@@ -42,10 +43,12 @@ class GUI_Main_Window(QtWidgets.QMainWindow):
         self.layout.setContentsMargins(2, 2, 2, 2)
         self.layout.setSpacing(10)
 
+        # TODO: Two versions of the logo for light/dark
         # RED LOGO
+        directory_path = os.path.dirname(__file__)
+        logo_path = os.path.join(directory_path, "RED_logo.png")
         self.logo = QtWidgets.QLabel()
-        # TODO: Update file path (dynamically?) and two versions for light/dark
-        self.logo.setPixmap(QtGui.QPixmap("RED_logo.png"))
+        self.logo.setPixmap(QtGui.QPixmap(logo_path))
         self.logo.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
         self.logo.setMaximumHeight(30)
         self.set_color(self.logo, "red")
@@ -498,9 +501,9 @@ class GUI_CTRL_Window(QtWidgets.QWidget):
         Method to begin saving the control data.
         """
         try:
-            # TODO: UPDATE (dynamically?) FOR GENERAL USE
-            filename = "C:/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/WTS Copy PyQT/Data/" + str(time.time_ns()) + "_control_data.csv"
-            self.control_data = open(filename, 'w')
+            directory_path = os.path.dirname(__file__)
+            file_path = os.path.join(directory_path, "Data/" + str(time.time_ns()) + "_control_data.csv")
+            self.control_data = open(file_path, 'w')
 
             # Header and initial state
             self.control_data.write("Global Time (ns from Epoch),Valve A State (1=Open),Valve B State(1=Open),Control State,Last Command\n")
@@ -626,6 +629,9 @@ class GUI_DAQ_Window(QtWidgets.QWidget):
         """
         if self.saving_data:
             self.end_save()
+
+        # Delete the graphs
+        self.graph.delete()
         
         self.root.layout.removeWidget(self)
         self.deleteLater()
@@ -719,9 +725,9 @@ class GUI_DAQ_Window(QtWidgets.QWidget):
         Method to begin saving the sensor data.
         """
         try:
-            # TODO: UPDATE (dynamically?) FOR GENERAL USE
-            filename = "C:/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/WTS Copy PyQT/Data/" + str(time.time_ns()) + "_sensor_data.csv"
-            self.sensor_data = open(filename, 'w')
+            directory_path = os.path.dirname(__file__)
+            file_path = os.path.join(directory_path, "Data/" + str(time.time_ns()) + "_sensor_data.csv")
+            self.sensor_data = open(file_path, 'w')
 
             # Header
             self.sensor_data.write("Global Time (ns from Epoch),Local Time (ms from test),Upstream Pressure (psia),")
@@ -878,6 +884,14 @@ class GUI_Graph_Window(QtWidgets.QWidget):
         layout = Frame_with_Title("Live Graphs", layout_widget)
         self.setLayout(layout)
         self.root.layout.addWidget(self, 1, 1, 3, 1)
+
+    def delete(self):
+        """
+        Method to remove Graph Window from the display and delete elements.
+        """
+        self.root.layout.removeWidget(self)
+        self.deleteLater()
+        self = None
 
     def update_plots(self):
         """
