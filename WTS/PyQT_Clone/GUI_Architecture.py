@@ -55,7 +55,7 @@ class GUI_Main_Window(QtWidgets.QMainWindow):
         self.layout.addWidget(self.logo, 0, 0)
 
         # Contructs menu for connecting to the Teensy
-        self.com_menu = GUI_COM_WINDOW(self)
+        self.com_menu = GUI_COM_Window(self)
 
     def closeEvent(self, event):
         """
@@ -83,17 +83,23 @@ class GUI_Main_Window(QtWidgets.QMainWindow):
             event.ignore()
 
     def manual_resize(self, width, height):
+        """
+        Method to force the Window the resize, but then allow it to be changed by the user.
+        """
         self.setFixedSize(QtCore.QSize(width, height))
         self.setMaximumSize(QtWidgets.QWIDGETSIZE_MAX, QtWidgets.QWIDGETSIZE_MAX)
         self.setMinimumSize(0, 0)
 
     def set_color(self, widget, color):
+        """
+        Method to change the background color of any widget.
+        """
         widget.setAutoFillBackground(True)
         palette = widget.palette()
         palette.setColor(QtGui.QPalette.ColorRole.Window, QtGui.QColor(color))
         widget.setPalette(palette)
 
-class GUI_COM_WINDOW(QtWidgets.QWidget):
+class GUI_COM_Window(QtWidgets.QWidget):
     def __init__(self, parent):
         """
         Constructs the menu for connecting to the Teensy.
@@ -129,9 +135,9 @@ class GUI_COM_WINDOW(QtWidgets.QWidget):
         bottom_layout.addWidget(self.baud_selection, 1, 1)
 
         # Refresh Button checks and updates both lists (may reset selection to default)
+        self.is_connected = False
         self.refresh = QtWidgets.QPushButton()
         self.refresh.setText("Refresh")
-        self.is_connected = False
         self.refresh.clicked.connect(self.update_COM_options)
         self.refresh.clicked.connect(self.update_baud_options)
         bottom_layout.addWidget(self.refresh, 0, 2)
@@ -228,6 +234,9 @@ class GUI_COM_WINDOW(QtWidgets.QWidget):
         self.check_connection_button()
 
     def check_connection_button(self):
+        """
+        Enables or disables the connect button based on if the currently selected settings are valid.
+        """
         if '-' == self.current_port_name or '-' == self.current_baud_rate:
             self.connect.setDisabled(True)
         else:
@@ -422,12 +431,19 @@ class GUI_CTRL_Window(QtWidgets.QWidget):
         self = None
 
     def create_label(self, bottom_layout, text, row):
+        """
+        Method to create a label with the given text and add it to the layout in a given row.
+        """
         label = QtWidgets.QLabel()
         label.setText(text)
         label.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
         bottom_layout.addWidget(label, row, 0)
 
     def create_open_close_buttons(self, bottom_layout, ID, row, col):
+        """
+        Method to create a pair of open/close buttons given a button ID and location to put the buttons.
+        Automatically initializes the buttons to the current valve states and adds them to the list of buttons.
+        """
         open = QtWidgets.QPushButton()
         open.setText("OPEN")
         open.clicked.connect(lambda x: self.open_valve(ID))
@@ -444,7 +460,7 @@ class GUI_CTRL_Window(QtWidgets.QWidget):
 
     def open_valve(self, ID):
         """
-        Method to open valve with a given ID
+        Method to open valve with a given ID.
         """
         # Actuate valve + log in console
         self.actuate(ID, "OPEN")
@@ -462,7 +478,7 @@ class GUI_CTRL_Window(QtWidgets.QWidget):
 
     def close_valve(self, ID):
         """
-        Method to open valve with a given ID
+        Method to close valve with a given ID.
         """
         # Actuate valve + log in console
         self.actuate(ID, "CLOSE")
@@ -480,8 +496,9 @@ class GUI_CTRL_Window(QtWidgets.QWidget):
 
     def actuate(self, valve, command):
         """
-        Method to give Teensy signal to actuate MOSFETs for vavles
+        Method to give Teensy a signal to actuate MOSFETs for valves.
         """
+        # TODO: Create dictionary to directly lookup and send the signal.
         # NOTE: I think the comments are incorrect, as the B valve is open in the power off state.
         if valve == "A":
             if command == "OPEN":
@@ -565,9 +582,9 @@ class GUI_DAQ_Window(QtWidgets.QWidget):
         self.vol_perc = 100.0                    # percentage, remaining volume
 
         # Variables to track data
-        self.p_up = 0
-        self.p_down = 0
-        self.mfr = 0
+        self.p_up = 0.0
+        self.p_down = 0.0
+        self.mfr = 0.0
         self.saving_data = False
 
         # Data for plotting
@@ -946,6 +963,9 @@ class Frame_with_Title(QtWidgets.QVBoxLayout):
         #self.set_color(frame, "blue")
 
     def set_color(self, widget, color):
+        """
+        Method to change the background color of any widget.
+        """
         widget.setAutoFillBackground(True)
         palette = widget.palette()
         palette.setColor(QtGui.QPalette.ColorRole.Window, QtGui.QColor(color))
@@ -953,6 +973,9 @@ class Frame_with_Title(QtWidgets.QVBoxLayout):
 
 class Standard_Label(QtWidgets.QLabel):
     def __init__(self, text, layout, row):
+        """
+        Generates a label with left aligned text and attaches it to the leftmost column on the specified row.
+        """
         super().__init__()
         self.setText(text)
         self.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
