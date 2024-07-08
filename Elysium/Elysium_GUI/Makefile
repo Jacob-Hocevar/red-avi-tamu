@@ -52,9 +52,11 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = Sources/GUI_Main_Window.cpp \
+SOURCES       = Sources/GUI_COM_Window.cpp \
+		Sources/GUI_Main_Window.cpp \
 		Sources/main.cpp 
-OBJECTS       = GUI_Main_Window.o \
+OBJECTS       = GUI_COM_Window.o \
+		GUI_Main_Window.o \
 		main.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -136,7 +138,9 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		Elysium_GUI.pro Headers/GUI_APP.h \
-		Headers/GUI_Main_Window.h Sources/GUI_Main_Window.cpp \
+		Headers/GUI_COM_Window.h \
+		Headers/GUI_Main_Window.h Sources/GUI_COM_Window.cpp \
+		Sources/GUI_Main_Window.cpp \
 		Sources/main.cpp
 QMAKE_TARGET  = Elysium_GUI
 DESTDIR       = 
@@ -325,8 +329,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents Headers/GUI_APP.h Headers/GUI_Main_Window.h $(DISTDIR)/
-	$(COPY_FILE) --parents Sources/GUI_Main_Window.cpp Sources/main.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents Headers/GUI_APP.h Headers/GUI_COM_Window.h Headers/GUI_Main_Window.h $(DISTDIR)/
+	$(COPY_FILE) --parents Sources/GUI_COM_Window.cpp Sources/GUI_Main_Window.cpp Sources/main.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -375,6 +379,9 @@ compiler_lex_clean:
 compiler_clean: compiler_moc_predefs_clean 
 
 ####### Compile
+
+GUI_COM_Window.o: Sources/GUI_COM_Window.cpp Headers/GUI_COM_Window.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GUI_COM_Window.o Sources/GUI_COM_Window.cpp
 
 GUI_Main_Window.o: Sources/GUI_Main_Window.cpp Headers/GUI_Main_Window.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GUI_Main_Window.o Sources/GUI_Main_Window.cpp
