@@ -5,6 +5,8 @@
 #include <QMainWindow>
 #include <QLabel>
 #include <QGridLayout>
+#include <QColor>
+#include <QCloseEvent>
 
 /*
     The Main Window for the GUI.
@@ -18,6 +20,7 @@ public:
     GUI_Main_Window();
     void add_to_main_window(QWidget* widget, int row, int col, int row_span, int col_span);
     void remove_from_main_window(QWidget* widget);
+    void set_color(QWidget* widget, const QColor& color);
 
 private:
     bool enable_shutdown_confirmation;
@@ -25,9 +28,8 @@ private:
     QGridLayout layout;
     // GUI_COM_Window com_menu;
 
-    // void closeEvent(Event);
     void manual_resize(int width, int height);
-    // void set_color(QWidget, string)
+    void closeEvent(QCloseEvent* event);
 };
 
 
