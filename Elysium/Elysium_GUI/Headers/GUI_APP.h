@@ -9,6 +9,9 @@
     Accepts Command Line arguments.
 */
 class GUI_APP : public QApplication {
+    Q_OBJECT
+    
+public:
     // Inherits the constructors (default, paramterized, copy, and move) from the base class
     using QApplication::QApplication;
 };

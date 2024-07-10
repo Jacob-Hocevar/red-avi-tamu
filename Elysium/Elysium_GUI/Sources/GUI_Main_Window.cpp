@@ -1,4 +1,5 @@
 #include "GUI_Main_Window.h"
+#include "GUI_COM_Window.h"
 #include <QWidget>
 #include <QPixmap>
 #include <QPalette>
@@ -15,29 +16,36 @@ using std::endl;
 */
 GUI_Main_Window::GUI_Main_Window():
     QMainWindow(), enable_shutdown_confirmation(true),
-    logo(), layout() {
+    logo(new QLabel()), layout(new QGridLayout()), com_menu(nullptr) {
         // Sets the initial size of the GUI
         this->manual_resize(320, 150);
 
-        this->layout.setContentsMargins(2, 2, 2, 2);
-        this->layout.setSpacing(10);
+        this->layout->setContentsMargins(2, 2, 2, 2);
+        this->layout->setSpacing(10);
 
         // TODO: Two versions of the logo for light/dark mode.
         // RED Logo:
-        this->logo.setPixmap(QPixmap("Assets/RED_logo.png"));
-        this->logo.setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        this->logo.setMaximumHeight(30);
-        this->set_color(&logo, Qt::red);
-        this->layout.addWidget(&this->logo, 0, 0);
+        this->logo->setPixmap(QPixmap("Assets/RED_logo.png"));
+        this->logo->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        this->logo->setMaximumHeight(30);
+        this->set_color(logo, Qt::red);
+        this->layout->addWidget(this->logo, 0, 0);
 
+        cout << "Main 1" << endl;
+        // Create the COM Window
+        //GUI_COM_Window* test = new GUI_COM_Window(this);
+        this->com_menu = new GUI_COM_Window(this);
+        cout << "Main 2" << endl;
 
-        // Contructs the menu for connecting to the Teensy
-        // this->com_menu = GUI_COM_Window(self);
+        //this->layout->addWidget(this->com_menu, 1, 0);
+
+        //this->com_menu = test;
 
         // Creates a dummy widget to hold the layout and attach to the window
         QWidget* w = new QWidget();
-        w->setLayout(&layout);
+        w->setLayout(layout);
         this->setCentralWidget(w);
+        cout << "Main 3" << endl;
 }
 
 
@@ -45,12 +53,12 @@ GUI_Main_Window::GUI_Main_Window():
     Public functions
 */
 
-void GUI_Main_Window::add_to_main_window(QWidget* widget, int row, int col, int row_span=1, int col_span=1) {
-    this->layout.addWidget(widget, row, col, row_span, col_span);
+void GUI_Main_Window::add_to_main_window(QWidget* widget, int row, int col, int row_span, int col_span) {
+    this->layout->addWidget(widget, row, col, row_span, col_span);
 }
 
 void GUI_Main_Window::remove_from_main_window(QWidget* widget) {
-    this->layout.removeWidget(widget);
+    this->layout->removeWidget(widget);
 }
 
 void GUI_Main_Window::set_color(QWidget* widget, const QColor& color) {
@@ -72,7 +80,12 @@ void GUI_Main_Window::manual_resize(int width, int height) {
 }
 
 void GUI_Main_Window::closeEvent(QCloseEvent* event) {
-    // TODO: ADD A CHECK IF THE COM MENU IS CONNECTED.
+    // If you are not connected to the Teensy, no confirmation needed
+    if (!com_menu || !this->com_menu->get_is_connected()) {
+        delete com_menu;
+        event->accept();
+        return;
+    }
 
     QMessageBox::StandardButton confirmation = QMessageBox::Apply;
     if (this->enable_shutdown_confirmation) {
@@ -81,7 +94,7 @@ void GUI_Main_Window::closeEvent(QCloseEvent* event) {
     }
 
     if (QMessageBox::Apply == confirmation) {
-        // this->com_menu.delete();
+        delete com_menu;
         event->accept();
     } else {
         event->ignore();
