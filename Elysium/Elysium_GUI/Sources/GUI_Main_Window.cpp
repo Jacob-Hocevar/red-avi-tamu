@@ -31,21 +31,13 @@ GUI_Main_Window::GUI_Main_Window():
         this->set_color(logo, Qt::red);
         this->layout->addWidget(this->logo, 0, 0);
 
-        cout << "Main 1" << endl;
         // Create the COM Window
-        //GUI_COM_Window* test = new GUI_COM_Window(this);
         this->com_menu = new GUI_COM_Window(this);
-        cout << "Main 2" << endl;
-
-        //this->layout->addWidget(this->com_menu, 1, 0);
-
-        //this->com_menu = test;
 
         // Creates a dummy widget to hold the layout and attach to the window
         QWidget* w = new QWidget();
         w->setLayout(layout);
         this->setCentralWidget(w);
-        cout << "Main 3" << endl;
 }
 
 

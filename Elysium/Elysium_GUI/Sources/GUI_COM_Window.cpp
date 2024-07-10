@@ -18,7 +18,7 @@ using std::endl;
 GUI_COM_Window::GUI_COM_Window(GUI_Main_Window* parent):
     QWidget(), root(parent), current_port_name(""), current_baud_rate(""),
     enable_disconnect_confirmation(true), is_connected(false), COM_selection(new QComboBox()),
-    baud_selection(new QComboBox()), refresh(new QPushButton), connect(new QPushButton()), layout(nullptr) {
+    baud_selection(new QComboBox()), refresh(new QPushButton), connect(new QPushButton()) {
     
     // Layout for the buttons and labels
     QGridLayout* bottom_layout = new QGridLayout();
@@ -59,16 +59,11 @@ GUI_COM_Window::GUI_COM_Window(GUI_Main_Window* parent):
 
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
-    this->layout = new Frame_with_Title("  Teensy Connection", bottom_widget);
+    Frame_with_Title* layout = new Frame_with_Title("  Teensy Connection", bottom_widget);
 
     this->setLayout(layout);
     this->setFixedHeight(106);
     this->root->add_to_main_window(this, 1, 0);
-    cout << "COM END" << endl;
-}
-
-GUI_COM_Window::~GUI_COM_Window() {
-    cout << "COM Destructor called" << endl;
 }
 
 /*

@@ -23,7 +23,6 @@ public:
     // The parameterized constructor and destructor will be overwritten in the source file
     using QWidget::QWidget;
     GUI_COM_Window(GUI_Main_Window* parent);
-    ~GUI_COM_Window();
     bool get_is_connected();
 
 private:
@@ -39,7 +38,7 @@ private:
     QPushButton* connect;
 
     // Temp
-    Frame_with_Title* layout;
+    //Frame_with_Title* layout;
 
     // teensy_ports (list of port info) [May be able to only use this as a locally scoped variable]
     // ser (serial connection type)
