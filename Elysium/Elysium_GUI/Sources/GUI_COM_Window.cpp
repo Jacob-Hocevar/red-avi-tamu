@@ -3,6 +3,7 @@
 #include "Standard_Label.h"
 #include <QMessageBox>
 #include <QGridLayout>
+#include <QStringList>
 #include <QObject>
 #include <QFrame>
 #include <Qt>
@@ -83,23 +84,28 @@ void GUI_COM_Window::update_COM_options() {
 }
 
 void GUI_COM_Window::update_port(const QString& text) {
-    // Nonsense operations to avoid 'unused parameter' compiler warning
-    bool tmp = text.isEmpty();
-    tmp = !tmp;
+    this->current_port_name = text;
+    this->check_connection_button();
 }
 
 void GUI_COM_Window::update_baud_options() {
-
+    const QStringList baud_rates = {"-", "300", "600", "1200", "2400", "4800", "9600", "14400",
+            "19200", "28800", "38400", "56000", "57600", "115200", "128000", "256000"};
+    this->baud_selection->clear();
+    this->baud_selection->addItems(baud_rates);
 }
 
 void GUI_COM_Window::update_baud(const QString& text) {
-    // Nonsense operations to avoid 'unused parameter' compiler warning
-    bool tmp = text.isEmpty();
-    tmp = !tmp;
+    this->current_baud_rate = text;
+    this->check_connection_button();
 }
 
 void GUI_COM_Window::check_connection_button() {
-
+    if ('-' == this->current_port_name || '-' == this->current_baud_rate) {
+        this->connect->setDisabled(true);
+    } else {
+        this->connect->setEnabled(true);
+    }
 }
 
 void GUI_COM_Window::connect_to_serial() {
