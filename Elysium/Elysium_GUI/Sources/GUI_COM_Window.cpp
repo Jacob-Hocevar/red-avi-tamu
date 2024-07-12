@@ -99,8 +99,8 @@ void GUI_COM_Window::update_COM_options() {
         // TODO: print info and implement checks for if it corresponds to a Teensy
         port_names.append(ports[i].portName());
     }
-    //port_names.append("COM32");
-    port_names.append("COM99");
+    port_names.append("/dev/pts/0");
+    // port_names.append("/dev/pts/1");
 
     this->COM_selection->clear();
     this->COM_selection->addItems(port_names);
@@ -252,5 +252,6 @@ void GUI_COM_Window::serial_close() {
     try {
         this->ser->isOpen();
         this->ser->close();
+        this->is_connected = false;
     } catch (...) { }
 }
