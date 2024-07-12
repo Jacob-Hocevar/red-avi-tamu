@@ -8,6 +8,8 @@
 #include <QGridLayout>
 #include <QString>
 
+#include <QSerialPort>
+
 // Forward declaration of mainwindow to avoid circular dependencies
 class GUI_Main_Window;
 
@@ -37,8 +39,7 @@ private:
     QPushButton* refresh;
     QPushButton* connect;
 
-    // Temp
-    //Frame_with_Title* layout;
+    QSerialPort* ser;
 
     // teensy_ports (list of port info) [May be able to only use this as a locally scoped variable]
     // ser (serial connection type)

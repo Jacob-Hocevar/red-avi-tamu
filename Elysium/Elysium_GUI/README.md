@@ -23,6 +23,8 @@ If you have made signficant changes (new files or substantive includes):
 
     D. Add a line reading `QT += core` for the namespace (alignment flags, among others).
 
+    E. Add a line reading `QT += serialport` for the serial connections.
+
     [comment]: # (Update Here if new lines become necessary)
 
 3. `qmake Elysium_GUI.pro` to generate a makefile from the project file.
@@ -35,3 +37,5 @@ Use a unix-like enviornment and install the proper libraries.
 In my case, the command is `sudo apt install make` to install `make`.
 
 You will need the `g++` compiler and the libraries `make`, `qmake`, and `qtdeclarative5-dev`.
+
+Additionally, for the serial comunication, I installed `libqt5serialport5` and `libqt5serialport5`.

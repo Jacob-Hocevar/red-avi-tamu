@@ -61,20 +61,20 @@ void GUI_Main_Window::set_color(QWidget* widget, const QColor& color) {
     widget->setPalette(palette);
 }
 
-/*
-    Private functions
-*/
-
 void GUI_Main_Window::manual_resize(int width, int height) {
     this->setFixedSize(width, height);
     this->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
     this->setMinimumSize(0, 0);
 }
 
+/*
+    Private functions
+*/
+
 void GUI_Main_Window::closeEvent(QCloseEvent* event) {
     // If you are not connected to the Teensy, no confirmation needed
-    if (!com_menu || !this->com_menu->get_is_connected()) {
-        delete com_menu;
+    if (!this->com_menu || !this->com_menu->get_is_connected()) {
+        delete this->com_menu;
         event->accept();
         return;
     }
@@ -86,7 +86,7 @@ void GUI_Main_Window::closeEvent(QCloseEvent* event) {
     }
 
     if (QMessageBox::Apply == confirmation) {
-        delete com_menu;
+        delete this->com_menu;
         event->accept();
     } else {
         event->ignore();

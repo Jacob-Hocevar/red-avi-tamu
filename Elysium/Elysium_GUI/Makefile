@@ -14,10 +14,10 @@ EQ            = =
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
+DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -IHeaders -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
+INCPATH       = -I. -IHeaders -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtSerialPort -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/qt5/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -40,7 +40,7 @@ DISTNAME      = Elysium_GUI1.0.0
 DISTDIR = /mnt/c/Users/tenor/OneDrive/Current\ Classes/RED/Local\ RED\ Test/RED_AVI_GitHub/Elysium/Elysium_GUI/.tmp/Elysium_GUI1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) /usr/lib/x86_64-linux-gnu/libQt5Widgets.so /usr/lib/x86_64-linux-gnu/libQt5Gui.so /usr/lib/x86_64-linux-gnu/libQt5Core.so /usr/lib/x86_64-linux-gnu/libGL.so -lpthread   
+LIBS          = $(SUBLIBS) /usr/lib/x86_64-linux-gnu/libQt5Widgets.so /usr/lib/x86_64-linux-gnu/libQt5Gui.so /usr/lib/x86_64-linux-gnu/libQt5SerialPort.so /usr/lib/x86_64-linux-gnu/libQt5Core.so /usr/lib/x86_64-linux-gnu/libGL.so -lpthread   
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -115,6 +115,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_qmltest.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quick.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quickwidgets.pri \
+		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_serialport.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_service_support_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri \
@@ -214,6 +215,7 @@ Makefile: Elysium_GUI.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_qmltest.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quick.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quickwidgets.pri \
+		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_serialport.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_service_support_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri \
@@ -295,6 +297,7 @@ Makefile: Elysium_GUI.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_qmltest.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quick.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quickwidgets.pri:
+/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_serialport.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_service_support_private.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri:
@@ -385,27 +388,28 @@ compiler_moc_header_clean:
 moc_Frame_with_Title.cpp: Headers/Frame_with_Title.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Frame_with_Title.h -o moc_Frame_with_Title.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Frame_with_Title.h -o moc_Frame_with_Title.cpp
 
 moc_GUI_APP.cpp: Headers/GUI_APP.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/GUI_APP.h -o moc_GUI_APP.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/GUI_APP.h -o moc_GUI_APP.cpp
 
 moc_GUI_COM_Window.cpp: Headers/GUI_COM_Window.h \
+		Headers/Frame_with_Title.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/GUI_COM_Window.h -o moc_GUI_COM_Window.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/GUI_COM_Window.h -o moc_GUI_COM_Window.cpp
 
 moc_GUI_Main_Window.cpp: Headers/GUI_Main_Window.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/GUI_Main_Window.h -o moc_GUI_Main_Window.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/GUI_Main_Window.h -o moc_GUI_Main_Window.cpp
 
 moc_Standard_Label.cpp: Headers/Standard_Label.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Standard_Label.h -o moc_Standard_Label.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Standard_Label.h -o moc_Standard_Label.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -427,12 +431,14 @@ Frame_with_Title.o: Sources/Frame_with_Title.cpp Headers/Frame_with_Title.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Frame_with_Title.o Sources/Frame_with_Title.cpp
 
 GUI_COM_Window.o: Sources/GUI_COM_Window.cpp Headers/GUI_COM_Window.h \
+		Headers/Frame_with_Title.h \
 		Headers/GUI_Main_Window.h \
 		Headers/Standard_Label.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GUI_COM_Window.o Sources/GUI_COM_Window.cpp
 
 GUI_Main_Window.o: Sources/GUI_Main_Window.cpp Headers/GUI_Main_Window.h \
-		Headers/GUI_COM_Window.h
+		Headers/GUI_COM_Window.h \
+		Headers/Frame_with_Title.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GUI_Main_Window.o Sources/GUI_Main_Window.cpp
 
 main.o: Sources/main.cpp Headers/GUI_APP.h \

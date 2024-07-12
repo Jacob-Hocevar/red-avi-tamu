@@ -1,6 +1,14 @@
 #include "GUI_COM_Window.h"
 #include "GUI_Main_Window.h"
 #include "Standard_Label.h"
+
+// For serial communication
+#include <QIODevice> // Might not need this
+#include <QSerialPortInfo>
+#include <QSerialPort> // In header file
+#include <QList>
+
+// For standard Qt objects and namespace
 #include <QMessageBox>
 #include <QGridLayout>
 #include <QStringList>
@@ -9,6 +17,7 @@
 #include <Qt>
 
 // For testing only
+#include <QDebug>
 #include<iostream>
 using std::cout;
 using std::endl;
@@ -19,7 +28,7 @@ using std::endl;
 GUI_COM_Window::GUI_COM_Window(GUI_Main_Window* parent):
     QWidget(), root(parent), current_port_name(""), current_baud_rate(""),
     enable_disconnect_confirmation(true), is_connected(false), COM_selection(new QComboBox()),
-    baud_selection(new QComboBox()), refresh(new QPushButton), connect(new QPushButton()) {
+    baud_selection(new QComboBox()), refresh(new QPushButton), connect(new QPushButton()), ser(nullptr) {
     
     // Layout for the buttons and labels
     QGridLayout* bottom_layout = new QGridLayout();
@@ -80,7 +89,21 @@ bool GUI_COM_Window::get_is_connected() {
 */
 
 void GUI_COM_Window::update_COM_options() {
+    // Check for all available ports (limited to USB serial) [will not find virtual]
+    cout << "Searching for serial ports..." << endl;
+    QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
 
+    // Isolate the names of the ports, add virtual and Null ("-") ports.
+    QStringList port_names = {"-"};
+    for (int i = 0; i < ports.size(); ++i) {
+        // TODO: print info and implement checks for if it corresponds to a Teensy
+        port_names.append(ports[i].portName());
+    }
+    //port_names.append("COM32");
+    port_names.append("COM99");
+
+    this->COM_selection->clear();
+    this->COM_selection->addItems(port_names);
 }
 
 void GUI_COM_Window::update_port(const QString& text) {
@@ -109,13 +132,125 @@ void GUI_COM_Window::check_connection_button() {
 }
 
 void GUI_COM_Window::connect_to_serial() {
+    // If not connected, attempt to connect
+    if (!this->is_connected) {
+        this->serial_open();
+        if (!this->is_connected) {
+            cout << "ERROR: Cannot open serial connection" << endl;
+            return;
+        }
 
+        // Disable connection configuration buttons
+        this->COM_selection->setDisabled(true);
+        this->baud_selection->setDisabled(true);
+        this->refresh->setDisabled(true);
+        this->connect->setText("Disconnect");
+
+        // Create CTRL and DAQ blocks, resize
+        //this->CTRL = GUI_CTRL_Window(this->root, this->ser);
+        //this->DAQ = GUI_CTRL_Window(this->root, this->ser);
+        this->root->manual_resize(320, 450);
+
+        //this->DAQ.start();
+        return;
+    }
+
+    QMessageBox::StandardButton confirmation = QMessageBox::Apply;
+    if (this->enable_disconnect_confirmation) {
+        confirmation = QMessageBox::warning(this, "Confirmation",
+                        "Are you sure you want to disconnect from the Teensy?",
+                        QMessageBox::Cancel | QMessageBox::Apply);
+    }
+
+    // Only delete if disconnect is confirmed or the confirmation is disabled
+    if (QMessageBox::Apply == confirmation) {
+        // Remove the CTRL and DAQ blocks, CTRL requires active serial connection
+        //delete this->CTRL;
+
+        // DAQ requires no serial connection to close
+        this->serial_close();
+        //delete this->DAQ;
+
+        // Re-enable the connection configuration buttons
+        this->root->manual_resize(320, 150);
+        this->COM_selection->setEnabled(true);
+        this->baud_selection->setEnabled(true);
+        this->refresh->setEnabled(true);
+        this->connect->setText("Connect");
+    }
 }
 
 void GUI_COM_Window::serial_open() {
+    cout << "Attempting to connect to serial" << endl;
+    if (this->ser) {
+        try {
+            if (this->ser->isOpen()) {
+                cout << "Already Open" << endl;
+                this->is_connected = true;
+                return;
+            } else {
+                delete this->ser;
+            }
+        } catch (...) {
+            cout << "ser already exists, but cannot be checked" << endl;
+            delete this->ser;
+        }
+    }
 
+    try {
+        QString PORT = this->current_port_name;
+        int BAUD = this->current_baud_rate.toInt();
+        this->ser = new QSerialPort();
+        this->ser->setPortName(PORT);
+        this->ser->setBaudRate(BAUD);
+
+        this->ser->open(QSerialPort::ReadWrite);
+        qDebug() << this->ser->error() << endl;
+        if (this->ser->isOpen()) {
+            this->is_connected = true;
+        } else {
+            cout << "Test 10" << endl;
+            return;
+        }
+    } catch (...) {
+        return;
+    }
+
+    // Method ported for python, causes seg fault
+    /*
+    try {
+        cout << "Test 1" << endl;
+        this->ser->isOpen();
+        cout << "Test 1.1" << endl;
+    } catch (...) {
+        cout << "Test 2" << endl;
+        QString PORT = this->current_port_name;
+        int BAUD = this->current_baud_rate.toInt();
+        this->ser = new QSerialPort();
+        this->ser->setPortName(PORT);
+        this->ser->setBaudRate(BAUD);
+
+        // Timeout options are handeled by the read/write commands themselves
+    }
+    try {
+        if (this-ser->isOpen()) {
+            cout << "Already Open" << endl;
+        } else {
+            QString PORT = this->current_port_name;
+            int BAUD = this->current_baud_rate.toInt();
+            this->ser = new QSerialPort();
+            this->ser->setPortName(PORT);
+            this->ser->setBaudRate(BAUD);
+
+            this->ser->open(QIODevice::ReadWrite);
+        }
+    } catch (...) { }
+    */
 }
 
 void GUI_COM_Window::serial_close() {
-
+    try {
+        this->ser->isOpen();
+        this->ser->close();
+    } catch (...) { }
 }

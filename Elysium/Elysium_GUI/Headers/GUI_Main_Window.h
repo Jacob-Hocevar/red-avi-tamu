@@ -24,6 +24,7 @@ public:
     void add_to_main_window(QWidget* widget, int row, int col, int row_span=1, int col_span=1);
     void remove_from_main_window(QWidget* widget);
     void set_color(QWidget* widget, const QColor& color);
+    void manual_resize(int width, int height);
 
 private:
     bool enable_shutdown_confirmation;
@@ -31,7 +32,6 @@ private:
     QGridLayout* layout;
     GUI_COM_Window* com_menu;
 
-    void manual_resize(int width, int height);
     void closeEvent(QCloseEvent* event);
 };
 
