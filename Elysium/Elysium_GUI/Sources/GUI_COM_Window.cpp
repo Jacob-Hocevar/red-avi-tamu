@@ -28,7 +28,8 @@ using std::endl;
 GUI_COM_Window::GUI_COM_Window(GUI_Main_Window* parent):
     QWidget(), root(parent), current_port_name(""), current_baud_rate(""),
     enable_disconnect_confirmation(true), is_connected(false), COM_selection(new QComboBox()),
-    baud_selection(new QComboBox()), refresh(new QPushButton), connect(new QPushButton()), ser(nullptr) {
+    baud_selection(new QComboBox()), refresh(new QPushButton), connect(new QPushButton()), ser(nullptr),
+    CTRL(nullptr), DAQ(nullptr) {
     
     // Layout for the buttons and labels
     QGridLayout* bottom_layout = new QGridLayout();
@@ -147,11 +148,11 @@ void GUI_COM_Window::connect_to_serial() {
         this->connect->setText("Disconnect");
 
         // Create CTRL and DAQ blocks, resize
-        //this->CTRL = GUI_CTRL_Window(this->root, this->ser);
-        //this->DAQ = GUI_CTRL_Window(this->root, this->ser);
+        this->CTRL = new GUI_CTRL_Window(this->root, this->ser);
+        this->DAQ = new GUI_DAQ_Window(this->root, this->ser);
         this->root->manual_resize(320, 450);
 
-        //this->DAQ.start();
+        this->DAQ->start();
         return;
     }
 
@@ -165,11 +166,11 @@ void GUI_COM_Window::connect_to_serial() {
     // Only delete if disconnect is confirmed or the confirmation is disabled
     if (QMessageBox::Apply == confirmation) {
         // Remove the CTRL and DAQ blocks, CTRL requires active serial connection
-        //delete this->CTRL;
+        delete this->CTRL;
 
         // DAQ requires no serial connection to close
         this->serial_close();
-        //delete this->DAQ;
+        delete this->DAQ;
 
         // Re-enable the connection configuration buttons
         this->root->manual_resize(320, 150);

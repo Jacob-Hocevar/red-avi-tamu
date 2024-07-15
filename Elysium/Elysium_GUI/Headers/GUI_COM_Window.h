@@ -2,6 +2,9 @@
 #define GUI_COM_Window_H
 
 #include "Frame_with_Title.h"
+#include "GUI_CTRL_Window.h"
+#include "GUI_DAQ_Window.h"
+
 #include <QWidget>
 #include <QPushButton>
 #include <QComboBox>
@@ -41,10 +44,8 @@ private:
 
     QSerialPort* ser;
 
-    // teensy_ports (list of port info) [May be able to only use this as a locally scoped variable]
-    // ser (serial connection type)
-    // CTRL (GUI_CTRL_Window) [Neither of these should reference GUI_COM_Window, so no forward declarations]
-    // DAQ (GUI_DAQ_Window) [Neither of these should reference GUI_COM_Window, so no forward declarations]
+    GUI_CTRL_Window* CTRL;
+    GUI_DAQ_Window* DAQ;
 
     void check_connection_button();
     void serial_open();

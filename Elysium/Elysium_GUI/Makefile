@@ -54,21 +54,29 @@ OBJECTS_DIR   = ./
 
 SOURCES       = Sources/Frame_with_Title.cpp \
 		Sources/GUI_COM_Window.cpp \
+		Sources/GUI_CTRL_Window.cpp \
+		Sources/GUI_DAQ_Window.cpp \
 		Sources/GUI_Main_Window.cpp \
 		Sources/main.cpp \
 		Sources/Standard_Label.cpp moc_Frame_with_Title.cpp \
 		moc_GUI_APP.cpp \
 		moc_GUI_COM_Window.cpp \
+		moc_GUI_CTRL_Window.cpp \
+		moc_GUI_DAQ_Window.cpp \
 		moc_GUI_Main_Window.cpp \
 		moc_Standard_Label.cpp
 OBJECTS       = Frame_with_Title.o \
 		GUI_COM_Window.o \
+		GUI_CTRL_Window.o \
+		GUI_DAQ_Window.o \
 		GUI_Main_Window.o \
 		main.o \
 		Standard_Label.o \
 		moc_Frame_with_Title.o \
 		moc_GUI_APP.o \
 		moc_GUI_COM_Window.o \
+		moc_GUI_CTRL_Window.o \
+		moc_GUI_DAQ_Window.o \
 		moc_GUI_Main_Window.o \
 		moc_Standard_Label.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -154,9 +162,13 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		Elysium_GUI.pro Headers/Frame_with_Title.h \
 		Headers/GUI_APP.h \
 		Headers/GUI_COM_Window.h \
+		Headers/GUI_CTRL_Window.h \
+		Headers/GUI_DAQ_Window.h \
 		Headers/GUI_Main_Window.h \
 		Headers/Standard_Label.h Sources/Frame_with_Title.cpp \
 		Sources/GUI_COM_Window.cpp \
+		Sources/GUI_CTRL_Window.cpp \
+		Sources/GUI_DAQ_Window.cpp \
 		Sources/GUI_Main_Window.cpp \
 		Sources/main.cpp \
 		Sources/Standard_Label.cpp
@@ -349,8 +361,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents Headers/Frame_with_Title.h Headers/GUI_APP.h Headers/GUI_COM_Window.h Headers/GUI_Main_Window.h Headers/Standard_Label.h $(DISTDIR)/
-	$(COPY_FILE) --parents Sources/Frame_with_Title.cpp Sources/GUI_COM_Window.cpp Sources/GUI_Main_Window.cpp Sources/main.cpp Sources/Standard_Label.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents Headers/Frame_with_Title.h Headers/GUI_APP.h Headers/GUI_COM_Window.h Headers/GUI_CTRL_Window.h Headers/GUI_DAQ_Window.h Headers/GUI_Main_Window.h Headers/Standard_Label.h $(DISTDIR)/
+	$(COPY_FILE) --parents Sources/Frame_with_Title.cpp Sources/GUI_COM_Window.cpp Sources/GUI_CTRL_Window.cpp Sources/GUI_DAQ_Window.cpp Sources/GUI_Main_Window.cpp Sources/main.cpp Sources/Standard_Label.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -382,9 +394,9 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 	g++ -pipe -O2 -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_Frame_with_Title.cpp moc_GUI_APP.cpp moc_GUI_COM_Window.cpp moc_GUI_Main_Window.cpp moc_Standard_Label.cpp
+compiler_moc_header_make_all: moc_Frame_with_Title.cpp moc_GUI_APP.cpp moc_GUI_COM_Window.cpp moc_GUI_CTRL_Window.cpp moc_GUI_DAQ_Window.cpp moc_GUI_Main_Window.cpp moc_Standard_Label.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_Frame_with_Title.cpp moc_GUI_APP.cpp moc_GUI_COM_Window.cpp moc_GUI_Main_Window.cpp moc_Standard_Label.cpp
+	-$(DEL_FILE) moc_Frame_with_Title.cpp moc_GUI_APP.cpp moc_GUI_COM_Window.cpp moc_GUI_CTRL_Window.cpp moc_GUI_DAQ_Window.cpp moc_GUI_Main_Window.cpp moc_Standard_Label.cpp
 moc_Frame_with_Title.cpp: Headers/Frame_with_Title.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
@@ -397,9 +409,24 @@ moc_GUI_APP.cpp: Headers/GUI_APP.h \
 
 moc_GUI_COM_Window.cpp: Headers/GUI_COM_Window.h \
 		Headers/Frame_with_Title.h \
+		Headers/GUI_CTRL_Window.h \
+		Headers/GUI_Main_Window.h \
+		Headers/GUI_DAQ_Window.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/GUI_COM_Window.h -o moc_GUI_COM_Window.cpp
+
+moc_GUI_CTRL_Window.cpp: Headers/GUI_CTRL_Window.h \
+		Headers/GUI_Main_Window.h \
+		moc_predefs.h \
+		/usr/lib/qt5/bin/moc
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/GUI_CTRL_Window.h -o moc_GUI_CTRL_Window.cpp
+
+moc_GUI_DAQ_Window.cpp: Headers/GUI_DAQ_Window.h \
+		Headers/GUI_Main_Window.h \
+		moc_predefs.h \
+		/usr/lib/qt5/bin/moc
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/GUI_DAQ_Window.h -o moc_GUI_DAQ_Window.cpp
 
 moc_GUI_Main_Window.cpp: Headers/GUI_Main_Window.h \
 		moc_predefs.h \
@@ -432,13 +459,27 @@ Frame_with_Title.o: Sources/Frame_with_Title.cpp Headers/Frame_with_Title.h
 
 GUI_COM_Window.o: Sources/GUI_COM_Window.cpp Headers/GUI_COM_Window.h \
 		Headers/Frame_with_Title.h \
+		Headers/GUI_CTRL_Window.h \
 		Headers/GUI_Main_Window.h \
+		Headers/GUI_DAQ_Window.h \
 		Headers/Standard_Label.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GUI_COM_Window.o Sources/GUI_COM_Window.cpp
 
+GUI_CTRL_Window.o: Sources/GUI_CTRL_Window.cpp Headers/GUI_CTRL_Window.h \
+		Headers/GUI_Main_Window.h \
+		Headers/Frame_with_Title.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GUI_CTRL_Window.o Sources/GUI_CTRL_Window.cpp
+
+GUI_DAQ_Window.o: Sources/GUI_DAQ_Window.cpp Headers/GUI_DAQ_Window.h \
+		Headers/GUI_Main_Window.h \
+		Headers/Frame_with_Title.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GUI_DAQ_Window.o Sources/GUI_DAQ_Window.cpp
+
 GUI_Main_Window.o: Sources/GUI_Main_Window.cpp Headers/GUI_Main_Window.h \
 		Headers/GUI_COM_Window.h \
-		Headers/Frame_with_Title.h
+		Headers/Frame_with_Title.h \
+		Headers/GUI_CTRL_Window.h \
+		Headers/GUI_DAQ_Window.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GUI_Main_Window.o Sources/GUI_Main_Window.cpp
 
 main.o: Sources/main.cpp Headers/GUI_APP.h \
@@ -456,6 +497,12 @@ moc_GUI_APP.o: moc_GUI_APP.cpp
 
 moc_GUI_COM_Window.o: moc_GUI_COM_Window.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_GUI_COM_Window.o moc_GUI_COM_Window.cpp
+
+moc_GUI_CTRL_Window.o: moc_GUI_CTRL_Window.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_GUI_CTRL_Window.o moc_GUI_CTRL_Window.cpp
+
+moc_GUI_DAQ_Window.o: moc_GUI_DAQ_Window.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_GUI_DAQ_Window.o moc_GUI_DAQ_Window.cpp
 
 moc_GUI_Main_Window.o: moc_GUI_Main_Window.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_GUI_Main_Window.o moc_GUI_Main_Window.cpp
