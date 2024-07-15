@@ -192,7 +192,7 @@ void GUI_COM_Window::serial_open() {
                 delete this->ser;
             }
         } catch (...) {
-            cout << "ser already exists, but cannot be checked" << endl;
+            cout << "serial connection already exists, but cannot access isOpen()" << endl;
             delete this->ser;
         }
     }
@@ -205,47 +205,14 @@ void GUI_COM_Window::serial_open() {
         this->ser->setBaudRate(BAUD);
 
         this->ser->open(QSerialPort::ReadWrite);
-        qDebug() << this->ser->error() << endl;
         if (this->ser->isOpen()) {
             this->is_connected = true;
         } else {
-            cout << "Test 10" << endl;
             return;
         }
     } catch (...) {
         return;
     }
-
-    // Method ported for python, causes seg fault
-    /*
-    try {
-        cout << "Test 1" << endl;
-        this->ser->isOpen();
-        cout << "Test 1.1" << endl;
-    } catch (...) {
-        cout << "Test 2" << endl;
-        QString PORT = this->current_port_name;
-        int BAUD = this->current_baud_rate.toInt();
-        this->ser = new QSerialPort();
-        this->ser->setPortName(PORT);
-        this->ser->setBaudRate(BAUD);
-
-        // Timeout options are handeled by the read/write commands themselves
-    }
-    try {
-        if (this-ser->isOpen()) {
-            cout << "Already Open" << endl;
-        } else {
-            QString PORT = this->current_port_name;
-            int BAUD = this->current_baud_rate.toInt();
-            this->ser = new QSerialPort();
-            this->ser->setPortName(PORT);
-            this->ser->setBaudRate(BAUD);
-
-            this->ser->open(QIODevice::ReadWrite);
-        }
-    } catch (...) { }
-    */
 }
 
 void GUI_COM_Window::serial_close() {
