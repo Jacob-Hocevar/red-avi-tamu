@@ -91,8 +91,9 @@ bool GUI_COM_Window::get_is_connected() {
 
 void GUI_COM_Window::update_COM_options() {
     // Check for all available ports (limited to USB serial) [will not find virtual]
-    cout << "Searching for serial ports..." << endl;
+    cout << "Searching for serial ports... ";
     QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
+    cout << ports.size() << " found" << endl;
 
     // Isolate the names of the ports, add virtual and Null ("-") ports.
     QStringList port_names = {"-"};
@@ -137,7 +138,8 @@ void GUI_COM_Window::connect_to_serial() {
     if (!this->is_connected) {
         this->serial_open();
         if (!this->is_connected) {
-            cout << "ERROR: Cannot open serial connection" << endl;
+            cout << "ERROR: Cannot open serial connection\n" << endl;
+            qDebug() << this->ser->error();
             return;
         }
 
