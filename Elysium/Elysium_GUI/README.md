@@ -2,11 +2,11 @@
 
 First navigate so that your active directory is `Elysium_GUI`.
 
-If you have made no changes/it is already compiled, simply run `./Elysium_GUI`.
+If you have made no changes/it is already compiled, simply run `sudo ./Elysium_GUI`.
 
 If you have just changed a couple files, but not added significant includes or new files:
 1. `make` to compile.
-2. `./Elysium_GUI` to run.
+2. `sudo ./Elysium_GUI` to run.
 
 
 If you have made signficant changes (new files or substantive includes):
@@ -29,7 +29,7 @@ If you have made signficant changes (new files or substantive includes):
 
 3. `qmake Elysium_GUI.pro` to generate a makefile from the project file.
 4. `make` to compile (this is where errors will show up with improper code).
-5. `./Elysium_GUI` to run.
+5. `sudo ./Elysium_GUI` to run.
 
 ## Setup
 Use a unix-like enviornment and install the proper libraries.
@@ -39,3 +39,6 @@ In my case, the command is `sudo apt install make` to install `make`.
 You will need the `g++` compiler and the libraries `make`, `qmake`, and `qtdeclarative5-dev`.
 
 Additionally, for the serial comunication, I installed `libqt5serialport5` and `libqt5serialport5`.
+
+## Additional Note
+The `sudo` keyword is needed for running the executable in order to access the serial ports. You will recieve a `PermissionError` without it. I am not certain why this is, but I think the `/dev/` directory (which is how ports are treated in WSL) is considered protected.

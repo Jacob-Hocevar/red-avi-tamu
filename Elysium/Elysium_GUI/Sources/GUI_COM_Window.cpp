@@ -101,8 +101,7 @@ void GUI_COM_Window::update_COM_options() {
         // TODO: print info and implement checks for if it corresponds to a Teensy
         port_names.append(ports[i].portName());
     }
-    port_names.append("/dev/pts/0");
-    // port_names.append("/dev/pts/1");
+    port_names.append("/dev/Test_GUI");
 
     this->COM_selection->clear();
     this->COM_selection->addItems(port_names);
