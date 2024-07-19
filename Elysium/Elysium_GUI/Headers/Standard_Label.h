@@ -10,7 +10,7 @@ class Standard_Label : public QLabel {
 public:
     // Inherits the constructors (default, paramterized, copy, and move) from the base class
     using QLabel::QLabel;
-    Standard_Label(const char* text, QGridLayout* layout, int row);
+    Standard_Label(const QString& text, QGridLayout* layout, int row);
 };
 
 #endif

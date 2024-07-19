@@ -1,6 +1,7 @@
 // TODO: add includes
 #include "GUI_CTRL_Window.h"
 #include "Frame_with_Title.h"
+#include "Valves.h"
 
 // For testing only
 #include <QLabel>
@@ -22,6 +23,13 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     // TODO: Delete, implement
     QLabel* tmp_label = new QLabel("<Put elements here>");
     bottom_layout->addWidget(tmp_label, 0, 0);
+
+    Valve* test_valve = new Valve(ser, "V1", "Test Valve", 1);
+    bottom_layout->addWidget(test_valve, 1, 0);
+    Solenoid_Valve* test_Solenoid = new Solenoid_Valve(ser, "VS1", "Solenoid", 1);
+    bottom_layout->addWidget(test_Solenoid, 2, 0);
+    LA_Ball_Valve* test_LA_BV = new LA_Ball_Valve(ser, "V4", "Test LA_BV", 1, 0);
+    bottom_layout->addWidget(test_LA_BV, 3, 0);
 
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
