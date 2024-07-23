@@ -66,6 +66,7 @@ SOURCES       = Sources/Frame_with_Title.cpp \
 		moc_GUI_CTRL_Window.cpp \
 		moc_GUI_DAQ_Window.cpp \
 		moc_GUI_Main_Window.cpp \
+		moc_Sensor.cpp \
 		moc_Standard_Label.cpp \
 		moc_Valves.cpp
 OBJECTS       = Frame_with_Title.o \
@@ -83,6 +84,7 @@ OBJECTS       = Frame_with_Title.o \
 		moc_GUI_CTRL_Window.o \
 		moc_GUI_DAQ_Window.o \
 		moc_GUI_Main_Window.o \
+		moc_Sensor.o \
 		moc_Standard_Label.o \
 		moc_Valves.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -404,9 +406,9 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 	g++ -pipe -O2 -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_Frame_with_Title.cpp moc_GUI_APP.cpp moc_GUI_COM_Window.cpp moc_GUI_CTRL_Window.cpp moc_GUI_DAQ_Window.cpp moc_GUI_Main_Window.cpp moc_Standard_Label.cpp moc_Valves.cpp
+compiler_moc_header_make_all: moc_Frame_with_Title.cpp moc_GUI_APP.cpp moc_GUI_COM_Window.cpp moc_GUI_CTRL_Window.cpp moc_GUI_DAQ_Window.cpp moc_GUI_Main_Window.cpp moc_Sensor.cpp moc_Standard_Label.cpp moc_Valves.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_Frame_with_Title.cpp moc_GUI_APP.cpp moc_GUI_COM_Window.cpp moc_GUI_CTRL_Window.cpp moc_GUI_DAQ_Window.cpp moc_GUI_Main_Window.cpp moc_Standard_Label.cpp moc_Valves.cpp
+	-$(DEL_FILE) moc_Frame_with_Title.cpp moc_GUI_APP.cpp moc_GUI_COM_Window.cpp moc_GUI_CTRL_Window.cpp moc_GUI_DAQ_Window.cpp moc_GUI_Main_Window.cpp moc_Sensor.cpp moc_Standard_Label.cpp moc_Valves.cpp
 moc_Frame_with_Title.cpp: Headers/Frame_with_Title.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
@@ -442,6 +444,11 @@ moc_GUI_Main_Window.cpp: Headers/GUI_Main_Window.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/GUI_Main_Window.h -o moc_GUI_Main_Window.cpp
+
+moc_Sensor.cpp: Headers/Sensor.h \
+		moc_predefs.h \
+		/usr/lib/qt5/bin/moc
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Elysium_GUI/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Sensor.h -o moc_Sensor.cpp
 
 moc_Standard_Label.cpp: Headers/Standard_Label.h \
 		moc_predefs.h \
@@ -482,7 +489,8 @@ GUI_COM_Window.o: Sources/GUI_COM_Window.cpp Headers/GUI_COM_Window.h \
 
 GUI_CTRL_Window.o: Sources/GUI_CTRL_Window.cpp Headers/GUI_CTRL_Window.h \
 		Headers/GUI_Main_Window.h \
-		Headers/Frame_with_Title.h
+		Headers/Frame_with_Title.h \
+		Headers/Valves.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GUI_CTRL_Window.o Sources/GUI_CTRL_Window.cpp
 
 GUI_DAQ_Window.o: Sources/GUI_DAQ_Window.cpp Headers/GUI_DAQ_Window.h \
@@ -501,7 +509,8 @@ main.o: Sources/main.cpp Headers/GUI_APP.h \
 		Headers/GUI_Main_Window.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o Sources/main.cpp
 
-Sensor.o: Sources/Sensor.cpp Headers/Sensor.h
+Sensor.o: Sources/Sensor.cpp Headers/Sensor.h \
+		Headers/Standard_Label.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Sensor.o Sources/Sensor.cpp
 
 Standard_Label.o: Sources/Standard_Label.cpp Headers/Standard_Label.h
@@ -528,6 +537,9 @@ moc_GUI_DAQ_Window.o: moc_GUI_DAQ_Window.cpp
 
 moc_GUI_Main_Window.o: moc_GUI_Main_Window.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_GUI_Main_Window.o moc_GUI_Main_Window.cpp
+
+moc_Sensor.o: moc_Sensor.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_Sensor.o moc_Sensor.cpp
 
 moc_Standard_Label.o: moc_Standard_Label.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_Standard_Label.o moc_Standard_Label.cpp

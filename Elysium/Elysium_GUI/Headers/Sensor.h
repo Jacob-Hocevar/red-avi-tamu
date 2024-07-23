@@ -1,14 +1,16 @@
 #ifndef Sensor_H
 #define Sensor_H
 
-#include <QSerialPort>
+#include <QWidget>
 #include <QString>
+#include <QLabel>
 
-class Sensor {
+class Sensor : public QWidget {
+    Q_OBJECT
 public:
     // Constructors 
     Sensor();
-    Sensor(QString ID, QString name);
+    Sensor(QString ID, QString name, QString unit);
 
     // Getter/Setter functions
     QString get_ID();
@@ -18,6 +20,11 @@ public:
 private:
     QString ID;
     QString name;
+    QString unit;
+
+    QLabel* data_label;
+
+    void create_label();
 };
 
 #endif

@@ -1,6 +1,7 @@
 // TODO: add includes
 #include "GUI_DAQ_Window.h"
 #include "Frame_with_Title.h"
+#include "Sensor.h"
 
 // For testing only
 #include <QLabel>
@@ -22,6 +23,14 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
     // TODO: Delete, implement
     QLabel* tmp_label = new QLabel("<Put elements here>");
     bottom_layout->addWidget(tmp_label, 0, 0);
+
+    Sensor* test_P1 = new Sensor("P1", "Upstream Pressure", "psi");
+    Sensor* test_P2 = new Sensor("P2", "Downstream Pressure", "psi");
+    Sensor* test_mfr = new Sensor("mfr", "Mass Flow Rate", "kg/s");
+
+    bottom_layout->addWidget(test_P1, 1, 0);
+    bottom_layout->addWidget(test_P2, 2, 0);
+    bottom_layout->addWidget(test_mfr, 3, 0);
 
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
