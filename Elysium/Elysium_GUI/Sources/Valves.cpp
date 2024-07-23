@@ -16,7 +16,7 @@ Valve::Valve(QSerialPort* ser, QString ID, QString name, int state) : QWidget(),
     name(name), state(state), open(new QPushButton("OPEN")), close(new QPushButton("CLOSE")) {
     // Construct a Layout to hold the buttons and label
     QGridLayout* layout = new QGridLayout();
-    layout->setContentsMargins(5, 5, 5, 5);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(10);
 
     // Create Label

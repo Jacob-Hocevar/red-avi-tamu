@@ -10,7 +10,7 @@ Sensor::Sensor(QString ID, QString name, QString unit) :
     QWidget(), ID(ID), name(name), unit(unit), data_label(new QLabel("-")) {
     // Construct a layout to hold the labels
     QGridLayout* layout = new QGridLayout();
-    layout->setContentsMargins(5, 5, 5, 5);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(10);
     this->setLayout(layout);
 
