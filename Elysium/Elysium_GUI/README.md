@@ -36,9 +36,21 @@ Use a unix-like enviornment and install the proper libraries.
 
 In my case, the command is `sudo apt install make` to install `make`.
 
-You will need the `g++` compiler and the libraries `make`, `qmake`, and `qtdeclarative5-dev`.
+You will need the `g++` compiler and the access to the commands `make` and `qmake` (via `qtchooser` library), and `qtdeclarative5-dev`.
 
-Additionally, for the serial comunication, I installed `libqt5serialport5` and `libqt5serialport5`.
+Additionally, for the serial comunication, I installed `libqt5serialport5`.
+
+## To connect to the Teensy via WSL
+1. Install `usbipd-win` via the .msi file for the latest release https://github.com/dorssel/usbipd-win/releases.
+2. Open Windows Powershell as administrator and execute `usbipd list`.
+3. Identify which device corresponds to the Teensy (the description may not list it, so confirm the COM number via the Arduino IDE or any other method) and remember the bus ID.
+4. Execute `usbipd bind --busid ID` (with the previously found `ID`). Verify that it is shared with `usbipd list`, if desired.
+5. Execute `usbipd attach --wsl --busid ID` (with the previously found `ID`). Verify that it is attached with `usbipd list`, if desired.
+6. A more precise way to verify is to open WSL terminal and execute `lsusb`, which should list the attached port.
+
+To detach, either remove the device physically or execute `usbipd detach --busid ID` (with the previously found `ID`).
+
+Every time the device is disconnected or the PC restarts, you will have to repeat step 5 (although, it would be wise to recheck the list to confirm the `ID`).
 
 ## Additional Note
 The `sudo` keyword is needed for running the executable in order to access the serial ports. You will recieve a `PermissionError` without it. I am not certain why this is, but I think the `/dev/` directory (which is how ports are treated in WSL) is considered protected.
