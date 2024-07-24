@@ -1,4 +1,5 @@
 #include "Virtual_Teensy.h"
+#include <QRandomGenerator>
 
 #include <QDebug>
 #include <iostream>
@@ -44,6 +45,12 @@ void Virtual_Teensy::read_data() {
 }
 
 void Virtual_Teensy::write_data() {
-    cout << "Write: 1.01,2.40005,12345\\r\\n" << endl;
-    this->ser->write("1.01,2.40005,12345\r\n"); 
+    QString data = "P1:";
+    data.append(QString::number(9 + 2*QRandomGenerator::global()->generateDouble()));
+    data.append(",P2:");
+    data.append(QString::number(28 + 4*QRandomGenerator::global()->generateDouble()));
+    cout << "Write:\t" << data.toStdString() << "\\r\\n" << endl;
+
+    data.append("\r\n");
+    //this->ser->write(data); 
 }
