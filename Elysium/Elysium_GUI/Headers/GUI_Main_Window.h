@@ -1,11 +1,14 @@
 #ifndef GUI_Main_Window_H
 #define GUI_Main_Window_H
 
+#include <QContextMenuEvent>
 #include <QMainWindow>
-#include <QLabel>
 #include <QGridLayout>
-#include <QColor>
 #include <QCloseEvent>
+#include <QLabel>
+#include <QColor>
+#include <QFile>
+#include <QDir>
 
 // Forward declaration of COM Window to avoid circular dependencies
 class GUI_COM_Window;
@@ -21,6 +24,9 @@ public:
     // The default will be overwritten in the source file
     using QMainWindow::QMainWindow;
     GUI_Main_Window();
+
+    QFile* get_theme();
+    QDir* get_configuration();
     void add_to_main_window(QWidget* widget, int row, int col, int row_span=1, int col_span=1);
     void remove_from_main_window(QWidget* widget);
     void set_color(QWidget* widget, const QColor& color);
@@ -32,7 +38,15 @@ private:
     QGridLayout* layout;
     GUI_COM_Window* com_menu;
 
+    QFile* theme;
+    QDir* configuration;
+
     void closeEvent(QCloseEvent* event);
+    void contextMenuEvent(QContextMenuEvent* event);
+    void update_config();
+private slots:
+    void set_theme(QAction* theme);
+    void set_configuration(QAction* configuration);
 };
 
 

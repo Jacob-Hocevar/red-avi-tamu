@@ -22,13 +22,14 @@ class GUI_Main_Window;
 */
 class GUI_COM_Window : public QWidget {
     Q_OBJECT
+
 public:
-    
     // Inherits the constructors (default, paramterized, copy, and move) from the base class
     // The parameterized constructor and destructor will be overwritten in the source file
     using QWidget::QWidget;
     GUI_COM_Window(GUI_Main_Window* parent);
     bool get_is_connected();
+    void update_config();
 
 private:
     GUI_Main_Window* root;

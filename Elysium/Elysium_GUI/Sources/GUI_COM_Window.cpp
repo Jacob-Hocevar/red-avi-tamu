@@ -85,6 +85,17 @@ bool GUI_COM_Window::get_is_connected() {
     return is_connected;
 }
 
+void GUI_COM_Window::update_config() {
+    if (this->CTRL) {
+        delete this->CTRL;
+        this->CTRL = new GUI_CTRL_Window(this->root, this->ser);
+    } if (this->DAQ) {
+        delete this->DAQ;
+        this->DAQ = new GUI_DAQ_Window(this->root, this->ser);
+        this->DAQ->start();
+    }
+}
+
 /*
     Private functions
 */

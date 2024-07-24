@@ -21,15 +21,27 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     bottom_layout->setSpacing(10);
 
     // TODO: Delete, implement
-    QLabel* tmp_label = new QLabel("<Put elements here>");
-    bottom_layout->addWidget(tmp_label, 0, 0);
+    QFile file(root->get_configuration()->filePath("valves.cfg"));
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
 
-    Valve* test_valve = new Valve(ser, "V1", "Valve", 1);
-    bottom_layout->addWidget(test_valve, 1, 0);
-    Solenoid_Valve* test_Solenoid = new Solenoid_Valve(ser, "VS1", "Sol.", 1);
-    bottom_layout->addWidget(test_Solenoid, 2, 0);
-    LA_Ball_Valve* test_LA_BV = new LA_Ball_Valve(ser, "V4", "LA BV", 1, 0);
-    bottom_layout->addWidget(test_LA_BV, 3, 0);
+        int i = 0;
+        while (!in.atEnd()) {
+            QStringList info = in.readLine().split(',');
+            Valve* valve = nullptr;
+            if ("Valve" == info[0]) {
+                valve = new Valve(ser, info[1], info[2], info[3].toInt());
+            } else if ("Solenoid" == info[0]) {
+                valve = new Solenoid_Valve(ser, info[1], info[2], info[3].toInt());
+            } else if ("LA_Ball" == info[0]) {
+                valve = new LA_Ball_Valve(ser, info[1], info[2], info[3].toInt(), info[4].toInt());
+            } else {
+                cout << "INVALID FORMAT in valves.cfg" << endl;
+            }
+            bottom_layout->addWidget(valve, i, 0);
+            ++i;
+        }
+    }
 
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);

@@ -1,17 +1,20 @@
-// TODO: add includes
 #include "GUI_DAQ_Window.h"
 #include "Frame_with_Title.h"
 #include "Sensor.h"
 
-// For testing only
+#include <QTextStream>
+#include <QStringList>
 #include <QLabel>
 #include <QFrame>
+#include <QFile>
+#include <QHash>
+
+// For testing only
 #include <QDebug>
 #include<iostream>
 using std::cout;
 using std::endl;
 
-// TODO: implement
 GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
     QWidget(), root(parent), ser(ser) {
     
@@ -20,17 +23,23 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
     bottom_layout->setContentsMargins(5, 5, 5, 5);
     bottom_layout->setSpacing(10);
 
-    // TODO: Delete, implement
-    QLabel* tmp_label = new QLabel("<Put elements here>");
-    bottom_layout->addWidget(tmp_label, 0, 0);
+    QHash<QString, Sensor*> sensors;
+    QFile file(root->get_configuration()->filePath("sensors.cfg"));
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
 
-    Sensor* test_P1 = new Sensor("P1", "Upstream Pressure", "psi");
-    Sensor* test_P2 = new Sensor("P2", "Downstream Pressure", "psi");
-    Sensor* test_mfr = new Sensor("mfr", "Mass Flow Rate", "kg/s");
+        int i = 0;
+        while (!in.atEnd()) {
+            QStringList info = in.readLine().split(',');
+            sensors[info.at(0)] = new Sensor(info.at(0), info.at(1), info.at(2));
+            bottom_layout->addWidget(sensors[info.at(0)], i, 0);
+            ++i;
+        }
 
-    bottom_layout->addWidget(test_P1, 1, 0);
-    bottom_layout->addWidget(test_P2, 2, 0);
-    bottom_layout->addWidget(test_mfr, 3, 0);
+    } else {
+        cout << "Cannot open file" << endl;
+    }
+
 
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
