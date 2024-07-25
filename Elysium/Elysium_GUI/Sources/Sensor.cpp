@@ -31,6 +31,10 @@ QString Sensor::get_name() {
     return name;
 }
 
+QString Sensor::get_data() {
+    return this->data_label->text();
+}
+
 // Setters
 void Sensor::set_ID(QString ID) {
     this->ID = ID;
@@ -59,4 +63,8 @@ void Sensor::create_label() {
         label.append(" ):");
     }
     new Standard_Label(label, layout, 0);
+}
+
+void Sensor::update_data(const QString& data) {
+    this->data_label->setText(data);
 }

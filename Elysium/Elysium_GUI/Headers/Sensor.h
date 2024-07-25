@@ -17,6 +17,9 @@ public:
     QString get_name();
     void set_ID(QString ID);
     void set_name(QString name);
+
+    QString get_data();
+    void update_data(const QString& data);
 private:
     QString ID;
     QString name;

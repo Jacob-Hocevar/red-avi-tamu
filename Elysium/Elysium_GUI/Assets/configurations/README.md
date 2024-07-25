@@ -10,7 +10,10 @@ The first arguments identify the object and provide the parameters required for 
 The order matters, as the elements are added to the GUI from the top down, starting at the beginning of the file.
 
 ### For `sensors.cfg` the arguments are given in the following order:
-`ID,name,unit`
+`ID,name,unit`$\newline$
+`group,type`
+
+The first line is self explanatory; `group` indicates that the sensor should be placed in the GUI in a seperated area for all sensors in that group, titled with `group`. The ordering is still first is top, and the same applies to the groups (first group top left, then top right, the second row left, second row right, etc.). If it is left blank (i.e., the line line starts with a `,`), then it is grouped but without a title. The `type` indicates if the sensor is a directly measured quanitity (`measured`), or derived from the others (`derived`). Additional `derived` quantities will require modifying GUI_DAQ_Window(.h/.cpp) to handle their calculations.
 
 ### For `valves.cfg` the arguments are given in the following order:
 `class,ID,name,*args`

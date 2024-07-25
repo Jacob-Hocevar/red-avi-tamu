@@ -52,5 +52,5 @@ void Virtual_Teensy::write_data() {
     cout << "Write:\t" << data.toStdString() << "\\r\\n" << endl;
 
     data.append("\r\n");
-    //this->ser->write(data); 
+    this->ser->write(data.toUtf8()); 
 }

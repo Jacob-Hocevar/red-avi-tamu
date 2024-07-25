@@ -3,7 +3,6 @@
 #include "Sensor.h"
 
 #include <QTextStream>
-#include <QStringList>
 #include <QLabel>
 #include <QFrame>
 #include <QFile>
@@ -16,23 +15,34 @@ using std::cout;
 using std::endl;
 
 GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
-    QWidget(), root(parent), ser(ser) {
+    QWidget(), root(parent), ser(ser), sensors(), derived_IDs() {
     
     // Layout for the buttons and labels
     QGridLayout* bottom_layout = new QGridLayout();
     bottom_layout->setContentsMargins(5, 5, 5, 5);
     bottom_layout->setSpacing(10);
 
-    QHash<QString, Sensor*> sensors;
+    // Construct a hashmap of the sensors from the configuration file,
+    // so that they can be dynamically generated and accessed
     QFile file(root->get_configuration()->filePath("sensors.cfg"));
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);
 
         int i = 0;
         while (!in.atEnd()) {
+            // Read the first line which contains Sensor initialization info
             QStringList info = in.readLine().split(',');
-            sensors[info.at(0)] = new Sensor(info.at(0), info.at(1), info.at(2));
-            bottom_layout->addWidget(sensors[info.at(0)], i, 0);
+            QString ID = info.at(0);
+            this->sensors[ID] = new Sensor(ID, info.at(1), info.at(2));
+
+            // Read the second line which contains placement and type info
+            // TODO: Implement groups
+            info = in.readLine().split(',');
+            bottom_layout->addWidget(this->sensors[ID], i, 0);
+            
+            if ("derived" == info.at(1)) {
+                this->derived_IDs.append(ID);
+            }
             ++i;
         }
 
@@ -40,23 +50,62 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
         cout << "Cannot open file" << endl;
     }
 
-
+    // Build frame and title for the Sensor section
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
     Frame_with_Title* layout = new Frame_with_Title("  Sensor Information", bottom_widget);
 
+    // Attach to the main window
     this->setLayout(layout);
     this->root->add_to_main_window(this, 3, 0);
+
+    // Connect the serial connection to the private slot so that it automatically updates the sensors
+    QObject::connect(this->ser, SIGNAL(readyRead()), this, SLOT(update_sensors()));
 }
 
-/*
-    Public functions
-*/
 
-void GUI_DAQ_Window::start() {
+void GUI_DAQ_Window::update_sensors() {
+    // Text streams are far easier to handle than the raw data stream (auto converts to QString, nicer readLine())
+    QTextStream in(this->ser->readAll());
+    while (!in.atEnd()) {
+        QStringList info = in.readLine().split(',');
 
+        // Examine each sensor separately
+        for (int i = 0; i < info.size(); ++i) {
+            // Isolate key, value pairs
+            QStringList cur_info = info.at(i).split(':');
+
+            if (cur_info.size() < 2) {
+                cout << "Not enough data: " << info.at(i).toStdString() << endl;
+                continue;
+            } if (!sensors.contains(cur_info.at(0))) {
+                cout << "No sensor with ID: " << cur_info.at(0).toStdString() << endl;
+                continue;
+            }
+
+            // Update sensors
+            sensors[cur_info.at(0)]->update_data(cur_info.at(1));
+        }
+    }
+
+    for (int i = 0; i < this->derived_IDs.size(); ++i) {
+        this->update_derived(this->derived_IDs.at(i));
+    }
 }
 
-/*
-    Private functions
-*/
+void GUI_DAQ_Window::update_derived(const QString& ID) {
+    double new_data;
+    if ("mfr" == ID) {
+        // TODO: Implement with correct equation and DAQ data stores
+        double P1 = this->sensors["P1"]->get_data().toDouble();
+        double P2 = 20;
+        double new_mfr = (P2 - P1) * 1.0234;
+        new_data = new_mfr;
+    } else if ("T_total" == ID) {
+        new_data = -1.0;
+    } else {
+        cout << "No Known Calculation for Derived Quantity: " << ID.toStdString() << endl;
+        return;
+    }
+    sensors[ID]->update_data(QString::number(new_data));
+}

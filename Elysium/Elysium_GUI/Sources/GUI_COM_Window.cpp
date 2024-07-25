@@ -92,7 +92,6 @@ void GUI_COM_Window::update_config() {
     } if (this->DAQ) {
         delete this->DAQ;
         this->DAQ = new GUI_DAQ_Window(this->root, this->ser);
-        this->DAQ->start();
     }
 }
 
@@ -163,8 +162,6 @@ void GUI_COM_Window::connect_to_serial() {
         this->CTRL = new GUI_CTRL_Window(this->root, this->ser);
         this->DAQ = new GUI_DAQ_Window(this->root, this->ser);
         this->root->manual_resize(320, 450);
-
-        this->DAQ->start();
         return;
     }
 
@@ -199,6 +196,7 @@ void GUI_COM_Window::serial_open() {
         try {
             if (this->ser->isOpen()) {
                 cout << "Already Open" << endl;
+                this->ser->flush();
                 this->is_connected = true;
                 return;
             } else {
@@ -219,6 +217,7 @@ void GUI_COM_Window::serial_open() {
 
         this->ser->open(QSerialPort::ReadWrite);
         if (this->ser->isOpen()) {
+            this->ser->flush();
             this->is_connected = true;
         } else {
             return;
