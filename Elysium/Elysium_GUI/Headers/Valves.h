@@ -56,11 +56,11 @@ class LA_Ball_Valve : public Valve {
 public:
     // Constructors
     LA_Ball_Valve();
-    LA_Ball_Valve(QSerialPort* ser, QString ID, QString name, int state, bool is_closed);
+    LA_Ball_Valve(QSerialPort* ser, QString ID, QString name, int state, bool is_open);
 
     // Getter and setter for derived class variables
     bool get_is_open();
-    void set_is_open(bool is_closed);
+    void set_is_open(bool is_open);
 private:
     // Note that is_open is distinct from state.
     // state is the state that the GUI has told the valve to be in
