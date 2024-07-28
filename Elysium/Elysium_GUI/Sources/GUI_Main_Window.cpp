@@ -38,12 +38,14 @@ GUI_Main_Window::GUI_Main_Window():
         cout << "Could not open main.cfg" << endl;
     }
 
+    // Load the theme from the file
+    this->update_theme();
+
     // TODO: Two versions of the logo for light/dark mode.
     // RED Logo:
     this->logo->setPixmap(QPixmap("Assets/RED_logo.png"));
     this->logo->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     this->logo->setMaximumHeight(30);
-    this->set_color(logo, Qt::red);
     this->layout->addWidget(this->logo, 0, 0);
 
     // Create the COM Window
@@ -60,10 +62,6 @@ GUI_Main_Window::GUI_Main_Window():
     Public functions
 */
 
-QFile* GUI_Main_Window::get_theme() {
-    return this->theme;
-}
-
 QDir* GUI_Main_Window::get_configuration() {
     return this->configuration;
 }
@@ -76,18 +74,13 @@ void GUI_Main_Window::remove_from_main_window(QWidget* widget) {
     this->layout->removeWidget(widget);
 }
 
-void GUI_Main_Window::set_color(QWidget* widget, const QColor& color) {
-    QPalette palette = QPalette();
-    palette.setColor(QPalette::Window, color);
-
-    widget->setAutoFillBackground(true);
-    widget->setPalette(palette);
-}
-
 void GUI_Main_Window::manual_resize(int width, int height) {
+    // Prevents the window from moving, but doesn't actually resize it
+    this->setGeometry(this->x()+32, this->y()+32, width, height);
+
+    // Changes the size, but will move the window without the previous command
+    // Does not lock the window, for some reason
     this->setFixedSize(width, height);
-    this->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-    this->setMinimumSize(0, 0);
 }
 
 /*
@@ -118,7 +111,6 @@ void GUI_Main_Window::closeEvent(QCloseEvent* event) {
 
 void GUI_Main_Window::contextMenuEvent(QContextMenuEvent* event) {
     // Create outer menu
-    cout << "\nContext Menu Event" << endl;
     QMenu menu(this);
 
     // Search the directory of themes for all files, sort alphabetically
@@ -190,16 +182,30 @@ void GUI_Main_Window::update_config() {
     com_menu->update_config();
 }
 
+void GUI_Main_Window::update_theme() {
+    // Load the theme from the file and set it to this window (and thus to all descendants)
+    if (this->theme->open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream theme_in(this->theme);
+        this->setStyleSheet(theme_in.readAll());
+        this->theme->close();
+    } else {
+        cout << "Could not open theme: " << this->theme->fileName().toStdString() << endl;
+    }
+}
+
 void GUI_Main_Window::set_theme(QAction* theme) {
     this->theme->setFileName("Assets/visual_themes/" + theme->text());
 
     // Auto update the main.cfg file to default to last selected theme
     this->update_config();
+
+    // Load the new theme
+    this->update_theme();
 }
 
 void GUI_Main_Window::set_configuration(QAction* configuration) {
     this->configuration->setPath("Assets/configurations/" + configuration->text());
 
-    // Auto update the main.cfg file to default to last selected theme
+    // Auto update the main.cfg file to default to last selected configuration
     this->update_config();
 }

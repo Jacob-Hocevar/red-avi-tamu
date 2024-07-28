@@ -2,6 +2,7 @@
 #define GUI_APP_H
 
 #include <QApplication>
+#include <QScreen>
 // This class is just a copy subclass of QApplication to reduce includes in main.cpp
 
 /*

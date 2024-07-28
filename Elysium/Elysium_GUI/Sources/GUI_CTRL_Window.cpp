@@ -45,7 +45,7 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
 
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
-    Frame_with_Title* layout = new Frame_with_Title("  Control Information", bottom_widget);
+    Frame_with_Title* layout = new Frame_with_Title("Control Information", bottom_widget);
 
     this->setLayout(layout);
     this->root->add_to_main_window(this, 2, 0);

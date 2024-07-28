@@ -3,7 +3,7 @@
 
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QColor>
+#include <QString>
 #include <QFrame>
 
 
@@ -12,9 +12,7 @@ class Frame_with_Title : public QVBoxLayout {
 public:
     // Inherits the constructors (default, paramterized, copy, and move) from the base class
     using QVBoxLayout::QVBoxLayout;
-    Frame_with_Title(const char* title, QFrame* bottom_widget);
-private:
-    void set_color(QWidget* widget, const QColor& color);
+    Frame_with_Title(const QString& title, QFrame* bottom_widget);
 };
 
 #endif

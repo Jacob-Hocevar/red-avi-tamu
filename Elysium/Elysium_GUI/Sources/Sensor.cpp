@@ -18,7 +18,7 @@ Sensor::Sensor(QString ID, QString name, QString unit) :
     this->create_label();
 
     // Create output for the sensor
-    this->data_label->setAlignment(Qt::AlignRight);
+    this->data_label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     layout->addWidget(this->data_label, 0, 1);
     }
 

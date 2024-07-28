@@ -16,6 +16,8 @@
 #include <QFrame>
 #include <Qt>
 
+#include <QListView>
+
 // For testing only
 #include <QDebug>
 #include<iostream>
@@ -40,12 +42,15 @@ GUI_COM_Window::GUI_COM_Window(GUI_Main_Window* parent):
     new Standard_Label("COM Port:", bottom_layout, 0);
     new Standard_Label("Baud Rate:", bottom_layout, 1);
 
-    QObject::connect(COM_selection, SIGNAL(currentTextChanged(const QString&)),
+    QObject::connect(this->COM_selection, SIGNAL(currentTextChanged(const QString&)),
             this, SLOT(update_port(const QString&)));
-    QObject::connect(baud_selection, SIGNAL(currentTextChanged(const QString&)),
+    QObject::connect(this->baud_selection, SIGNAL(currentTextChanged(const QString&)),
             this, SLOT(update_baud(const QString&)));
+    
+    // Add custom view options
+    this->COM_selection->setView(new QListView);
+    this->baud_selection->setView(new QListView);
 
-    //this->baud_selection.setMaxVisibleItems(16);
     bottom_layout->addWidget(this->COM_selection, 0, 1);
     bottom_layout->addWidget(this->baud_selection, 1, 1);
 
@@ -70,7 +75,7 @@ GUI_COM_Window::GUI_COM_Window(GUI_Main_Window* parent):
 
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
-    Frame_with_Title* layout = new Frame_with_Title("  Teensy Connection", bottom_widget);
+    Frame_with_Title* layout = new Frame_with_Title("Teensy Connection", bottom_widget);
 
     this->setLayout(layout);
     this->setFixedHeight(106);

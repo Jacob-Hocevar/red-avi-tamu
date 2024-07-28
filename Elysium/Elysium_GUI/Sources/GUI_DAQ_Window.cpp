@@ -53,7 +53,7 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
     // Build frame and title for the Sensor section
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
-    Frame_with_Title* layout = new Frame_with_Title("  Sensor Information", bottom_widget);
+    Frame_with_Title* layout = new Frame_with_Title("Sensor Information", bottom_widget);
 
     // Attach to the main window
     this->setLayout(layout);

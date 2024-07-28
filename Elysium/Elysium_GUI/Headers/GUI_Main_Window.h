@@ -25,11 +25,9 @@ public:
     using QMainWindow::QMainWindow;
     GUI_Main_Window();
 
-    QFile* get_theme();
     QDir* get_configuration();
     void add_to_main_window(QWidget* widget, int row, int col, int row_span=1, int col_span=1);
     void remove_from_main_window(QWidget* widget);
-    void set_color(QWidget* widget, const QColor& color);
     void manual_resize(int width, int height);
 
 private:
@@ -44,6 +42,8 @@ private:
     void closeEvent(QCloseEvent* event);
     void contextMenuEvent(QContextMenuEvent* event);
     void update_config();
+    void update_theme();
+
 private slots:
     void set_theme(QAction* theme);
     void set_configuration(QAction* configuration);
