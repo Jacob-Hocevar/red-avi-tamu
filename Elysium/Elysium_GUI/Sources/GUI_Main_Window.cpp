@@ -165,7 +165,7 @@ void GUI_Main_Window::contextMenuEvent(QContextMenuEvent* event) {
     menu.exec(event->globalPos());
 }
 
-void GUI_Main_Window::update_config() {
+void GUI_Main_Window::update_config(bool is_theme_change) {
     // Load the main config file to overwrite the configuration and theme
     QFile file("Assets/main.cfg");
     if (file.open(QIODevice::WriteOnly  | QIODevice::Text)) {
@@ -179,7 +179,9 @@ void GUI_Main_Window::update_config() {
     }
 
     // Inform the com_menu of the change, which will regenerate the bottom windows, if needed
-    com_menu->update_config();
+    if (!is_theme_change) {
+        com_menu->update_config();
+    }
 }
 
 void GUI_Main_Window::update_theme() {
@@ -197,7 +199,7 @@ void GUI_Main_Window::set_theme(QAction* theme) {
     this->theme->setFileName("Assets/visual_themes/" + theme->text());
 
     // Auto update the main.cfg file to default to last selected theme
-    this->update_config();
+    this->update_config(true);
 
     // Load the new theme
     this->update_theme();
@@ -207,5 +209,5 @@ void GUI_Main_Window::set_configuration(QAction* configuration) {
     this->configuration->setPath("Assets/configurations/" + configuration->text());
 
     // Auto update the main.cfg file to default to last selected configuration
-    this->update_config();
+    this->update_config(false);
 }

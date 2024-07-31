@@ -41,7 +41,7 @@ private:
 
     void closeEvent(QCloseEvent* event);
     void contextMenuEvent(QContextMenuEvent* event);
-    void update_config();
+    void update_config(bool is_theme_change);
     void update_theme();
 
 private slots:
