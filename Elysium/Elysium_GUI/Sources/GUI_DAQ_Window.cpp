@@ -165,3 +165,7 @@ void GUI_DAQ_Window::end_save() {
     this->start_save_btn->setEnabled(true);
     this->end_save_btn->setDisabled(true);
 }
+
+void GUI_DAQ_Window::save() {
+    // TODO: Implement
+}

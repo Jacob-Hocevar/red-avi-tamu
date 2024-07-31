@@ -34,6 +34,7 @@ private slots:
     void update_sensors();
     void start_save();
     void end_save();
+    void save();
 };
 
 

@@ -2,8 +2,8 @@
 #define Valves_H
 
 #include <QSerialPort>
-#include <QString>
 #include <QPushButton>
+#include <QString>
 #include <QWidget>
 
 class Valve : public QWidget {
@@ -25,6 +25,7 @@ public:
     void set_ser(QSerialPort* ser);
     void set_ID(QString ID);
     void set_name(QString name);
+
 private:
     QSerialPort* ser;
     QString ID;
@@ -33,10 +34,14 @@ private:
 
     QPushButton* open;
     QPushButton* close;
+
 protected slots:
     void set_state(int state);
     void set_open();
     void set_closed();
+
+signals:
+    void updated_state(const QString& command);
 };
 
 class Solenoid_Valve : public Valve {

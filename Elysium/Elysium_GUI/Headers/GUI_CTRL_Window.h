@@ -27,6 +27,7 @@ private:
 private slots:
     void start_save();
     void end_save();
+    void save(const QString& command);
 };
 
 

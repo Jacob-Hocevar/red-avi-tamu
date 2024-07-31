@@ -81,8 +81,9 @@ void Valve::set_state(int state) {
         return;
     }
 
-    // Only updates the state if the command was properly sent to the serial port
+    // Only updates the state/ emits signal if the command was properly sent to the serial port
     this->state = state;
+    emit updated_state(ID + ":" + QString::number(state));
 }
 
 void Valve::set_open() {

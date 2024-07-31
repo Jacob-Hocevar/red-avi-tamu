@@ -2,15 +2,16 @@
 #include "GUI_CTRL_Window.h"
 #include "Frame_with_Title.h"
 
-// For testing only
+#include <QDateTime>
 #include <QLabel>
 #include <QFrame>
+
+// For testing only
 #include <QDebug>
 #include<iostream>
 using std::cout;
 using std::endl;
 
-// TODO: implement
 GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     QWidget(), root(parent), ser(ser), valves(new QList<Valve*>), is_saving(false), data_file(nullptr),
     start_save_btn(new QPushButton("Start Save")), end_save_btn(new QPushButton("End Save")) {
@@ -39,8 +40,7 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
                 cout << "INVALID FORMAT in valves.cfg" << endl;
             }
 
-            // TODO: connect valve signals to a slot to handle the recording of all valve states
-            // and update/record operation states
+            QObject::connect(valve, SIGNAL(updated_state(const QString&)), this, SLOT(save(const QString&)));
 
             // Add valve to list and to layout;
             this->valves->append(valve);
@@ -55,6 +55,8 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     bottom_layout->addWidget(this->start_save_btn, 0, 10);
     bottom_layout->addWidget(this->end_save_btn, 1, 10);
 
+    // TODO: Implement Control State
+
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
     Frame_with_Title* layout = new Frame_with_Title("Control Information", bottom_widget);
@@ -62,14 +64,6 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     this->setLayout(layout);
     this->root->add_to_main_window(this, 2, 0);
 }
-
-/*
-    Public functions
-*/
-
-/*
-    Private functions
-*/
 
 void GUI_CTRL_Window::start_save() {
     // Create the "Data" directory, if needed
@@ -103,11 +97,17 @@ void GUI_CTRL_Window::start_save() {
 
     // Write the header for the .csv file
     QTextStream out(this->data_file);
-    out << "Global Time (ns from Epoch)";
+    out << "Global Time (ms since Epoch)";
     for (int i = 0; i < this->valves->size(); ++i) {
         out << ',' << this->valves->at(i)->get_ID() << " State (1=Open)";
     }
     out << ",Control State,Last Command\n";
+
+    // Need to flush here, or the first data line may appear above the header
+    out.flush();
+
+    // Write the first line (command is "Start Save")
+    this->save("Start Save");
 }
 
 void GUI_CTRL_Window::end_save() {
@@ -116,4 +116,22 @@ void GUI_CTRL_Window::end_save() {
     this->is_saving = false;
     this->start_save_btn->setEnabled(true);
     this->end_save_btn->setDisabled(true);
+}
+
+void GUI_CTRL_Window::save(const QString& command) {
+    // Do not attempt to save anything if not saving
+    if (!is_saving) {
+        return;
+    }
+
+    QTextStream out(this->data_file);
+    out << QDateTime::currentMSecsSinceEpoch();
+    for (int i = 0; i < this->valves->size(); ++i) {
+        out << ',' << this->valves->at(i)->get_state();
+    }
+    // TODO: Implement control state
+    out << ",," << command << '\n';
+
+    // Probably unnecessary (should flush as out exits its scope and is destroyed)
+    out.flush();
 }
