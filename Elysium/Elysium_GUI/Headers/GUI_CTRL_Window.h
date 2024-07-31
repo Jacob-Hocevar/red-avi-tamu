@@ -2,6 +2,7 @@
 #define GUI_CTRL_Window_H
 
 #include "GUI_Main_Window.h"
+#include "Valves.h"
 #include <QSerialPort>
 
 // TODO: implement
@@ -17,7 +18,15 @@ private:
     GUI_Main_Window* root;
     QSerialPort* ser;
 
+    QList<Valve*>* valves;
+    bool is_saving;
+    QFile* data_file;
+    QPushButton* start_save_btn;
+    QPushButton* end_save_btn;
+
 private slots:
+    void start_save();
+    void end_save();
 };
 
 

@@ -3,6 +3,11 @@
 #include <QGridLayout>
 #include <Qt>
 
+// Testing only
+#include <iostream>
+using std::cout;
+using std::endl;
+
 // Constructors
 Sensor::Sensor() : QWidget(), ID(""), name(""), unit(""), data_label(nullptr) {}
 
@@ -35,6 +40,14 @@ QString Sensor::get_data() {
     return this->data_label->text();
 }
 
+QString Sensor::get_full_name() {
+    QString full_name = name + " (" + ID + ")";
+    if ("" != unit) {
+        full_name.append(" [" + unit + "]");
+    }
+    return full_name;
+}
+
 // Setters
 void Sensor::set_ID(QString ID) {
     this->ID = ID;
@@ -52,16 +65,7 @@ void Sensor::create_label() {
     // the layout() command returns a generic QLayout*, but it will always be a QGridLayout*
     QGridLayout* layout = static_cast<QGridLayout*>(this->layout());
 
-    QString label = name;
-    label.append(" (");
-    label.append(ID);
-    if ("" != unit) {
-        label.append(") [");
-        label.append(unit);
-        label.append("]:");
-    } else {
-        label.append(" ):");
-    }
+    QString label = this->get_full_name() + ":";
     new Standard_Label(label, layout, 0);
 }
 
