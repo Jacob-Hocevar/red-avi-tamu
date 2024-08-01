@@ -101,10 +101,7 @@ void GUI_CTRL_Window::start_save() {
     for (int i = 0; i < this->valves->size(); ++i) {
         out << ',' << this->valves->at(i)->get_ID() << " State (1=Open)";
     }
-    out << ",Control State,Last Command\n";
-
-    // Need to flush here, or the first data line may appear above the header
-    out.flush();
+    out << ",Control State,Last Command" << endl;
 
     // Write the first line (command is "Start Save")
     this->save("Start Save");
@@ -131,8 +128,5 @@ void GUI_CTRL_Window::save(const QString& command) {
         out << ',' << this->valves->at(i)->get_state();
     }
     // TODO: Implement control state
-    out << ",," << command << '\n';
-
-    // Probably unnecessary (should flush as out exits its scope and is destroyed)
-    out.flush();
+    out << ",," << command << endl;
 }

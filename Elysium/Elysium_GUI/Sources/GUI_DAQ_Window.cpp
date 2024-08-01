@@ -166,10 +166,7 @@ void GUI_DAQ_Window::start_save() {
     for (int i = 0; i < keys.size(); ++i) {
         out << ',' << this->sensors[keys[i]]->get_full_name();
     }
-    out << '\n';
-
-    // Probably unnecessary (should flush as out exits its scope and is destroyed)
-    out.flush();
+    out << endl;
 }
 
 void GUI_DAQ_Window::end_save() {
@@ -199,8 +196,5 @@ void GUI_DAQ_Window::save() {
         // instead of reading from the sensor object (note that this is also locally stored, not a serial read)
         out << ',' << this->sensors[keys[i]]->get_data();
     }
-    out << '\n';
-
-    // Probably unnecessary (should flush as out exits its scope and is destroyed)
-    out.flush();
+    out << endl;
 }
