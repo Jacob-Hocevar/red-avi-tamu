@@ -3,6 +3,7 @@
 #include "Sensor.h"
 
 #include <QTextStream>
+#include <QDateTime>
 #include <QLabel>
 #include <QFrame>
 #include <QFile>
@@ -22,6 +23,12 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
     QGridLayout* bottom_layout = new QGridLayout();
     bottom_layout->setContentsMargins(5, 5, 5, 5);
     bottom_layout->setSpacing(10);
+
+    // TODO: Implement local storage of data
+    // Possibly a rolling window of 20 data points, take the average every 5
+    // Then store the last 200 averaged points for plotting
+    // OR: Do it based on time
+    // Likely, use another QHash, with key = ID and data type as lists of doubles
 
     // Construct a hashmap of the sensors from the configuration file,
     // so that they can be dynamically generated and accessed
@@ -99,6 +106,10 @@ void GUI_DAQ_Window::update_sensors() {
     for (int i = 0; i < this->derived_IDs.size(); ++i) {
         this->update_derived(this->derived_IDs.at(i));
     }
+
+    // Every time the sensors are updated, attempt to record the data
+    // The check for if saving is enabled is handled inside save()
+    this->save();
 }
 
 void GUI_DAQ_Window::update_derived(const QString& ID) {
@@ -156,6 +167,9 @@ void GUI_DAQ_Window::start_save() {
         out << ',' << this->sensors[keys[i]]->get_full_name();
     }
     out << '\n';
+
+    // Probably unnecessary (should flush as out exits its scope and is destroyed)
+    out.flush();
 }
 
 void GUI_DAQ_Window::end_save() {
@@ -167,5 +181,26 @@ void GUI_DAQ_Window::end_save() {
 }
 
 void GUI_DAQ_Window::save() {
-    // TODO: Implement
+    // Do not attempt to save anything if not saving
+    if (!is_saving) {
+        return;
+    }
+
+    // Handles outputs via a text stream for nicer syntax and control with QStrings
+    QTextStream out(this->data_file);
+    out << QDateTime::currentMSecsSinceEpoch();
+
+    // TODO: Local time
+    out << ',';
+
+    QStringList keys = this->sensors.keys();
+    for (int i = 0; i < keys.size(); ++i) {
+        // TODO: Use locally stored sensor data (possibly, the averaged values)
+        // instead of reading from the sensor object (note that this is also locally stored, not a serial read)
+        out << ',' << this->sensors[keys[i]]->get_data();
+    }
+    out << '\n';
+
+    // Probably unnecessary (should flush as out exits its scope and is destroyed)
+    out.flush();
 }

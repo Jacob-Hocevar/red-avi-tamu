@@ -124,6 +124,7 @@ void GUI_CTRL_Window::save(const QString& command) {
         return;
     }
 
+    // Handles outputs via a text stream for nicer syntax and control with QStrings
     QTextStream out(this->data_file);
     out << QDateTime::currentMSecsSinceEpoch();
     for (int i = 0; i < this->valves->size(); ++i) {
