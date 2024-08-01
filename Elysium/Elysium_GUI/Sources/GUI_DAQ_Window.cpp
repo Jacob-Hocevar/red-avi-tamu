@@ -1,5 +1,6 @@
 #include "GUI_DAQ_Window.h"
 #include "Frame_with_Title.h"
+#include "GUI_Graph_Window.h"
 #include "Sensor.h"
 
 #include <QTextStream>
@@ -17,7 +18,7 @@ using std::endl;
 
 GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
     QWidget(), root(parent), ser(ser), sensors(), derived_IDs(), is_saving(false), data_file(nullptr),
-    start_save_btn(new QPushButton("Start Save")), end_save_btn(new QPushButton("End Save")) {
+    start_save_btn(new QPushButton("Start Save")), end_save_btn(new QPushButton("End Save")), graphs(nullptr) {
     
     // Layout for the buttons and labels
     QGridLayout* bottom_layout = new QGridLayout();
@@ -76,8 +77,16 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
 
     // Connect the serial connection to the private slot so that it automatically updates the sensors
     QObject::connect(this->ser, SIGNAL(readyRead()), this, SLOT(update_sensors()));
+
+    // Create graphs module
+    graphs = new GUI_Graph_Window(this->root, this);
 }
 
+GUI_DAQ_Window::~GUI_DAQ_Window() {
+    if (this->graphs) {
+        delete graphs;
+    }
+}
 
 void GUI_DAQ_Window::update_sensors() {
     // Text streams are far easier to handle than the raw data stream (auto converts to QString, nicer readLine())

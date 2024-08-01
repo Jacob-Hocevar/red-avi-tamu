@@ -7,6 +7,9 @@
 #include <QStringList>
 #include <QPushButton>
 
+// Forward decleration to avoid circular dependencies
+class GUI_Graph_Window;
+
 // TODO: implement
 class GUI_DAQ_Window : public QWidget {
     Q_OBJECT
@@ -15,6 +18,7 @@ public:
     // The parameterized constructor and destructor will be overwritten in the source file
     using QWidget::QWidget;
     GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser);
+    ~GUI_DAQ_Window();
 
 private:
     GUI_Main_Window* root;
@@ -27,6 +31,8 @@ private:
     QFile* data_file;
     QPushButton* start_save_btn;
     QPushButton* end_save_btn;
+
+    GUI_Graph_Window* graphs;
 
     void update_derived(const QString& ID);
 
