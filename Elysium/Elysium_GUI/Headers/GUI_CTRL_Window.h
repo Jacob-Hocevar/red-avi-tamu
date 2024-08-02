@@ -4,6 +4,7 @@
 #include "GUI_Main_Window.h"
 #include "Valves.h"
 #include <QSerialPort>
+#include <QHash>
 
 // TODO: implement
 class GUI_CTRL_Window : public QWidget {
@@ -19,10 +20,15 @@ private:
     QSerialPort* ser;
 
     QList<Valve*>* valves;
+    QLabel* control_state;
+    QHash<QString, QHash<QString, int>*> control_states;
+
     bool is_saving;
     QFile* data_file;
     QPushButton* start_save_btn;
     QPushButton* end_save_btn;
+
+    void update_control_state();
 
 private slots:
     void start_save();

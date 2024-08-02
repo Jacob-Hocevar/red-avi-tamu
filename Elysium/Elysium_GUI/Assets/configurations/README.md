@@ -1,5 +1,5 @@
 # Configurations
-Each subdirectory represents a configuration of valves and sensors, with the corresponding P&ID. The name of the subdirectory indicates the configuration name, the file names within are required to be fixed so that the GUI can access them. I.e., there must files titled `sensors.cfg`, `valves.cfg`, and `P&ID.png`.
+Each subdirectory represents a configuration of valves and sensors, with the corresponding P&ID. The name of the subdirectory indicates the configuration name, the file names within are required to be fixed so that the GUI can access them. I.e., there must files titled `sensors.cfg`, `valves.cfg`, `control_states.cfg` and `P&ID.png`.
 
 ## Format of configuration files
 
@@ -16,8 +16,13 @@ The order matters, as the elements are added to the GUI from the top down, start
 The first line is self explanatory; `group` indicates that the sensor should be placed in the GUI in a seperated area for all sensors in that group, titled with `group`. The ordering is still first is top, and the same applies to the groups (first group top left, then top right, the second row left, second row right, etc.). If it is left blank (i.e., the line line starts with a `,`), then it is grouped but without a title. The `type` indicates if the sensor is a directly measured quanitity (`measured`), or derived from the others (`derived`). Additional `derived` quantities will require modifying GUI_DAQ_Window(.h/.cpp) to handle their calculations.
 
 ### For `valves.cfg` the arguments are given in the following order:
-`class,ID,name,*args`
+`class,ID,name,[args]*`
 
 The `class` has three values: `Valve`, `Solenoid`, and `LA_Ball`, indicating the `Valve`, `Solenoid_Valve`, and `LA_Ball_Valve` classes respectively.
 
-The `*args` depends on the class. For `Valve` it indicates the `state` parameter, for `Solenoid` it indicates the `normally_open` parameter, and for `LA_Ball` it will be two values indicating `state` then `is_open`.
+The `[args]*` depends on the class. For `Valve` it indicates the `state` parameter, for `Solenoid` it indicates the `normally_open` parameter, and for `LA_Ball` it will be two values indicating `state` then `is_open`.
+
+### For `control_states.cfg` the arguments are given in the following order:
+`name,[valve:state]*`
+
+Each control state is a name followed by a list of key:value pairs denoting which valves (by ID) are in the specified state. If a valve is not mentioned, then the control state is independent of that variable. The program will select the first state it checks which is satisfied (due to hashing, this is not the same order as the config file). Thus, a good config file will ensure that each combination of valve states corresponds to exactly one control state.

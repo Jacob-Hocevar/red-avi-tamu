@@ -1,6 +1,7 @@
 // TODO: add includes
 #include "GUI_CTRL_Window.h"
 #include "Frame_with_Title.h"
+#include "Standard_Label.h"
 
 #include <QDateTime>
 #include <QLabel>
@@ -13,18 +14,19 @@ using std::cout;
 using std::endl;
 
 GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
-    QWidget(), root(parent), ser(ser), valves(new QList<Valve*>), is_saving(false), data_file(nullptr),
-    start_save_btn(new QPushButton("Start Save")), end_save_btn(new QPushButton("End Save")) {
+    QWidget(), root(parent), ser(ser), valves(new QList<Valve*>), control_state(new QLabel("-")), control_states(),
+    is_saving(false), data_file(nullptr), start_save_btn(new QPushButton("Start Save")),
+    end_save_btn(new QPushButton("End Save")) {
     
     // Layout for the buttons and labels
     QGridLayout* bottom_layout = new QGridLayout();
     bottom_layout->setContentsMargins(5, 5, 5, 5);
     bottom_layout->setSpacing(10);
 
-    // Open the configuration file and add the listed valves
-    QFile file(root->get_configuration()->filePath("valves.cfg"));
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream in(&file);
+    // Open the valves configuration file and add the listed valves
+    QFile valve_file(root->get_configuration()->filePath("valves.cfg"));
+    if (valve_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&valve_file);
 
         int i = 0;
         while (!in.atEnd()) {
@@ -44,7 +46,7 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
 
             // Add valve to list and to layout;
             this->valves->append(valve);
-            bottom_layout->addWidget(valve, i++, 0);
+            bottom_layout->addWidget(valve, i++, 0, 1, 2);
         }
     }
 
@@ -55,14 +57,77 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     bottom_layout->addWidget(this->start_save_btn, 0, 10);
     bottom_layout->addWidget(this->end_save_btn, 1, 10);
 
-    // TODO: Implement Control State
+    // Open the control_states configuration file and create a hash map of the 
+    QFile control_state_file(root->get_configuration()->filePath("control_states.cfg"));
+    if (control_state_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&control_state_file);
 
+        while (!in.atEnd()) {
+            QStringList info = in.readLine().split(',');
+
+            // Create a hashmap for the control state
+            QHash<QString, int>* cur_state = new QHash<QString, int>;
+
+            // Loop through the listed valves and add them as key:value pairs to the control state
+            for (int i = 1; i < info.size(); ++i) {
+                QStringList valve = info[i].split(':');
+                cur_state->insert(valve[0], valve[1].toInt());
+            }
+
+            // Add this control state (with its name, the first element) to the hash of all control states
+            this->control_states.insert(info[0], cur_state);
+        }
+    }
+
+    // Create label for the control state
+    new Standard_Label("Control State:", bottom_layout, 100);
+    this->control_state->setAlignment(Qt::AlignCenter);
+    bottom_layout->addWidget(this->control_state, 100, 1);
+    this->update_control_state(); // Properly initialize its text
+
+    // Create dummy frame around this window
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
     Frame_with_Title* layout = new Frame_with_Title("Control Information", bottom_widget);
 
     this->setLayout(layout);
     this->root->add_to_main_window(this, 2, 0);
+}
+
+void GUI_CTRL_Window::update_control_state() {
+    // Loop through all control states until the first one which is satisfied
+    QStringList states = this->control_states.keys();
+    for (int i = 0; i < states.size(); ++i) {
+        QString name = states[i];
+        QHash<QString, int>* cur_state = this->control_states[name];
+
+        // Loop through all valves and check if they match the current control state
+        bool is_control_state = true;
+        for (int j = 0; j < this->valves->size(); ++j) {
+            Valve* valve = this->valves->at(j);
+            QString ID = valve->get_ID();
+
+            // If the control state does not mention the current valve, it is considered to pass
+            if (!cur_state->contains(ID)) {
+                continue;
+            }
+
+            // Check if the current valve has the same state
+            if (cur_state->value(ID) != valve->get_state()) {
+                is_control_state = false;
+                break;
+            }
+        }
+
+        // If the control state is correct, update the display and return
+        if (is_control_state) {
+            this->control_state->setText(name);
+            return;
+        }
+    }
+
+    // If no control state matches, do not change the display, but print to the console
+    cout << "No control state matches" << endl;
 }
 
 void GUI_CTRL_Window::start_save() {
@@ -116,6 +181,10 @@ void GUI_CTRL_Window::end_save() {
 }
 
 void GUI_CTRL_Window::save(const QString& command) {
+    // Since save activates every time a valve is updated, this can pass through the signal
+    // without needing another connection
+    this->update_control_state();
+
     // Do not attempt to save anything if not saving
     if (!is_saving) {
         return;
@@ -127,6 +196,6 @@ void GUI_CTRL_Window::save(const QString& command) {
     for (int i = 0; i < this->valves->size(); ++i) {
         out << ',' << this->valves->at(i)->get_state();
     }
-    // TODO: Implement control state
-    out << ",," << command << endl;
+    // outputs current control state (just updated) and last command
+    out << ',' << this->control_state->text() << ',' << command << endl;
 }
