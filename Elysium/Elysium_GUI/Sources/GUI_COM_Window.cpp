@@ -166,7 +166,7 @@ void GUI_COM_Window::connect_to_serial() {
         // Create CTRL and DAQ blocks, resize
         this->CTRL = new GUI_CTRL_Window(this->root, this->ser);
         this->DAQ = new GUI_DAQ_Window(this->root, this->ser);
-        this->root->manual_resize(646, 460);
+        this->root->manual_resize(646, 500);
         return;
     }
 

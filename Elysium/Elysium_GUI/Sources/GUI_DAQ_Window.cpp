@@ -63,8 +63,8 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
     this->end_save_btn->setDisabled(true);
     QObject::connect(this->start_save_btn, SIGNAL(clicked()), this, SLOT(start_save()));
     QObject::connect(this->end_save_btn, SIGNAL(clicked()), this, SLOT(end_save()));
-    bottom_layout->addWidget(this->start_save_btn, 0, 10);
-    bottom_layout->addWidget(this->end_save_btn, 1, 10);
+    bottom_layout->addWidget(this->start_save_btn, 0, 10, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+    bottom_layout->addWidget(this->end_save_btn, 1, 10, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
 
     // Build frame and title for the Sensor section
     QFrame* bottom_widget = new QFrame();

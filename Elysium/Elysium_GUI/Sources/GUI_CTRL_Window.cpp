@@ -3,6 +3,7 @@
 #include "Frame_with_Title.h"
 #include "Standard_Label.h"
 
+#include <QTabWidget>
 #include <QDateTime>
 #include <QLabel>
 #include <QFrame>
@@ -18,10 +19,15 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     is_saving(false), data_file(nullptr), start_save_btn(new QPushButton("Start Save")),
     end_save_btn(new QPushButton("End Save")) {
     
-    // Layout for the buttons and labels
-    QGridLayout* bottom_layout = new QGridLayout();
-    bottom_layout->setContentsMargins(5, 5, 5, 5);
-    bottom_layout->setSpacing(10);
+    // Layout for the individual valve control setup
+    QGridLayout* valve_layout = new QGridLayout();
+    valve_layout->setContentsMargins(5, 5, 5, 5);
+    valve_layout->setSpacing(10);
+
+    // Layout for the operation/control state setup
+    QGridLayout* operation_layout = new QGridLayout();
+    operation_layout->setContentsMargins(5, 5, 5, 5);
+    operation_layout->setSpacing(10);
 
     // Open the valves configuration file and add the listed valves
     QFile valve_file(root->get_configuration()->filePath("valves.cfg"));
@@ -46,7 +52,7 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
 
             // Add valve to list and to layout;
             this->valves->append(valve);
-            bottom_layout->addWidget(valve, i++, 0, 1, 2);
+            valve_layout->addWidget(valve, i++, 0, 1, 2);
         }
     }
 
@@ -54,8 +60,8 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     this->end_save_btn->setDisabled(true);
     QObject::connect(this->start_save_btn, SIGNAL(clicked()), this, SLOT(start_save()));
     QObject::connect(this->end_save_btn, SIGNAL(clicked()), this, SLOT(end_save()));
-    bottom_layout->addWidget(this->start_save_btn, 0, 10);
-    bottom_layout->addWidget(this->end_save_btn, 1, 10);
+    valve_layout->addWidget(this->start_save_btn, 0, 10, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+    valve_layout->addWidget(this->end_save_btn, 1, 10, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
 
     // Open the control_states configuration file and create a hash map of the 
     QFile control_state_file(root->get_configuration()->filePath("control_states.cfg"));
@@ -80,13 +86,27 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     }
 
     // Create label for the control state
-    new Standard_Label("Control State:", bottom_layout, 100);
+    new Standard_Label("Control State:", valve_layout, 100);
     this->control_state->setAlignment(Qt::AlignCenter);
-    bottom_layout->addWidget(this->control_state, 100, 1);
+    valve_layout->addWidget(this->control_state, 100, 1);
     this->update_control_state(); // Properly initialize its text
 
-    // Create dummy frame around this window
-    QFrame* bottom_widget = new QFrame();
+    // Create dummy widget for valve layout and operation layout
+    QWidget* valve_widget = new QWidget;
+    valve_widget->setLayout(valve_layout);
+    QWidget* operation_widget = new QWidget;
+    operation_widget->setLayout(operation_layout);
+
+    // Create tab widget, attach pages
+    QTabWidget* tab = new QTabWidget;
+    tab->addTab(valve_widget, "Valves");
+    tab->addTab(operation_widget, "Operations");
+
+    // Create a dummy layout to hold the tab widget
+    QGridLayout* bottom_layout = new QGridLayout;
+    bottom_layout->addWidget(tab, 0, 0, 1, 1, Qt::AlignCenter);
+    bottom_layout->setContentsMargins(2, 2, 2, 2);
+    QFrame* bottom_widget = new QFrame;
     bottom_widget->setLayout(bottom_layout);
     Frame_with_Title* layout = new Frame_with_Title("Control Information", bottom_widget);
 
