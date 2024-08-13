@@ -16,9 +16,13 @@
 using std::cout;
 using std::endl;
 
+// Number of milliseconds to notify the user that no new data has arrived
+const int CHECK_CONNECTION_INTERVAL = 100;
+
 GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
     QWidget(), root(parent), ser(ser), sensors(), derived_IDs(), is_saving(false), data_file(nullptr),
-    start_save_btn(new QPushButton("Start Save")), end_save_btn(new QPushButton("End Save")), graphs(nullptr) {
+    start_save_btn(new QPushButton("Start Save")), end_save_btn(new QPushButton("End Save")),
+    check_connection_timer(new QTimer(this)), graphs(nullptr) {
     
     // Layout for the buttons and labels
     QGridLayout* bottom_layout = new QGridLayout();
@@ -77,6 +81,10 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
 
     // Connect the serial connection to the private slot so that it automatically updates the sensors
     QObject::connect(this->ser, SIGNAL(readyRead()), this, SLOT(update_sensors()));
+
+    // If new data is not recieved within CHECK_CONNECTION_INTERVAL, notify the user
+    QObject::connect(this->check_connection_timer, SIGNAL(timeout()), this, SLOT(connection_failed()));
+    this->check_connection_timer->start(CHECK_CONNECTION_INTERVAL);
 
     // Create graphs module
     graphs = new GUI_Graph_Window(this->root, this);
@@ -187,6 +195,9 @@ void GUI_DAQ_Window::end_save() {
 }
 
 void GUI_DAQ_Window::save() {
+    // Reset the timer checking if it is recieving data
+    this->check_connection_timer->start();
+
     // Do not attempt to save anything if not saving
     if (!is_saving) {
         return;
@@ -206,4 +217,8 @@ void GUI_DAQ_Window::save() {
         out << ',' << this->sensors[keys[i]]->get_data();
     }
     out << endl;
+}
+
+void GUI_DAQ_Window::connection_failed() {
+    cout << "Connection failed" << endl;
 }

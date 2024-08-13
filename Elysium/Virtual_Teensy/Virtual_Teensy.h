@@ -12,7 +12,7 @@ using std::endl;
 const QString PORT = "/dev/Virtual_Teensy";
 const int BAUD = 115200;
 
-const int INTERVAL = 750;   // Time in ms between writes to serial signal.
+const int INTERVAL = 10;   // Time in ms between writes to serial signal.
 
 class Virtual_Teensy : public QObject {
     Q_OBJECT

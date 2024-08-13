@@ -6,11 +6,16 @@
 #include <QSerialPort>
 #include <QStringList>
 #include <QPushButton>
+#include <QTimer>
 
 // Forward decleration to avoid circular dependencies
 class GUI_Graph_Window;
 
-// TODO: implement
+// Number of milliseconds to notify the user that no new data has arrived
+// Not a definition to avoid multiply defined objects with all files that include this header
+// Defined in the .cpp file
+extern const int CHECK_CONNECTION_INTERVAL;
+
 class GUI_DAQ_Window : public QWidget {
     Q_OBJECT
 public:
@@ -31,6 +36,7 @@ private:
     QFile* data_file;
     QPushButton* start_save_btn;
     QPushButton* end_save_btn;
+    QTimer* check_connection_timer;
 
     GUI_Graph_Window* graphs;
 
@@ -41,6 +47,7 @@ private slots:
     void start_save();
     void end_save();
     void save();
+    void connection_failed();
 };
 
 

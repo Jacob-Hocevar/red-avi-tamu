@@ -73,6 +73,7 @@ GUI_COM_Window::GUI_COM_Window(GUI_Main_Window* parent):
     this->update_COM_options();
     this->update_baud_options();
 
+    // Create frame around section
     QFrame* bottom_widget = new QFrame();
     bottom_widget->setLayout(bottom_layout);
     Frame_with_Title* layout = new Frame_with_Title("Teensy Connection", bottom_widget);

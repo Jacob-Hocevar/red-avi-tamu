@@ -49,7 +49,9 @@ void Virtual_Teensy::write_data() {
     data.append(QString::number(9 + 2*QRandomGenerator::global()->generateDouble()));
     data.append(",P2:");
     data.append(QString::number(28 + 4*QRandomGenerator::global()->generateDouble()));
-    cout << "Write:\t" << data.toStdString() << "\\r\\n" << endl;
+    
+    // Uncomment if you need to confirm the output, otherwise it spams the terminal
+    // cout << "Write:\t" << data.toStdString() << "\\r\\n" << endl;
 
     data.append("\r\n");
     this->ser->write(data.toUtf8()); 
