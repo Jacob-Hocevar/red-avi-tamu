@@ -38,7 +38,7 @@ In my case, the command is `sudo apt install make` to install `make`.
 
 You will need the `g++` compiler and the access to the commands `make` and `qmake` (via `qtchooser` library), and `qtdeclarative5-dev`.
 
-Additionally, for the serial comunication, I installed `libqt5serialport5`, and for the live graphs, I installed `libqt5charts5-dev`.
+Additionally, for the serial comunication, I installed `libqt5serialport5-dev`, and for the live graphs, I installed `libqt5charts5-dev`.
 
 ## To connect to the Teensy via WSL
 1. Install `usbipd-win` via the .msi file for the latest release https://github.com/dorssel/usbipd-win/releases.
