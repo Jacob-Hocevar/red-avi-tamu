@@ -114,8 +114,18 @@ void GUI_COM_Window::update_COM_options() {
     // Isolate the names of the ports, add virtual and Null ("-") ports.
     QStringList port_names = {"-"};
     for (int i = 0; i < ports.size(); ++i) {
-        // TODO: print info and implement checks for if it corresponds to a Teensy
-        port_names.append(ports[i].portName());
+        QSerialPortInfo port = ports[i];
+        cout << "Port Name: " << port.portName().toStdString();
+        cout << ", Manufacturer: " << port.manufacturer().toStdString();
+        cout << ", Product ID: " << port.productIdentifier();
+        cout << ", S/N: " << port.serialNumber().toStdString() << endl;
+
+        // Only add to the list of available ports if it has a manufacturer listed
+        // Consider checking that it matches with the Teensy
+        // Check that the Teensy when attached to WSL displays this info
+        if ("" != port.manufacturer()) {
+            port_names.append(port.portName());
+        }
     }
     port_names.append("/dev/Test_GUI");
 
