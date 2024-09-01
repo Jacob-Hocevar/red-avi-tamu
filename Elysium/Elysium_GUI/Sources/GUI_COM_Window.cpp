@@ -118,12 +118,15 @@ void GUI_COM_Window::update_COM_options() {
         cout << "Port Name: " << port.portName().toStdString();
         cout << ", Manufacturer: " << port.manufacturer().toStdString();
         cout << ", Product ID: " << port.productIdentifier();
-        cout << ", S/N: " << port.serialNumber().toStdString() << endl;
+        cout << ", Vendor ID: " << port.vendorIdentifier();
+        cout << ", System Location: " << port.systemLocation().toStdString();
+        cout << ", S/N: " << port.serialNumber().toStdString();
+        cout << ", Description: " << port.description().toStdString() << endl;
 
-        // Only add to the list of available ports if it has a manufacturer listed
-        // Consider checking that it matches with the Teensy
-        // Check that the Teensy when attached to WSL displays this info
-        if ("" != port.manufacturer()) {
+        // The default build of QSerialPortInfo cannot get actual details
+        // However, the usbipd method seems to always map the COM port to /dev/ttyACMx for some int x
+        // Print all info, in case it works and will allow to check which device is new
+        if (port.portName().contains("ttyACM")) {
             port_names.append(port.portName());
         }
     }
