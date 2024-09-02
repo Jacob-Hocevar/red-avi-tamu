@@ -43,6 +43,13 @@ VT_Main_Window::VT_Main_Window():
     this->setCentralWidget(w);
 }
 
+void VT_Main_Window::closeEvent(QCloseEvent* event) {
+    // Trigger the shutdown of the virtual teensy
+    delete this->vt;
+
+    // Accept the event (close the program)
+    event->accept();
+}
 
 void VT_Main_Window::contextMenuEvent(QContextMenuEvent* event) {
     // Create outer menu

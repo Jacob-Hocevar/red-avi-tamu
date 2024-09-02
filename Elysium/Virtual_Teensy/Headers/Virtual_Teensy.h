@@ -1,6 +1,9 @@
 #ifndef Virtual_Teensy_H
 #define Virtual_Teensy_H
 
+#include "VT_Sensor.h"
+
+#include <QGridLayout>
 #include <QSerialPort>
 #include <QWidget>
 #include <QString>
@@ -8,6 +11,7 @@
 #include <QTimer>
 #include <QLabel>
 #include <QFile>
+#include <QList>
 
 #include <QDebug>
 #include <iostream>
@@ -24,8 +28,10 @@ public:
     Virtual_Teensy(int interval, QFile* config);
     ~Virtual_Teensy();
 private:
+    QGridLayout* layout;
     int interval;
     QFile* config;
+    QList<VT_Sensor*> sensors;
 
     QLabel* interval_label;
     QSlider* interval_slider;
@@ -35,7 +41,8 @@ private slots:
     void set_interval(int interval);
     void read_data();
     void write_data();
-    void add_sensor();
+    void add_sensor(QString ID="", QString min_data="", QString max_data="", QString min_error="",
+        QString max_error="", bool is_gaussian_error=false);
 };
 
 #endif

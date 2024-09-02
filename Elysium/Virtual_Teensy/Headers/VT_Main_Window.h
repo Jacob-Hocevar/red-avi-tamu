@@ -4,6 +4,7 @@
 #include "Virtual_Teensy.h"
 
 #include <QContextMenuEvent>
+#include <QCloseEvent>
 #include <QMainWindow>
 #include <QGridLayout>
 #include <QFile>
@@ -25,6 +26,7 @@ private:
     Virtual_Teensy* vt;
     QFile* configuration;
 
+    void closeEvent(QCloseEvent* event);
     void contextMenuEvent(QContextMenuEvent* event);
 private slots:
     void set_configuration(QAction* configuration);

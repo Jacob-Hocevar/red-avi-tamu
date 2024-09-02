@@ -5,6 +5,9 @@
 #include <QWidget>
 #include <QString>
 
+// No default Qt feature for Gaussian distributions
+#include <random>
+
 class VT_Sensor : public QWidget {
     Q_OBJECT
 public:
@@ -23,6 +26,7 @@ private:
     double cur_error;
 
     QCheckBox* is_gaussian_check;
+    std::default_random_engine generator;
     void set_cur_data(const QString& cur_data);
     void set_cur_error(const QString& cur_error);
 private slots:

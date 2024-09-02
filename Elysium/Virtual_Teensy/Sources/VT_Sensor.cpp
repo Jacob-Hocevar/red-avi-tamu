@@ -18,7 +18,7 @@ VT_Sensor::VT_Sensor(QString ID, QString min_data, QString max_data, QString min
     QString max_error, bool is_gaussian_error):
         QWidget(), ID(ID), min_data(min_data.toDouble()), max_data(max_data.toDouble()),
         cur_data(this->min_data), min_error(min_error.toDouble()), max_error(max_error.toDouble()),
-        cur_error(this->min_error), is_gaussian_check(new QCheckBox("Guassian\nError?")) {
+        cur_error(this->min_error), is_gaussian_check(new QCheckBox("Guassian\nError?")), generator() {
     // Setup layout
     QGridLayout* layout = new QGridLayout();
     layout->setSpacing(10);
@@ -105,19 +105,23 @@ VT_Sensor::VT_Sensor(QString ID, QString min_data, QString max_data, QString min
 
 QString VT_Sensor::get_reading() {
     double data = cur_data;
-    // TODO: Proper error randomization
     if (Qt::Checked == this->is_gaussian_check->checkState()) {
-        data += 0.1;
-    // Else corresponds to uniform distribution error
+        std::normal_distribution<double> distribution(0, this->cur_error);
+        data += distribution(this->generator);
     } else {
-        data += 1;
+        // Else corresponds to uniform distribution error
+        data += QRandomGenerator::global()->generateDouble() * 2 * this->cur_error - this->cur_error;
     }
     return ID + ":" + QString::number(data);
 }
 
 QString VT_Sensor::get_settings() {
     // Output all sensor settings in a csv string.
-    return "1";
+    QString settings =  "" == ID ? "NULL" : ID;
+    settings += ',' + QString::number(min_data) + ',' + QString::number(max_data) + ',';
+    settings += QString::number(min_error) + ',' + QString::number(max_error) + ',';
+    settings += QString::number(Qt::Checked == this->is_gaussian_check->checkState() ? true : false);
+    return settings;
 }
 
 
@@ -152,4 +156,3 @@ void VT_Sensor::update_error(const int& cur_position) {
     this->cur_error = cur_position / 1000.0 * (max_error - min_error) + min_error;
     emit new_error(QString::number(this->cur_error));
 }
-
