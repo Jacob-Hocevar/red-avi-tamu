@@ -38,10 +38,11 @@ private slots:
 
     void update_data(const int& cur_position);
     void update_error(const int& cur_position);
+    void remove_sensor_called();
 signals:
     void new_data(const QString& data);
     void new_error(const QString& data);
-    void remove_sensor();
+    void remove_sensor(VT_Sensor* sensor_ptr);
 };
 
 #endif

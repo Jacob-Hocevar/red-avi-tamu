@@ -87,6 +87,8 @@ void VT_Main_Window::contextMenuEvent(QContextMenuEvent* event) {
 }
 
 void VT_Main_Window::set_configuration(QAction* configuration) {
+    // Need to delete vt before changing the config file so that it overwrites the old, not the new
+    delete this->vt;
     this->configuration->setFileName("Assets/" + configuration->text());
 
     // Load the main config file to overwrite the configuration and theme
@@ -98,7 +100,6 @@ void VT_Main_Window::set_configuration(QAction* configuration) {
     } else {
         cout << "Could not open main.cfg" << endl;
     }
-    delete this->vt;
     this->vt = new Virtual_Teensy(50, this->configuration);
     this->layout->addWidget(this->vt, 0, 0);
 }

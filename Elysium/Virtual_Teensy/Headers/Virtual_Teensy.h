@@ -29,6 +29,7 @@ public:
     ~Virtual_Teensy();
 private:
     QGridLayout* layout;
+    int cur_row;
     int interval;
     QFile* config;
     QList<VT_Sensor*> sensors;
@@ -43,6 +44,7 @@ private slots:
     void write_data();
     void add_sensor(QString ID="", QString min_data="", QString max_data="", QString min_error="",
         QString max_error="", bool is_gaussian_error=false);
+    void remove_sensor(VT_Sensor* sensor_ptr);
 };
 
 #endif

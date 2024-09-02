@@ -14,7 +14,7 @@ const QString PORT = "/dev/Virtual_Teensy";
 const int BAUD = 115200;
 
 Virtual_Teensy::Virtual_Teensy(int interval, QFile* config):
-    QWidget(), layout(new QGridLayout()), interval(interval), config(config), sensors(),
+    QWidget(), layout(new QGridLayout()), cur_row(3), interval(interval), config(config), sensors(),
     interval_label(new QLabel()), interval_slider(new QSlider()), ser(new QSerialPort()), timer(new QTimer()) {
     // Layout to attach internal widgets to
     this->layout->setSpacing(10);
@@ -42,8 +42,17 @@ Virtual_Teensy::Virtual_Teensy(int interval, QFile* config):
     this->layout->addWidget(add_sensor_btn, 2, 0, 1, 2);
 
     // TODO: Add all sensors from the config file
-    this->add_sensor();
-    this->add_sensor("P3", QString::number(14), QString::number(800), QString::number(0), QString::number(1.1), true);
+    if (this->config->open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(this->config);
+        while (!in.atEnd()) {
+            QStringList info = in.readLine().split(',');
+            qDebug() << info;
+            this->add_sensor(info[0], info[1], info[2], info[3], info[4], info[5].toInt());
+        }
+        this->config->close();
+    } else {
+        cout << "Could not open " << this->config->fileName().toStdString() << endl;
+    }
 
     // Attach the layout to this object
     this->setLayout(this->layout);
@@ -76,7 +85,7 @@ Virtual_Teensy::~Virtual_Teensy() {
 
     // Save the current configuration
     if (this->config->open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream out(config);
+        QTextStream out(this->config);
         for (int i = 0; i < this->sensors.size(); ++i) {
             out << this->sensors[i]->get_settings() << endl;
         }
@@ -122,8 +131,14 @@ void Virtual_Teensy::add_sensor(QString ID, QString min_data, QString max_data, 
     QString max_error, bool is_gaussian_error) {
     // Create a new sensor with given (or default) settings
     VT_Sensor* sensor = new VT_Sensor(ID, min_data, max_data, min_error, max_error, is_gaussian_error);
+    QObject::connect(sensor, SIGNAL(remove_sensor(VT_Sensor*)), this, SLOT(remove_sensor(VT_Sensor*)));
 
     // Add to list and layout
     this->sensors.append(sensor);
-    this->layout->addWidget(sensor, 2 + this->sensors.size(), 0, 1, 2);
+    this->layout->addWidget(sensor, this->cur_row++, 0, 1, 2);
+}
+
+void Virtual_Teensy::remove_sensor(VT_Sensor* sensor_ptr) {
+    this->sensors.removeOne(sensor_ptr);
+    delete sensor_ptr;
 }

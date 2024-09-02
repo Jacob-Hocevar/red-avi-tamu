@@ -96,7 +96,7 @@ VT_Sensor::VT_Sensor(QString ID, QString min_data, QString max_data, QString min
     // Button to delete the sensor
     QPushButton* delete_btn = new QPushButton();
     delete_btn->setIcon(QPixmap("Assets/delete_icon.png"));
-    QObject::connect(delete_btn, SIGNAL(clicked()), this, SIGNAL(remove_sensor()));
+    QObject::connect(delete_btn, SIGNAL(clicked()), this, SLOT(remove_sensor_called()));
     layout->addWidget(delete_btn, 0, 6);
 
 
@@ -155,4 +155,8 @@ void VT_Sensor::update_data(const int& cur_position) {
 void VT_Sensor::update_error(const int& cur_position) {
     this->cur_error = cur_position / 1000.0 * (max_error - min_error) + min_error;
     emit new_error(QString::number(this->cur_error));
+}
+
+void VT_Sensor::remove_sensor_called() {
+    emit remove_sensor(this);
 }
