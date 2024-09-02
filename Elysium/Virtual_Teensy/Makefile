@@ -14,10 +14,10 @@ EQ            = =
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB
+DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -I. -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtSerialPort -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
+INCPATH       = -I. -IHeaders -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtSerialPort -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/qt5/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -40,7 +40,7 @@ DISTNAME      = Virtual_Teensy1.0.0
 DISTDIR = /mnt/c/Users/tenor/OneDrive/Current\ Classes/RED/Local\ RED\ Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/.tmp/Virtual_Teensy1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) /usr/lib/x86_64-linux-gnu/libQt5Gui.so /usr/lib/x86_64-linux-gnu/libQt5SerialPort.so /usr/lib/x86_64-linux-gnu/libQt5Core.so /usr/lib/x86_64-linux-gnu/libGL.so -lpthread   
+LIBS          = $(SUBLIBS) /usr/lib/x86_64-linux-gnu/libQt5Widgets.so /usr/lib/x86_64-linux-gnu/libQt5Gui.so /usr/lib/x86_64-linux-gnu/libQt5SerialPort.so /usr/lib/x86_64-linux-gnu/libQt5Core.so /usr/lib/x86_64-linux-gnu/libGL.so -lpthread   
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -52,11 +52,19 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = main.cpp \
-		Virtual_Teensy.cpp moc_Virtual_Teensy.cpp
+SOURCES       = Sources/main.cpp \
+		Sources/Virtual_Teensy.cpp \
+		Sources/VT_Main_Window.cpp \
+		Sources/VT_Sensor.cpp moc_Virtual_Teensy.cpp \
+		moc_VT_Main_Window.cpp \
+		moc_VT_Sensor.cpp
 OBJECTS       = main.o \
 		Virtual_Teensy.o \
-		moc_Virtual_Teensy.o
+		VT_Main_Window.o \
+		VT_Sensor.o \
+		moc_Virtual_Teensy.o \
+		moc_VT_Main_Window.o \
+		moc_VT_Sensor.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -68,6 +76,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/qconfig.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_accessibility_support_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_bootstrap_private.pri \
+		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_charts.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_concurrent.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_concurrent_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_core.pri \
@@ -129,6 +138,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/resources.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/moc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/unix/opengl.prf \
+		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/uic.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/unix/thread.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qmake_use.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/file_copies.prf \
@@ -136,8 +146,12 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		Virtual_Teensy.pro Virtual_Teensy.h main.cpp \
-		Virtual_Teensy.cpp
+		Virtual_Teensy.pro Headers/Virtual_Teensy.h \
+		Headers/VT_Main_Window.h \
+		Headers/VT_Sensor.h Sources/main.cpp \
+		Sources/Virtual_Teensy.cpp \
+		Sources/VT_Main_Window.cpp \
+		Sources/VT_Sensor.cpp
 QMAKE_TARGET  = Virtual_Teensy
 DESTDIR       = 
 TARGET        = Virtual_Teensy
@@ -160,6 +174,7 @@ Makefile: Virtual_Teensy.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qma
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/qconfig.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_accessibility_support_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_bootstrap_private.pri \
+		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_charts.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_concurrent.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_concurrent_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_core.pri \
@@ -221,6 +236,7 @@ Makefile: Virtual_Teensy.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qma
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/resources.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/moc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/unix/opengl.prf \
+		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/uic.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/unix/thread.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qmake_use.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/file_copies.prf \
@@ -241,6 +257,7 @@ Makefile: Virtual_Teensy.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qma
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/qconfig.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_accessibility_support_private.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_bootstrap_private.pri:
+/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_charts.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_concurrent.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_concurrent_private.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_core.pri:
@@ -302,6 +319,7 @@ Makefile: Virtual_Teensy.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qma
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/resources.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/moc.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/unix/opengl.prf:
+/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/uic.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/unix/thread.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qmake_use.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/file_copies.prf:
@@ -325,8 +343,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents Virtual_Teensy.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp Virtual_Teensy.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents Headers/Virtual_Teensy.h Headers/VT_Main_Window.h Headers/VT_Sensor.h $(DISTDIR)/
+	$(COPY_FILE) --parents Sources/main.cpp Sources/Virtual_Teensy.cpp Sources/VT_Main_Window.cpp Sources/VT_Sensor.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -358,18 +376,31 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 	g++ -pipe -O2 -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_Virtual_Teensy.cpp
+compiler_moc_header_make_all: moc_Virtual_Teensy.cpp moc_VT_Main_Window.cpp moc_VT_Sensor.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_Virtual_Teensy.cpp
-moc_Virtual_Teensy.cpp: Virtual_Teensy.h \
+	-$(DEL_FILE) moc_Virtual_Teensy.cpp moc_VT_Main_Window.cpp moc_VT_Sensor.cpp
+moc_Virtual_Teensy.cpp: Headers/Virtual_Teensy.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Virtual_Teensy.h -o moc_Virtual_Teensy.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Virtual_Teensy.h -o moc_Virtual_Teensy.cpp
+
+moc_VT_Main_Window.cpp: Headers/VT_Main_Window.h \
+		Headers/Virtual_Teensy.h \
+		moc_predefs.h \
+		/usr/lib/qt5/bin/moc
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/VT_Main_Window.h -o moc_VT_Main_Window.cpp
+
+moc_VT_Sensor.cpp: Headers/VT_Sensor.h \
+		moc_predefs.h \
+		/usr/lib/qt5/bin/moc
+	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/VT_Sensor.h -o moc_VT_Sensor.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
+compiler_uic_make_all:
+compiler_uic_clean:
 compiler_yacc_decl_make_all:
 compiler_yacc_decl_clean:
 compiler_yacc_impl_make_all:
@@ -380,14 +411,28 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 
 ####### Compile
 
-main.o: main.cpp Virtual_Teensy.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
+main.o: Sources/main.cpp Headers/VT_Main_Window.h \
+		Headers/Virtual_Teensy.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o Sources/main.cpp
 
-Virtual_Teensy.o: Virtual_Teensy.cpp Virtual_Teensy.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Virtual_Teensy.o Virtual_Teensy.cpp
+Virtual_Teensy.o: Sources/Virtual_Teensy.cpp Headers/Virtual_Teensy.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Virtual_Teensy.o Sources/Virtual_Teensy.cpp
+
+VT_Main_Window.o: Sources/VT_Main_Window.cpp Headers/VT_Main_Window.h \
+		Headers/Virtual_Teensy.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o VT_Main_Window.o Sources/VT_Main_Window.cpp
+
+VT_Sensor.o: Sources/VT_Sensor.cpp Headers/VT_Sensor.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o VT_Sensor.o Sources/VT_Sensor.cpp
 
 moc_Virtual_Teensy.o: moc_Virtual_Teensy.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_Virtual_Teensy.o moc_Virtual_Teensy.cpp
+
+moc_VT_Main_Window.o: moc_VT_Main_Window.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_VT_Main_Window.o moc_VT_Main_Window.cpp
+
+moc_VT_Sensor.o: moc_VT_Sensor.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_VT_Sensor.o moc_VT_Sensor.cpp
 
 ####### Install
 
