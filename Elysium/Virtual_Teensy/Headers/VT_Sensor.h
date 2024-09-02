@@ -9,9 +9,8 @@ class VT_Sensor : public QWidget {
     Q_OBJECT
 public:
     using QWidget::QWidget;
-    VT_Sensor();
-    VT_Sensor(QString ID, QString min_data, QString max_data, QString cur_data, QString min_error,
-        QString max_error, QString cur_error, bool is_guassian_error);
+    VT_Sensor(QString ID="", QString min_data="", QString max_data="", QString min_error="",
+        QString max_error="", bool is_gaussian_error=false);
     QString get_reading();
     QString get_settings();
 private:

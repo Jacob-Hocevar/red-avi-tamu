@@ -49,7 +49,7 @@ Virtual_Teensy::Virtual_Teensy(int interval, QFile* config):
     VT_Sensor* test_empty = new VT_Sensor();
     layout->addWidget(test_empty, 3, 0, 1, 2);
     VT_Sensor* test_configured = new VT_Sensor("P3", QString::number(14), QString::number(800),
-        QString::number(30), QString::number(0), QString::number(1.1), QString::number(0.4), true);
+        QString::number(0), QString::number(1.1), true);
     layout->addWidget(test_configured, 4, 0, 1, 2);
 
     // Attach the layout to this object

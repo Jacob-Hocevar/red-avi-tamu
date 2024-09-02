@@ -14,23 +14,26 @@
 using std::cout;
 using std::endl;
 
-VT_Sensor::VT_Sensor(): QWidget(), ID(""), min_data(0), max_data(0), cur_data(0), min_error(0),
-    max_error(0), cur_error(0), is_gaussian_check(new QCheckBox("Guassian\nError?")) {
+VT_Sensor::VT_Sensor(QString ID, QString min_data, QString max_data, QString min_error,
+    QString max_error, bool is_gaussian_error):
+        QWidget(), ID(ID), min_data(min_data.toDouble()), max_data(max_data.toDouble()),
+        cur_data(this->min_data), min_error(min_error.toDouble()), max_error(max_error.toDouble()),
+        cur_error(this->min_error), is_gaussian_check(new QCheckBox("Guassian\nError?")) {
     // Setup layout
     QGridLayout* layout = new QGridLayout();
     layout->setSpacing(10);
     layout->setContentsMargins(0, 10, 0, 10);
 
     // Editable zone for ID
-    QLineEdit* ID_line = new QLineEdit();
+    QLineEdit* ID_line = new QLineEdit(ID);
     ID_line->setPlaceholderText("ID");
     ID_line->setFixedWidth(50);
     QObject::connect(ID_line, SIGNAL(textEdited(const QString&)), this, SLOT(set_ID(const QString&)));
     layout->addWidget(ID_line, 0, 1);
 
     // Editable zones for min/max data ranges
-    QLineEdit* min_data_line = new QLineEdit();
-    QLineEdit* max_data_line = new QLineEdit();
+    QLineEdit* min_data_line = new QLineEdit(min_data);
+    QLineEdit* max_data_line = new QLineEdit(max_data);
     min_data_line->setPlaceholderText("min value");
     max_data_line->setPlaceholderText("max value");
     min_data_line->setFixedWidth(80);
@@ -41,8 +44,8 @@ VT_Sensor::VT_Sensor(): QWidget(), ID(""), min_data(0), max_data(0), cur_data(0)
     layout->addWidget(max_data_line, 1, 6);
 
     // Editable zones for min/max error ranges
-    QLineEdit* min_error_line = new QLineEdit();
-    QLineEdit* max_error_line = new QLineEdit();
+    QLineEdit* min_error_line = new QLineEdit(min_error);
+    QLineEdit* max_error_line = new QLineEdit(max_error);
     min_error_line->setPlaceholderText("min error");
     max_error_line->setPlaceholderText("max error");
     min_error_line->setFixedWidth(80);
@@ -73,8 +76,8 @@ VT_Sensor::VT_Sensor(): QWidget(), ID(""), min_data(0), max_data(0), cur_data(0)
     layout->addWidget(plus_minus, 0, 4);
 
     // Labels to show current value and error
-    QLabel* data_label = new QLabel("__________");
-    QLabel* error_label = new QLabel("__________");
+    QLabel* data_label = new QLabel(QString::number(this->cur_data));
+    QLabel* error_label = new QLabel(QString::number(this->cur_error));
     data_label->setAlignment(Qt::AlignCenter);
     error_label->setAlignment(Qt::AlignCenter);
     data_label->setFixedWidth(100);
@@ -87,7 +90,7 @@ VT_Sensor::VT_Sensor(): QWidget(), ID(""), min_data(0), max_data(0), cur_data(0)
     // Checkbox to enable Gaussian error
     this->is_gaussian_check->setLayoutDirection(Qt::RightToLeft);
     this->is_gaussian_check->setToolTip("Default (Unchecked) is Uniformly Distributed Error");
-    this->is_gaussian_check->setCheckState(Qt::Unchecked);
+    this->is_gaussian_check->setCheckState(is_gaussian_error ? Qt::Checked : Qt::Unchecked);
     layout->addWidget(this->is_gaussian_check, 0, 0);
 
     // Button to delete the sensor
@@ -98,25 +101,6 @@ VT_Sensor::VT_Sensor(): QWidget(), ID(""), min_data(0), max_data(0), cur_data(0)
 
 
     this->setLayout(layout);
-}
-
-
-// TODO: give all arguments a default value of "" or false and only have one constructor
-VT_Sensor::VT_Sensor(QString ID, QString min_data, QString max_data, QString cur_data, QString min_error,
-    QString max_error, QString cur_error, bool is_guassian_error): VT_Sensor() {
-    // Creates the default VT_Sensor, then assigns all the values.
-    this->set_ID(ID);
-    this->set_min_data(min_data);
-    this->set_max_data(max_data);
-    //this->set_cur_data(cur_data);
-    this->set_min_error(min_error);
-    this->set_max_error(max_error);
-    //this->set_cur_error(cur_error);
-    if (is_guassian_error) {
-        this->is_gaussian_check->setCheckState(Qt::Checked);
-    } else {
-        this->is_gaussian_check->setCheckState(Qt::Unchecked);
-    }
 }
 
 QString VT_Sensor::get_reading() {
