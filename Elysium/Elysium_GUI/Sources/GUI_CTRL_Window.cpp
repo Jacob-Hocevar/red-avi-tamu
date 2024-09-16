@@ -60,8 +60,14 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     this->end_save_btn->setDisabled(true);
     QObject::connect(this->start_save_btn, SIGNAL(clicked()), this, SLOT(start_save()));
     QObject::connect(this->end_save_btn, SIGNAL(clicked()), this, SLOT(end_save()));
-    valve_layout->addWidget(this->start_save_btn, 0, 10, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-    valve_layout->addWidget(this->end_save_btn, 1, 10, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+
+    // Make a group of the aligned save buttons
+    QGridLayout* save_btns_layout = new QGridLayout();
+    save_btns_layout->addWidget(this->start_save_btn, 0, 1);
+    save_btns_layout->addWidget(this->end_save_btn, 1, 1);
+    save_btns_layout->setContentsMargins(0, 0, 0, 0);
+    QWidget* save_btns = new QWidget();
+    save_btns->setLayout(save_btns_layout);
 
     // Open the control_states configuration file and create a hash map of the 
     QFile control_state_file(root->get_configuration()->filePath("control_states.cfg"));
@@ -102,10 +108,11 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     tab->addTab(valve_widget, "Valves");
     tab->addTab(operation_widget, "Operations");
 
-    // Create a dummy layout to hold the tab widget
+    // Create a dummy layout to hold the tab widget and save buttons
     QGridLayout* bottom_layout = new QGridLayout;
-    bottom_layout->addWidget(tab, 0, 0, 1, 1, Qt::AlignCenter);
-    bottom_layout->setContentsMargins(2, 2, 2, 2);
+    bottom_layout->addWidget(tab, 0, 0, -1, 1, Qt::AlignLeft | Qt::AlignTop);
+    bottom_layout->addWidget(save_btns, 0, 1, Qt::AlignRight | Qt::AlignTop);
+    bottom_layout->setContentsMargins(5, 5, 5, 5);
     QFrame* bottom_widget = new QFrame;
     bottom_widget->setLayout(bottom_layout);
     Frame_with_Title* layout = new Frame_with_Title("Control Information", bottom_widget);
