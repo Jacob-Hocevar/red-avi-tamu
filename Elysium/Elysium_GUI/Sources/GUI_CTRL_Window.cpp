@@ -75,19 +75,33 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
         QTextStream in(&control_state_file);
 
         while (!in.atEnd()) {
-            QStringList info = in.readLine().split(',');
+            // The first line gives name and placement
+            // The second line gives valve, ignitor, and personnel safety info
+            QStringList l1 = in.readLine().split(',');
+            QStringList l2 = in.readLine().split(',');
+
+            // Splits the name, row, and col sublists from the first line
+            QStringList names = l1[0].split('/');
+            QStringList rows = l1[1].split('/');
+            QStringList cols = l1[2].split('/');
 
             // Create a hashmap for the control state
             QHash<QString, int>* cur_state = new QHash<QString, int>;
 
             // Loop through the listed valves and add them as key:value pairs to the control state
-            for (int i = 1; i < info.size(); ++i) {
-                QStringList valve = info[i].split(':');
+            for (int i = 0; i < l2.size(); ++i) {
+                QStringList valve = l2[i].split(':');
                 cur_state->insert(valve[0], valve[1].toInt());
             }
 
-            // Add this control state (with its name, the first element) to the hash of all control states
-            this->control_states.insert(info[0], cur_state);
+            // Add this control state (with the combined name) to the hash of all control states
+            this->control_states.insert(l1[0], cur_state);
+
+            // Create a button for each name, add it to the specified spot, and connect it to the proper function
+            for (int i = 0; i < names.size(); ++i) {
+                QPushButton* btn = new QPushButton(names[i]);
+                operation_layout->addWidget(btn, rows[i].toInt(), cols[i].toInt());
+            }
         }
     }
 
@@ -146,6 +160,9 @@ void GUI_CTRL_Window::update_control_state() {
             }
         }
 
+        // Consider checking if any valve is mentioned in the control state, but not in the system
+        // Should not happen if control_states.cfg is setup properly...
+
         // If the control state is correct, update the display and return
         if (is_control_state) {
             this->control_state->setText(name);
@@ -153,7 +170,8 @@ void GUI_CTRL_Window::update_control_state() {
         }
     }
 
-    // If no control state matches, do not change the display, but print to the console
+    // If no control state matches, update the display and print to the console
+    this->control_state->setText("Unknown State");
     cout << "No control state matches" << endl;
 }
 

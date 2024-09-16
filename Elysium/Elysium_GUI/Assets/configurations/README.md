@@ -23,6 +23,11 @@ The `class` has three values: `Valve`, `Solenoid`, and `LA_Ball`, indicating the
 The `[args]*` depends on the class. For `Valve` it indicates the `state` parameter, for `Solenoid` it indicates the `normally_open` parameter, and for `LA_Ball` it will be two values indicating `state` then `is_open`.
 
 ### For `control_states.cfg` the arguments are given in the following order:
-`name,[valve:state]*`
+`name1/name2/name3,row1/row2/row3,col1/col2/col3`$\newline$
+`valve1:state1,valve2:state2,valve3:state3`
 
-Each control state is a name followed by a list of key:value pairs denoting which valves (by ID) are in the specified state. If a valve is not mentioned, then the control state is independent of that variable. The program will select the first state it checks which is satisfied (due to hashing, this is not the same order as the config file). Thus, a good config file will ensure that each combination of valve states corresponds to exactly one control state.
+Note that while this example lists three (3) of all values, the lists can be shortened or lengthed at will for arbitrary control.
+
+The first line indicates all names of the control state in a `/` separated list, followed by the rows and then columns that each name should be displayed on, similarly presented in a `/` separated list. This allows for multiple named states to have the same valve configurations and be listed in the correct places in the operations page.
+
+The second line indicates the states of all valves in a comma separated list of key:value pairs, denoting the valves (by ID) and the state (0=closed, 1=open). The ignition system is also treated as a valve with ID=IGNITE and 0=unpowered, 1=powered. Additionally, the requirement that there are no personnel near the engine is listed as a valve with ID=SAFE and 0=personnel can be nearby, 1=operator must confirm that no personnel are nearby.
