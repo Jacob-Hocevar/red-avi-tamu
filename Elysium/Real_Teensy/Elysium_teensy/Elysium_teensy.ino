@@ -23,8 +23,6 @@ long unsigned last_update_time = 0;
 const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
 
 
-
-
 /*
 VALVE SETUP
 */
@@ -254,10 +252,10 @@ void loop() {
     weight2 = scale2.get_units(1); // Get the weight in kilograms
 
     // send data to serial monitor 
-    Serial.print(sensor_update_last);                                  // print time reading
+    Serial.print("t:"); Serial.print(sensor_update_last);                                  // print time reading
     // Serial.print(","); Serial.print(pt1_analog);             // print analog pressure reading (comment out when using GUI)
     // Serial.print(","); Serial.print(pt2_analog);             // print analog pressure reading (comment out when using GUI)
-    Serial.print("P1:"); Serial.print(pt1_pressure);             // print pressure calculation in psi
+    Serial.print(",P1:"); Serial.print(pt1_pressure);             // print pressure calculation in psi
     Serial.print(",P2:"); Serial.print(pt2_pressure);              // print pressure calculation in psi
     Serial.print(",P3:"); Serial.print(pt2_pressure);              // print pressure calculation in psi
     Serial.print(",P4:"); Serial.print(pt2_pressure);              // print pressure calculation in psi
@@ -266,9 +264,9 @@ void loop() {
     Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());    // print thermocouple temperature in C
     Serial.print(",L1:"); Serial.print(weight1);                   // print load cell 1 in kg
     Serial.print(",L2:"); Serial.print(weight2);                   // print load cell 2 in kg
-    Serial.print(",x:"); Serial.print(accx);                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
-    Serial.print(",y:"); Serial.print(accy);                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
-    Serial.print(",z:"); Serial.print(accz);                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
+    Serial.print(",Ax:"); Serial.print(accx);                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
+    Serial.print(",Ay:"); Serial.print(accy);                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
+    Serial.print(",Az:"); Serial.print(accz);                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
     Serial.println();
     delay(10);
   }
