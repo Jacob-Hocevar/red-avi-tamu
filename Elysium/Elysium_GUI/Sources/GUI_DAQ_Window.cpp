@@ -20,9 +20,9 @@ using std::endl;
 const int CHECK_CONNECTION_INTERVAL = 100;
 
 GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
-    QWidget(), root(parent), ser(ser), sensors(), derived_IDs(), is_saving(false), data_file(nullptr),
-    start_save_btn(new QPushButton("Start Save")), end_save_btn(new QPushButton("End Save")),
-    check_connection_timer(new QTimer(this)), graphs(nullptr) {
+    QWidget(), root(parent), ser(ser), sensors(), derived_IDs(), data(nullptr), is_saving(false),
+    data_file(nullptr), start_save_btn(new QPushButton("Start Save")),
+    end_save_btn(new QPushButton("End Save")), check_connection_timer(new QTimer(this)), graphs(nullptr) {
     
     // Layout for the buttons and labels
     QGridLayout* sensor_layout = new QGridLayout();
@@ -33,7 +33,11 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
     // Possibly a rolling window of 20 data points, take the average every 5
     // Then store the last 200 averaged points for plotting
     // OR: Do it based on time
-    // Likely, use another QHash, with key = ID and data type as lists of doubles
+    // Likely, use another QHash, with key = ID+data type (e.g., P4_raw, P4, P4_plot)
+    // and data type as lists of doubles
+    // Possibly, two hashes, one that just stores the most recent, averaged value (same as displayed)
+    // and one that stores lists of raw for averagine and smoothed for plotting.
+    // Different types QHash<QString, double>* vs QHash<QString, QList<double>> (optional *)
 
     // Construct a hashmap of the sensors from the configuration file,
     // so that they can be dynamically generated and accessed
@@ -110,7 +114,30 @@ GUI_DAQ_Window::~GUI_DAQ_Window() {
     }
 }
 
+QHash<QString, double>* GUI_DAQ_Window::get_data() {
+    return this->data;
+}
+
+void GUI_DAQ_Window::update_derived(const QString& ID) {
+    double new_data;
+    if ("mfr" == ID) {
+        // TODO: Implement with correct equation and DAQ data stores
+        double P1 = this->sensors["P1"]->get_data().toDouble();
+        double P2 = 20;
+        double new_mfr = (P2 - P1) * 1.0234;
+        new_data = new_mfr;
+    } else if ("T_total" == ID) {
+        new_data = -1.0;
+    } else {
+        cout << "No Known Calculation for Derived Quantity: " << ID.toStdString() << endl;
+        return;
+    }
+    sensors[ID]->update_data(QString::number(new_data));
+}
+
 void GUI_DAQ_Window::update_sensors() {
+    // TODO: Use the local data solution
+    
     // Text streams are far easier to handle than the raw data stream (auto converts to QString, nicer readLine())
     QTextStream in(this->ser->readAll());
     while (!in.atEnd()) {
@@ -134,30 +161,17 @@ void GUI_DAQ_Window::update_sensors() {
         }
     }
 
+    // Loop through all derived quantities (in the order listed) and update them
     for (int i = 0; i < this->derived_IDs.size(); ++i) {
         this->update_derived(this->derived_IDs.at(i));
     }
 
+    // Inform the State Machine of new data
+    emit new_data();
+
     // Every time the sensors are updated, attempt to record the data
     // The check for if saving is enabled is handled inside save()
     this->save();
-}
-
-void GUI_DAQ_Window::update_derived(const QString& ID) {
-    double new_data;
-    if ("mfr" == ID) {
-        // TODO: Implement with correct equation and DAQ data stores
-        double P1 = this->sensors["P1"]->get_data().toDouble();
-        double P2 = 20;
-        double new_mfr = (P2 - P1) * 1.0234;
-        new_data = new_mfr;
-    } else if ("T_total" == ID) {
-        new_data = -1.0;
-    } else {
-        cout << "No Known Calculation for Derived Quantity: " << ID.toStdString() << endl;
-        return;
-    }
-    sensors[ID]->update_data(QString::number(new_data));
 }
 
 void GUI_DAQ_Window::start_save() {

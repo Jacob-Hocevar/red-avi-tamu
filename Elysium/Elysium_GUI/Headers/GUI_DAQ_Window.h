@@ -25,12 +25,15 @@ public:
     GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser);
     ~GUI_DAQ_Window();
 
+    QHash<QString, double>* get_data();
+
 private:
     GUI_Main_Window* root;
     QSerialPort* ser;
 
     QHash<QString, Sensor*> sensors;
     QStringList derived_IDs;
+    QHash<QString, double>* data;
 
     bool is_saving;
     QFile* data_file;
@@ -48,6 +51,9 @@ private slots:
     void end_save();
     void save();
     void connection_failed();
+
+signals:
+    void new_data();
 };
 
 

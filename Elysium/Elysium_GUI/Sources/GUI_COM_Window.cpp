@@ -31,7 +31,7 @@ GUI_COM_Window::GUI_COM_Window(GUI_Main_Window* parent):
     QWidget(), root(parent), current_port_name(""), current_baud_rate(""),
     enable_disconnect_confirmation(true), is_connected(false), COM_selection(new QComboBox()),
     baud_selection(new QComboBox()), refresh(new QPushButton), connect(new QPushButton()), ser(nullptr),
-    CTRL(nullptr), DAQ(nullptr) {
+    CTRL(nullptr), DAQ(nullptr), state_machine(nullptr) {
     
     // Layout for the buttons and labels
     QGridLayout* bottom_layout = new QGridLayout();
@@ -98,6 +98,17 @@ void GUI_COM_Window::update_config() {
     } if (this->DAQ) {
         delete this->DAQ;
         this->DAQ = new GUI_DAQ_Window(this->root, this->ser);
+    } if (this->state_machine) {
+        // Create state machine, connect to CTRL and DAQ
+        QString config_name = this->root->get_configuration()->dirName();
+        this->state_machine = new State_Machine(config_name, this->DAQ->get_data());
+        QObject::connect(this->state_machine, SIGNAL(new_state(QString)),
+                         this->CTRL, SLOT(sm_new_state(QString)));
+        QObject::connect(this->state_machine, SIGNAL(allowed_states(QStringList*)),
+                         this->CTRL, SLOT(sm_allowed_states(QStringList*)));
+        QObject::connect(this->CTRL, SIGNAL(people_safe_dist(bool)),
+                         this->state_machine, SLOT(set_people_safe_dist(bool)));
+        QObject::connect(this->DAQ, SIGNAL(new_data()), this->state_machine, SLOT(new_data()));
     }
 }
 
@@ -180,7 +191,21 @@ void GUI_COM_Window::connect_to_serial() {
         // Create CTRL and DAQ blocks, resize
         this->CTRL = new GUI_CTRL_Window(this->root, this->ser);
         this->DAQ = new GUI_DAQ_Window(this->root, this->ser);
+
+        // TODO: Fix autosizing, remove manual enforcement
         this->root->manual_resize(646, 500);
+
+        // Create state machine, connect to CTRL and DAQ
+        QString config_name = this->root->get_configuration()->dirName();
+        this->state_machine = new State_Machine(config_name, this->DAQ->get_data());
+        QObject::connect(this->state_machine, SIGNAL(new_state(QString)),
+                         this->CTRL, SLOT(sm_new_state(QString)));
+        QObject::connect(this->state_machine, SIGNAL(allowed_states(QStringList*)),
+                         this->CTRL, SLOT(sm_allowed_states(QStringList*)));
+        QObject::connect(this->CTRL, SIGNAL(people_safe_dist(bool)),
+                         this->state_machine, SLOT(set_people_safe_dist(bool)));
+        QObject::connect(this->DAQ, SIGNAL(new_data()), this->state_machine, SLOT(new_data()));
+        
         return;
     }
 
@@ -199,13 +224,16 @@ void GUI_COM_Window::connect_to_serial() {
         // DAQ requires no serial connection to close
         this->serial_close();
         delete this->DAQ;
+        delete this->state_machine;
 
         // Re-enable the connection configuration buttons
-        this->root->manual_resize(320, 150);
         this->COM_selection->setEnabled(true);
         this->baud_selection->setEnabled(true);
         this->refresh->setEnabled(true);
         this->connect->setText("Connect");
+
+        // TODO: Fix autosizing, remove manual enforcement
+        this->root->manual_resize(320, 150);
     }
 }
 

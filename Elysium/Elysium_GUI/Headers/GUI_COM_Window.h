@@ -4,6 +4,7 @@
 #include "Frame_with_Title.h"
 #include "GUI_CTRL_Window.h"
 #include "GUI_DAQ_Window.h"
+#include "State_Machine.h"
 
 #include <QWidget>
 #include <QPushButton>
@@ -47,6 +48,7 @@ private:
 
     GUI_CTRL_Window* CTRL;
     GUI_DAQ_Window* DAQ;
+    State_Machine* state_machine;
 
     void check_connection_button();
     void serial_open();

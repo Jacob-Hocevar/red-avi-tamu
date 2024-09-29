@@ -70,7 +70,7 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     save_btns->setLayout(save_btns_layout);
 
     // Open the control_states configuration file and create a hash map of the 
-    QFile control_state_file(root->get_configuration()->filePath("control_states.cfg"));
+    QFile control_state_file(this->root->get_configuration()->filePath("control_states.cfg"));
     if (control_state_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&control_state_file);
 
@@ -243,4 +243,16 @@ void GUI_CTRL_Window::save(const QString& command) {
     }
     // outputs current control state (just updated) and last command
     out << ',' << this->control_state->text() << ',' << command << endl;
+}
+
+void GUI_CTRL_Window::sm_new_state(QString new_state) {
+    // TODO: Add check if SM is enabled
+    // TODO: Implement
+    cout << new_state.toStdString() << endl;
+}
+
+void GUI_CTRL_Window::sm_allowed_states(QStringList* allowed_states) {
+    // TODO: Add check if SM is enabled
+    // TODO: Implement
+    cout << allowed_states->at(0).toStdString() << endl;
 }

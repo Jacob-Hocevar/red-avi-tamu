@@ -14,6 +14,7 @@ extern const int IGNITION_DELAY;
 extern const int UNDER_PRESSURE;
 
 // TODO: Consider using derived classes for each configuration. Make update_signals() a pure virtual function.
+// This class must derive from QObject to use signals/slots
 class State_Machine : public QObject {
     Q_OBJECT
 public:

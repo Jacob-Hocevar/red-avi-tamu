@@ -3,6 +3,7 @@
 
 #include "GUI_Main_Window.h"
 #include "Valves.h"
+#include <QStringList>
 #include <QSerialPort>
 #include <QHash>
 
@@ -34,6 +35,11 @@ private slots:
     void start_save();
     void end_save();
     void save(const QString& command);
+    void sm_new_state(QString);
+    void sm_allowed_states(QStringList*);
+
+signals:
+    void people_safe_dist(bool);
 };
 
 
