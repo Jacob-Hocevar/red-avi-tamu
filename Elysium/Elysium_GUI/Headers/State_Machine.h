@@ -1,17 +1,29 @@
 #ifndef State_Machine_H
 #define State_Machine_H
 
+#include <QStringList>
 #include <QString>
+#include <QHash>
 #include <QFile>
 
-class State_Machine {
+// Constant Declarations, not definitions to avoid multiply defined objects with all files that include this header
+// Defined in the .cpp file
+extern const int PURGE_DURATION;
+extern const int FIRE_DURATION;
+extern const int IGNITION_DELAY;
+extern const int UNDER_PRESSURE;
+
+// TODO: Consider using derived classes for each configuration. Make update_signals() a pure virtual function.
+class State_Machine : public QObject {
+    Q_OBJECT
 public:
     // Constructor
-    State_Machine(const QFile& configuration);
+    State_Machine(QString name, QHash<QString, double>* data);
 private:
-    QFile configuration;
     QString config_name;
     QString cur_state;
+    bool people_safe_dist;
+    QStringList* cur_allowed_states;
 
     // TODO: Determine best way to get access to relevant data.
     // One option is to modify the GUI_DAQ to have hash map on the heap,
@@ -20,13 +32,16 @@ private:
     // to update only the relevant data, though it is still stored twice.
     QHash<QString, double>* cur_data;
 
+    void hotfire_1(bool new_state);
 private slots:
     void set_state(QString state);
+    void set_people_safe_dist(bool safe);
+    void new_data();
+    void update_signals(bool new_state);
 
 signals:
     void new_state(QString state);
-    void allowed_states(QStringList allowed_states);
-    void prohibited_states(QStringList allowed_states);
+    void allowed_states(QStringList* allowed_states);
 };
 
 #endif
