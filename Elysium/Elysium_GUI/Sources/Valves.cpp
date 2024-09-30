@@ -72,7 +72,7 @@ void Valve::set_name(QString name) {
 }
 
 void Valve::set_state(int state) {
-    QString command = ID + ":" + QString::number(state) + "/r/n";
+    QString command = ID + ":" + QString::number(state) + "\r\n";
 
     try {
         this->ser->write(command.toUtf8());
@@ -81,20 +81,20 @@ void Valve::set_state(int state) {
         return;
     }
 
+    // Update the buttons
+    this->open->setDisabled(state);
+    this->close->setEnabled(state);
+
     // Only updates the state/ emits signal if the command was properly sent to the serial port
     this->state = state;
     emit updated_state(ID + ":" + QString::number(state));
 }
 
 void Valve::set_open() {
-    open->setDisabled(true);
-    close->setEnabled(true);
     set_state(1);
 }
 
 void Valve::set_closed() {
-    open->setEnabled(true);
-    close->setDisabled(true);
     set_state(0);
 }
 

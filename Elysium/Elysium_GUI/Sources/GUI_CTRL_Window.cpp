@@ -16,7 +16,7 @@ using std::endl;
 
 GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     QWidget(), root(parent), ser(ser), valves(new QList<Valve*>), control_state(new QLabel("-")), control_states(),
-    is_saving(false), data_file(nullptr), start_save_btn(new QPushButton("Start Save")),
+    operation_btns(), is_saving(false), data_file(nullptr), start_save_btn(new QPushButton("Start Save")),
     end_save_btn(new QPushButton("End Save")) {
     
     // Layout for the individual valve control setup
@@ -86,7 +86,7 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
             QStringList cols = l1[2].split('/');
 
             // Create a hashmap for the control state
-            QHash<QString, int>* cur_state = new QHash<QString, int>;
+            QHash<QString, int>* cur_state = new QHash<QString, int>();
 
             // Loop through the listed valves and add them as key:value pairs to the control state
             for (int i = 0; i < l2.size(); ++i) {
@@ -99,8 +99,12 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
 
             // Create a button for each name, add it to the specified spot, and connect it to the proper function
             for (int i = 0; i < names.size(); ++i) {
-                QPushButton* btn = new QPushButton(names[i]);
+                QString name = names[i];
+                QPushButton* btn = new QPushButton(name);
                 operation_layout->addWidget(btn, rows[i].toInt(), cols[i].toInt());
+                operation_btns.insert(name, btn);
+                QObject::connect(btn, &QPushButton::clicked,
+                                 this, [this, name]() {new_state(name);});
             }
         }
     }
@@ -231,7 +235,7 @@ void GUI_CTRL_Window::save(const QString& command) {
     this->update_control_state();
 
     // Do not attempt to save anything if not saving
-    if (!is_saving) {
+    if (!this->is_saving) {
         return;
     }
 
@@ -245,14 +249,53 @@ void GUI_CTRL_Window::save(const QString& command) {
     out << ',' << this->control_state->text() << ',' << command << endl;
 }
 
-void GUI_CTRL_Window::sm_new_state(QString new_state) {
+void GUI_CTRL_Window::new_state(QString new_state) {
     // TODO: Add check if SM is enabled
-    // TODO: Implement
-    cout << new_state.toStdString() << endl;
+    cout << "New Control State: " << new_state.toStdString() << endl;
+
+    // TODO: Consider enabling all other buttons if SM is disabled
+    // Disable the button that was just clicked
+    this->operation_btns[new_state]->setDisabled(true);
+
+    // TODO: visually indicate the currently active state
+    // Add property/object name/class and use QSS sheet
+
+    // Find the control states full name (some states have multiple /-separated names)
+    // Some names also contain other names ("Purge" is in "Purge Shutdown"), so exact match is needed
+    QStringList states = this->control_states.keys();
+    QString name = new_state;
+    for (int i = 0; i < states.size(); ++i) {
+        QString state = states[i];
+        if (state == name) {
+            break;
+        } if (state.contains(name) && state.split('/').contains(name)) {
+            name = state;
+            break;
+        }
+    }
+
+    // TODO: Consider modifying the way data is saved, as it currently considers this as 
+    //      a series of valve changes, rather than one state change
+    // Loop through all valves and set them to their assigned value in the control state.
+    const QHash<QString, int>* control_state = this->control_states.value(name);
+    for (int i = 0; i < this->valves->size(); ++i) {
+        Valve* valve = this->valves->value(i);
+        valve->set_state(control_state->value(valve->get_ID()));
+    }
+
+    // Notify the state machine of the new state
+    emit new_state_signal(new_state);
 }
 
 void GUI_CTRL_Window::sm_allowed_states(QStringList* allowed_states) {
     // TODO: Add check if SM is enabled
-    // TODO: Implement
-    cout << allowed_states->at(0).toStdString() << endl;
+    
+    // Loop through all buttons, set disabled if not in list, enabled if in the list
+    QStringList all_states = this->operation_btns.keys();
+    for (int i = 0; i < all_states.size(); ++i) {
+        QString state = all_states.value(i);
+        QPushButton* btn = this->operation_btns.value(state);
+        btn->setEnabled(allowed_states->contains(state));
+    }
+
 }

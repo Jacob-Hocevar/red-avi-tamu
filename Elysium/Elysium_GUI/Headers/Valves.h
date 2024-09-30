@@ -35,8 +35,10 @@ private:
     QPushButton* open;
     QPushButton* close;
 
-protected slots:
+public slots:
     void set_state(int state);
+
+protected slots:
     void set_open();
     void set_closed();
 

@@ -103,12 +103,17 @@ void GUI_COM_Window::update_config() {
         QString config_name = this->root->get_configuration()->dirName();
         this->state_machine = new State_Machine(config_name, this->DAQ->get_data());
         QObject::connect(this->state_machine, SIGNAL(new_state(QString)),
-                         this->CTRL, SLOT(sm_new_state(QString)));
+                         this->CTRL, SLOT(new_state(QString)));
         QObject::connect(this->state_machine, SIGNAL(allowed_states(QStringList*)),
                          this->CTRL, SLOT(sm_allowed_states(QStringList*)));
         QObject::connect(this->CTRL, SIGNAL(people_safe_dist(bool)),
                          this->state_machine, SLOT(set_people_safe_dist(bool)));
+        QObject::connect(this->CTRL, SIGNAL(new_state_signal(QString)),
+                         this->state_machine, SLOT(set_state(QString)));
         QObject::connect(this->DAQ, SIGNAL(new_data()), this->state_machine, SLOT(new_data()));
+
+        // Initialize the state machine (cannot do in constructor because it needs connections)
+        this->state_machine->start();
     }
 }
 
@@ -199,12 +204,17 @@ void GUI_COM_Window::connect_to_serial() {
         QString config_name = this->root->get_configuration()->dirName();
         this->state_machine = new State_Machine(config_name, this->DAQ->get_data());
         QObject::connect(this->state_machine, SIGNAL(new_state(QString)),
-                         this->CTRL, SLOT(sm_new_state(QString)));
+                         this->CTRL, SLOT(new_state(QString)));
         QObject::connect(this->state_machine, SIGNAL(allowed_states(QStringList*)),
                          this->CTRL, SLOT(sm_allowed_states(QStringList*)));
         QObject::connect(this->CTRL, SIGNAL(people_safe_dist(bool)),
                          this->state_machine, SLOT(set_people_safe_dist(bool)));
+        QObject::connect(this->CTRL, SIGNAL(new_state_signal(QString)),
+                         this->state_machine, SLOT(set_state(QString)));
         QObject::connect(this->DAQ, SIGNAL(new_data()), this->state_machine, SLOT(new_data()));
+
+        // Initialize the state machine (cannot do in constructor because it needs connections)
+        this->state_machine->start();
         
         return;
     }

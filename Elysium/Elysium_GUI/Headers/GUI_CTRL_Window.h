@@ -23,6 +23,7 @@ private:
     QList<Valve*>* valves;
     QLabel* control_state;
     QHash<QString, QHash<QString, int>*> control_states;
+    QHash<QString, QPushButton*> operation_btns;
 
     bool is_saving;
     QFile* data_file;
@@ -35,11 +36,12 @@ private slots:
     void start_save();
     void end_save();
     void save(const QString& command);
-    void sm_new_state(QString);
-    void sm_allowed_states(QStringList*);
+    void new_state(QString state);
+    void sm_allowed_states(QStringList* allowed_states);
 
 signals:
-    void people_safe_dist(bool);
+    void new_state_signal(QString state);
+    void people_safe_dist(bool people_safe_dist);
 };
 
 

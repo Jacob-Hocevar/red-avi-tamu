@@ -20,6 +20,7 @@ class State_Machine : public QObject {
 public:
     // Constructor
     State_Machine(QString name, QHash<QString, double>* data);
+    void start();
 private:
     QString config_name;
     QString cur_state;

@@ -102,10 +102,10 @@ void Virtual_Teensy::set_interval(int interval) {
 }
 
 void Virtual_Teensy::read_data() {
-    cout << "Read: ";
+    cout << "Read:";
     QTextStream in(this->ser->readAll());
     while (!in.atEnd()) {
-        cout << in.readLine().toStdString();
+        cout << '\t' << in.readLine().toStdString() << "\r\n";
     }
     cout << endl;
 }
@@ -121,7 +121,7 @@ void Virtual_Teensy::write_data() {
     }
     
     // Uncomment if you need to confirm the output, otherwise it spams the terminal
-    cout << "Write:\t" << data.toStdString() << "\\r\\n" << endl;
+    // cout << "Write:\t" << data.toStdString() << "\\r\\n" << endl;
 
     data += "\r\n";
     this->ser->write(data.toUtf8()); 

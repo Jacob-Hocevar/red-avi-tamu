@@ -22,16 +22,19 @@ const int UNDER_PRESSURE = 450;
 
 // Constructor
 State_Machine::State_Machine(QString name, QHash<QString, double>* data):
-    config_name(name), cur_allowed_states(new QStringList()), cur_data(data) {
-    // Set Initial State
+    config_name(name), cur_state("Fully Closed"), people_safe_dist(false),
+    cur_allowed_states(new QStringList()), cur_data(data) {
+    // If the system autonomously updates the state, it should update the change the same as a manual update
+    QObject::connect(this, SIGNAL(new_state(QString)), this, SLOT(set_state(QString)));
+}
+
+void State_Machine::start() {
+    // Set Initial State (cannot do in constructor because it needs external connections)
     if ("hotfire_1" == this->config_name) {
-        this->set_state("Fully Closed");
+        emit new_state("Fully Closed");
     } else {
         cout << "State Machine: Unknown configuration: " << this->config_name.toStdString() << endl;
     }
-
-    // If the system autonomously updates the state, it should update the change the same as a manual update
-    QObject::connect(this, SIGNAL(new_state(QString)), this, SLOT(set_state(QString)));
 }
 
 void State_Machine::hotfire_1(bool new_state) {
@@ -40,13 +43,13 @@ void State_Machine::hotfire_1(bool new_state) {
 
     // Consider each state and failure mode
     if        ("Fully Closed"           == this->cur_state) {
-        // The fill state is safe to open
-        new_allowed_states << "Filling";
+        // The fill state and Pre-pressurization are safe to open
+        new_allowed_states << "Filling" << "Pre-Pressurization";
+        new_allowed_states << "Shutdown Ph. 2"; // Non-emergency abort
 
         // Personnel must be at a safe distance before advancing
         if (this->people_safe_dist) {
             new_allowed_states << "Letting GN2 In";
-            new_allowed_states << "Shutdown Ph. 2"; // Non-emergency abort
         }
 
     } else if ("Letting GN2 In"         == this->cur_state) {
@@ -75,19 +78,22 @@ void State_Machine::hotfire_1(bool new_state) {
     
     } else if ("Filling"                == this->cur_state) {
         // Closing the venting/fill valve is safe
-        new_allowed_states << "Fully Closed" << "Pre-Pressurization";
+        new_allowed_states << "Fully Closed" << "Pre-Pressurization" << "Shutdown Ph. 2";
     
     } else if ("Pre-Pressurization"     == this->cur_state) {
         // This state is safe (identical to fully closed)
-        // Allowing a name change to fully closed may break the sequencing
+        new_allowed_states << "Fully Closed";
+        new_allowed_states << "Filling";        // Revert to previous state
+        new_allowed_states << "Shutdown Ph. 2"; // Non-emergency abort
 
         // Personnel must be at a safe distance before changing the state
         if (this->people_safe_dist) {
             new_allowed_states << "Pressurization"; // Advance
-            new_allowed_states << "Shutdown Ph. 2"; // Non-emergency abort
         }
     
     } else if ("Pressurization"         == this->cur_state) {
+        // TODO: Consider blocking Purge unless relevant pressure > UNDER_PRESSURE
+
         // Personnel must be at a safe distance before changing the state
         if (this->people_safe_dist) {
             new_allowed_states << "Pre-Pressurization"; // Return to previous state
@@ -107,10 +113,10 @@ void State_Machine::hotfire_1(bool new_state) {
         if (new_state) {
             QTimer* purge = new QTimer(this);
             purge->setSingleShot(true);
-            QObject::connect(purge, SIGNAL(timeout()), this, SLOT([=]() {this->emit new_state("Purge Shutdown");}));
+            QObject::connect(purge, &QTimer::timeout, this, [this]() {emit this->new_state("Purge Shutdown");});
             
             // If the state is changed, the timer should stop to prevent multiple state changes.
-            QObject::connect(this, SIGNAL(new_state()), purge, SLOT(stop()));
+            QObject::connect(this, SIGNAL(new_state(QString)), purge, SLOT(stop()));
             purge->start(PURGE_DURATION);
         }
 
@@ -127,14 +133,17 @@ void State_Machine::hotfire_1(bool new_state) {
         if (new_state) {
             QTimer* ignition = new QTimer(this);
             ignition->setSingleShot(true);
-            QObject::connect(ignition, SIGNAL(timeout()), this, SLOT([=]() {this->emit new_state("Fire");}));
+            // See GUI_CTRL_Window for lambda function example (near bottom of contructor)
+            QObject::connect(ignition, &QTimer::timeout, this, [this]() {emit this->new_state("Fire");});
 
             // If the state is changed, the timer should stop to prevent multiple state changes.
-            QObject::connect(this, SIGNAL(new_state()), ignition, SLOT(stop()));
+            QObject::connect(this, SIGNAL(new_state(QString)), ignition, SLOT(stop()));
             ignition->start(IGNITION_DELAY);
         }
     
     } else if ("Fire"                   == this->cur_state) {
+        // TODO: Consider skipping (straight to Shutdown Ph. 2) if relevant pressure < UNDER_PRESSURE
+
         // Terminal sequence (no returning to previous state)
         // This state change makes the system safer, so while there should be no one near the engine,
         // the button should never be disabled.
@@ -144,10 +153,10 @@ void State_Machine::hotfire_1(bool new_state) {
         if (new_state) {
             QTimer* fire = new QTimer(this);
             fire->setSingleShot(true);
-            QObject::connect(fire, SIGNAL(timeout()), this, SLOT([=]() {this->emit new_state("Shutdown Ph. 1");}));
+            QObject::connect(fire, &QTimer::timeout, this, [this]() {emit this->new_state("Shutdown Ph. 1");});
 
             // If the state is changed, the timer should stop to prevent multiple state changes.
-            QObject::connect(this, SIGNAL(new_state()), fire, SLOT(stop()));
+            QObject::connect(this, SIGNAL(new_state(QString)), fire, SLOT(stop()));
             fire->start(FIRE_DURATION);
         }
     
@@ -161,10 +170,10 @@ void State_Machine::hotfire_1(bool new_state) {
         if (new_state) {
             QTimer* purge = new QTimer(this);
             purge->setSingleShot(true);
-            QObject::connect(purge, SIGNAL(timeout()), this, SLOT([=]() {this->emit new_state("Shutdown Ph. 2");}));
+            QObject::connect(purge, &QTimer::timeout, this, [this]() {emit this->new_state("Shutdown Ph. 2");});
 
             // If the state is changed, the timer should stop to prevent multiple state changes.
-            QObject::connect(this, SIGNAL(new_state()), purge, SLOT(stop()));
+            QObject::connect(this, SIGNAL(new_state(QString)), purge, SLOT(stop()));
             purge->start(PURGE_DURATION);
         }
     
@@ -172,6 +181,7 @@ void State_Machine::hotfire_1(bool new_state) {
         // Shutdown sequence (no returning to previous state)
         if (this->people_safe_dist) {
             new_allowed_states << "Excess Discharge Ph. 1"; // Advance (continue safing procedure)
+            new_allowed_states << "Fully Closed";           // Return to start (if early abort)
         }
     
     } else if ("Excess Discharge Ph. 1" == this->cur_state) {
@@ -223,6 +233,10 @@ void State_Machine::new_data() {
     }
 
     // TODO: Consider Overpressure during Pressurization - Fire. (check PT resolution, FSYS).
+
+    // TODO: Figure out a filter/way of better checking P4.
+    // It is in the injector manifold, so when fire is called, it should be ambient (<<< UNDER_PRESSURE)
+    // Maybe check if it has been higher than UNDER_PRESSURE, then dropped below?
 
     // During the fire state, check if the fuel side has dropped in pressure below the cutoff.
     if ("Fire" == this->cur_state) {
