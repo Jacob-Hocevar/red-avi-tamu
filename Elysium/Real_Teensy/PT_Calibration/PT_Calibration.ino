@@ -13,7 +13,10 @@ VARIABLES & USER INPUT
 
 // time variables
 long unsigned sensor_update_last = 0;
-long unsigned sensor_update_interval = 100000;    // sensor update interval (microsec)     <-- USER INPUT
+long unsigned sensor_update_interval = 0;    // sensor update interval (microsec)     <-- USER INPUT
+
+long unsigned start_time = 0;
+long unsigned num_reads = 0;
 
 // BAUD rate 
 const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
@@ -46,6 +49,7 @@ SETUP Function
 */
 void setup() {
   Serial.begin(BAUD);           // initializes serial communication at set baud rate
+  start_time = micros();
 }
 
 /*
@@ -84,8 +88,14 @@ void loop() {
         Serial.print(",P6:"); Serial.print(pt6_analog);
     }
 
-    // Newline and delay
+    // Prints the sample rate for the current duration of the test
+    double seconds_elapsed = (sensor_update_last - start_time) / 1000000.0;
+    Serial.print(",SR:"); Serial.print(++num_reads / seconds_elapsed);
+    // Serial.print(",smp:"); Serial.print(num_reads);
+    // Serial.print(",tim:"); Serial.print(seconds_elapsed);
+
+    // Newline and delay (not sure the reason for the delay, currently commented out)
     Serial.println();
-    delay(10);
+    // delay(10);
   }
 }
