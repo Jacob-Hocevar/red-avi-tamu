@@ -5,6 +5,7 @@
 #include "Valves.h"
 #include <QStringList>
 #include <QSerialPort>
+#include <QCheckBox>
 #include <QHash>
 
 // TODO: implement
@@ -29,6 +30,7 @@ private:
     QFile* data_file;
     QPushButton* start_save_btn;
     QPushButton* end_save_btn;
+    QPushButton* abort_btn;
 
     void update_control_state();
 
@@ -38,10 +40,11 @@ private slots:
     void save(const QString& command);
     void new_state(QString state);
     void sm_allowed_states(QStringList* allowed_states);
+    void abort();
 
 signals:
     void new_state_signal(QString state);
-    void people_safe_dist(bool people_safe_dist);
+    void people_safe_dist(int people_safe_dist);
 };
 
 

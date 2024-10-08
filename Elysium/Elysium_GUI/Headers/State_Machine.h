@@ -34,12 +34,12 @@ private:
     // to update only the relevant data, though it is still stored twice.
     QHash<QString, double>* cur_data;
 
-    void hotfire_1(bool new_state);
+    void hotfire_1(bool new_state, bool abort);
 private slots:
     void set_state(QString state);
-    void set_people_safe_dist(bool safe);
+    void set_people_safe_dist(int safe);
     void new_data();
-    void update_signals(bool new_state);
+    void update_signals(bool new_state, bool abort=false);
 
 signals:
     void new_state(QString state);

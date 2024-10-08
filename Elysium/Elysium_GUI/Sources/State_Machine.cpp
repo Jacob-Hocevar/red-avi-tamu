@@ -37,9 +37,24 @@ void State_Machine::start() {
     }
 }
 
-void State_Machine::hotfire_1(bool new_state) {
+void State_Machine::hotfire_1(bool new_state, bool abort) {
     // Determine what states should be allowed, given the current state and safety
     QStringList new_allowed_states = {};
+
+    // Handle aborts first: 2 cases
+    if (abort) {
+        // If the main ball valves are open, do a purge
+        if ("Fire" == this->cur_state) {
+            this->cur_state = "Shutdown Ph. 1";
+        
+        // Otherwise, go straight to non-purge shutdown procedure
+        } else {
+            this->cur_state = "Shutdown Ph. 2";
+        }
+
+        // Notify the CTRL Window of the abort decision
+        emit this->new_state(this->cur_state);
+    }
 
     // Consider each state and failure mode
     if        ("Fully Closed"           == this->cur_state) {
@@ -217,12 +232,16 @@ void State_Machine::hotfire_1(bool new_state) {
 }
 
 void State_Machine::set_state(QString state) {
-    this->cur_state = state;
-    this->update_signals(true);
+    if ("ABORT" == state) {
+        this->update_signals(true, true);
+    } else {
+        this->cur_state = state;
+        this->update_signals(true, false);
+    }
 }
 
-void State_Machine::set_people_safe_dist(bool safe) {
-    this->people_safe_dist = safe;
+void State_Machine::set_people_safe_dist(int safe) {
+    this->people_safe_dist = Qt::Checked == safe;
     this->update_signals(false);
 }
 
@@ -239,6 +258,7 @@ void State_Machine::new_data() {
     // Maybe check if it has been higher than UNDER_PRESSURE, then dropped below?
 
     // During the fire state, check if the fuel side has dropped in pressure below the cutoff.
+    /*
     if ("Fire" == this->cur_state) {
         try {
             double p4 = this->cur_data->value("P4");
@@ -251,11 +271,12 @@ void State_Machine::new_data() {
             cout << "Could not access data with ID: P4" << endl;
         }
     }
+    */
 }
 
-void State_Machine::update_signals(bool new_state) {
+void State_Machine::update_signals(bool new_state, bool abort) {
     if ("hotfire_1" == this->config_name) {
-        this->hotfire_1(new_state);
+        this->hotfire_1(new_state, abort);
     } else {
         cout << "State Machine: Unknown configuration: " << this->config_name.toStdString() << endl;
     }

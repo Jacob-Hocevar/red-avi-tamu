@@ -106,8 +106,8 @@ void GUI_COM_Window::update_config() {
                          this->CTRL, SLOT(new_state(QString)));
         QObject::connect(this->state_machine, SIGNAL(allowed_states(QStringList*)),
                          this->CTRL, SLOT(sm_allowed_states(QStringList*)));
-        QObject::connect(this->CTRL, SIGNAL(people_safe_dist(bool)),
-                         this->state_machine, SLOT(set_people_safe_dist(bool)));
+        QObject::connect(this->CTRL, SIGNAL(people_safe_dist(int)),
+                         this->state_machine, SLOT(set_people_safe_dist(int)));
         QObject::connect(this->CTRL, SIGNAL(new_state_signal(QString)),
                          this->state_machine, SLOT(set_state(QString)));
         QObject::connect(this->DAQ, SIGNAL(new_data()), this->state_machine, SLOT(new_data()));
@@ -207,8 +207,8 @@ void GUI_COM_Window::connect_to_serial() {
                          this->CTRL, SLOT(new_state(QString)));
         QObject::connect(this->state_machine, SIGNAL(allowed_states(QStringList*)),
                          this->CTRL, SLOT(sm_allowed_states(QStringList*)));
-        QObject::connect(this->CTRL, SIGNAL(people_safe_dist(bool)),
-                         this->state_machine, SLOT(set_people_safe_dist(bool)));
+        QObject::connect(this->CTRL, SIGNAL(people_safe_dist(int)),
+                         this->state_machine, SLOT(set_people_safe_dist(int)));
         QObject::connect(this->CTRL, SIGNAL(new_state_signal(QString)),
                          this->state_machine, SLOT(set_state(QString)));
         QObject::connect(this->DAQ, SIGNAL(new_data()), this->state_machine, SLOT(new_data()));

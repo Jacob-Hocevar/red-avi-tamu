@@ -1,4 +1,3 @@
-// TODO: add includes
 #include "GUI_CTRL_Window.h"
 #include "Frame_with_Title.h"
 #include "Standard_Label.h"
@@ -7,6 +6,7 @@
 #include <QDateTime>
 #include <QLabel>
 #include <QFrame>
+#include <QStyle>
 
 // For testing only
 #include <QDebug>
@@ -17,7 +17,7 @@ using std::endl;
 GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     QWidget(), root(parent), ser(ser), valves(new QList<Valve*>), control_state(new QLabel("-")), control_states(),
     operation_btns(), is_saving(false), data_file(nullptr), start_save_btn(new QPushButton("Start Save")),
-    end_save_btn(new QPushButton("End Save")) {
+    end_save_btn(new QPushButton("End Save")), abort_btn(new QPushButton("ABORT")) {
     
     // Layout for the individual valve control setup
     QGridLayout* valve_layout = new QGridLayout();
@@ -63,11 +63,28 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
 
     // Make a group of the aligned save buttons
     QGridLayout* save_btns_layout = new QGridLayout();
-    save_btns_layout->addWidget(this->start_save_btn, 0, 1);
-    save_btns_layout->addWidget(this->end_save_btn, 1, 1);
+    save_btns_layout->addWidget(this->start_save_btn, 0, 1, Qt::AlignRight);
+    save_btns_layout->addWidget(this->end_save_btn, 1, 1, Qt::AlignRight);
     save_btns_layout->setContentsMargins(0, 0, 0, 0);
     QWidget* save_btns = new QWidget();
     save_btns->setLayout(save_btns_layout);
+
+    // TODO: Create a checkbox to enable the state machine
+    /*
+    QCheckBox* sm_check_box = new QCheckBox();
+    sm_check_box->setText("Enable State\nMachine");
+    sm_check_box->setCheckState(Qt::Checked);
+    save_btns_layout->addWidget(sm_check_box, 2, 1);
+    QObject::connect(sm_check_box, SIGNAL(stateChanged(int)))
+    */
+
+    // Create a checkbox to confirm personnel safety
+    QCheckBox* safety_check_box = new QCheckBox();
+    safety_check_box->setText("All personnel at\na safe distance");
+    safety_check_box->setCheckState(Qt::Unchecked);
+    save_btns_layout->addWidget(safety_check_box, 3, 1);
+    QObject::connect(safety_check_box, SIGNAL(stateChanged(int)),
+                     this, SIGNAL(people_safe_dist(int)));
 
     // Open the control_states configuration file and create a hash map of the 
     QFile control_state_file(this->root->get_configuration()->filePath("control_states.cfg"));
@@ -126,10 +143,16 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     tab->addTab(valve_widget, "Valves");
     tab->addTab(operation_widget, "Operations");
 
-    // Create a dummy layout to hold the tab widget and save buttons
+    // Configure abort button at the bottom of the window
+    this->abort_btn->setObjectName("abort_btn"); // Allow QSS styling
+    QObject::connect(this->abort_btn, SIGNAL(clicked()), this, SLOT(abort()));
+
+
+    // Create a dummy layout to hold the tab widget, save buttons, abort button
     QGridLayout* bottom_layout = new QGridLayout;
-    bottom_layout->addWidget(tab, 0, 0, -1, 1, Qt::AlignLeft | Qt::AlignTop);
+    bottom_layout->addWidget(tab, 0, 0, 1, 1, Qt::AlignLeft | Qt::AlignTop);
     bottom_layout->addWidget(save_btns, 0, 1, Qt::AlignRight | Qt::AlignTop);
+    bottom_layout->addWidget(this->abort_btn, 1, 0, 1, 2, Qt::AlignHCenter | Qt::AlignBottom);
     bottom_layout->setContentsMargins(5, 5, 5, 5);
     QFrame* bottom_widget = new QFrame;
     bottom_widget->setLayout(bottom_layout);
@@ -257,8 +280,24 @@ void GUI_CTRL_Window::new_state(QString new_state) {
     // Disable the button that was just clicked
     this->operation_btns[new_state]->setDisabled(true);
 
-    // TODO: visually indicate the currently active state
-    // Add property/object name/class and use QSS sheet
+    // Visually indicate the currently active state via object name QSS
+    QStringList btn_names = operation_btns.keys();
+    for (int i = 0; i < btn_names.size(); ++i) {
+        QString cur_state = btn_names[i];
+        QPushButton* btn= operation_btns[cur_state];
+        
+        // Check if the button is the new state, update name accordingly
+        if (cur_state == new_state) {
+            btn->setObjectName("cur_state");
+        } else {
+            btn->setObjectName("");
+        }
+
+        // Tell the system to update the display of the button
+        style()->unpolish(btn);
+        style()->polish(btn);
+    }
+    
 
     // Find the control states full name (some states have multiple /-separated names)
     // Some names also contain other names ("Purge" is in "Purge Shutdown"), so exact match is needed
@@ -285,6 +324,11 @@ void GUI_CTRL_Window::new_state(QString new_state) {
 
     // Notify the state machine of the new state
     emit new_state_signal(new_state);
+
+    // Reenable the abort button if the state is fully closed
+    if ("Fully Closed" == new_state) {
+        this->abort_btn->setEnabled(true);
+    }
 }
 
 void GUI_CTRL_Window::sm_allowed_states(QStringList* allowed_states) {
@@ -297,5 +341,14 @@ void GUI_CTRL_Window::sm_allowed_states(QStringList* allowed_states) {
         QPushButton* btn = this->operation_btns.value(state);
         btn->setEnabled(allowed_states->contains(state));
     }
+}
 
+void GUI_CTRL_Window::abort() {
+    // Disable the abort button
+    this->abort_btn->setDisabled(true);
+
+    // TODO: Force the state machine to be enabled
+
+    // Tell the state machine to abort
+    emit new_state_signal("ABORT");
 }
