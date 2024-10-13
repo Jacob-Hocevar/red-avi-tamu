@@ -246,7 +246,8 @@ void State_Machine::set_people_safe_dist(int safe) {
 }
 
 void State_Machine::new_data() {
-    if ("hotfire_1" != this->config_name) {
+    if (("hotfire_1" != this->config_name) && ("ignition_test_1" != this->config_name)) {
+        cout << "Check 1" << endl;
         cout << "State Machine: Unknown configuration: " << this->config_name.toStdString() << endl;
         return;
     }
