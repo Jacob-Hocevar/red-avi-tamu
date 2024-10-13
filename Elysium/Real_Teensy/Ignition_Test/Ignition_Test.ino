@@ -13,7 +13,7 @@ VARIABLES & USER INPUT
 
 // time variables
 long unsigned sensor_update_last = 0;
-long unsigned sensor_update_interval = 100000;    // sensor update interval (microsec)     <-- USER INPUT
+long unsigned sensor_update_interval = 10000;    // sensor update interval (microsec)     <-- USER INPUT
 
 // BAUD rate 
 const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
@@ -48,8 +48,7 @@ void loop() {
     sensor_update_last = micros();                               // update last time update
 
     // send data to serial monitor 
-    Serial.print("t:"); Serial.print(sensor_update_last);  // print time reading
-    Serial.print("I1:"); Serial.print(igniter_on);         // print time reading
+    Serial.print("I1:"); Serial.print(igniter_on);         // print current ignition state
     Serial.println();
     delay(10);
   }
@@ -57,12 +56,12 @@ void loop() {
   // checks if user input is available to read
   if (Serial.available() > 0) {
     // read user input
-    String input = Serial.read();
+    String input = Serial.readStringUntil('\n');
 
-    if ("IGNITE:0" == input) {
+    if (input == "IGNITE:0\r") {
       igniter_on = 0;
       digitalWrite(Igniter_pin, LOW);
-    } else if ("IGNITE:1" == input) {
+    } else if (input == "IGNITE:1\r") {
       igniter_on = 1;
       digitalWrite(Igniter_pin, HIGH);
     }
