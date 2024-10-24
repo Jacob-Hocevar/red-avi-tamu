@@ -1,9 +1,3 @@
-/*
--------------------------------------------------------------------
-Water Test Stand Teensy
--------------------------------------------------------------------
-(Add text for what this program does)
-*/
 
 /*
 -------------------------------------------------------------------
@@ -24,11 +18,11 @@ VALVE SETUP
 -------------------------------------------------------------------
 */
 
-// Valves
+// Valve pins
 const int NCS1_pin = 0;           // <-- USER INPUT
 const int NCS2_pin = 0;           // <-- USER INPUT
-
-
+const int LABV1_pin = 0;          // <-- USER INPUT
+const int LABV2_pin = 0;          // <-- USER INPUT
 
 /*
 -------------------------------------------------------------------
@@ -40,24 +34,22 @@ PRESSURE TRANSDUCER SET UP
 const int pt1_pin = 0;                    // <-- USER INPUT
 const int pt2_pin = 0;                    // <-- USER INPUT
 
-// callibration parameters for the pts
-const float pt1_ref1 = 0;                       // known pressure low                <-- USER INPUT
-const float pt1_ref2 = 0 + pt1_ref1;            // known pressure high               <-- USER INPUT
-const float pt2_ref1 = 0;                       // known pressure low                <-- USER INPUT
-const float pt2_ref2 = 0 + pt2_ref1;            // known pressure high               <-- USER INPUT
+int pt1_analog = 0;                        // analog reading from PT output signal
+int pt2_analog = 0;                        // analog reading from PT output signal
 
-const int pt1_analog_ref1 = 0;         // analog at known pressure small    <-- USER INPUT
-const int pt1_analog_ref2 = 0;         // analog at known pressure high     <-- USER INPUT
-const int pt2_analog_ref1 = 0;         // analog at known pressure small    <-- USER INPUT
-const int pt2_analog_ref2 = 0;         // analog at known pressure high     <-- USER INPUT
+const float pt_slope = 0;                    // <-- USER INPUT
+const float pt_intercept = 0;                    // <-- USER INPUT
+
+// Function to calculate pressure
+float pressureCalculation(float analog) {
+    // Calculate pressure based on analog input
+    float pressure = pt_slope * analog + pt_intercept;
+    return pressure;  // Return the calculated pressure
+}
 
 // analog and digital reading variables setup
 int pt1_analog = 0;                        // analog reading from PT output signal
 int pt2_analog = 0;                        // analog reading from PT output signal
-float pt1_pressure = 0.0;                  // calculated pressure using calibration eq
-float pt2_pressure = 0.0;                  // calculated pressure using calibration eq
-
-
 
 /*
 -------------------------------------------------------------------
@@ -78,8 +70,10 @@ void countPulse() {
 // Number of pulse counts until sending flow rate
 int pulseReading = 20;
 
-
 void setup() {
+  Serial.begin(BAUD);           // initializes serial communication at set baud rate
+  Wire.begin();
+
   /*
   -------------------------------------------------------------------
   VALVE SET UP
@@ -88,6 +82,8 @@ void setup() {
 
   pinMode(NCS1_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 1 MOSFET
   pinMode(NCS2_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 2 MOSFET
+  pinMode(LABV1_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 5 MOSFET
+  pinMode(LABV2_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 6 MOSFET
 
   /*
   -------------------------------------------------------------------
@@ -114,20 +110,60 @@ void loop() {
   if ((micros() - sensor_update_last) > sensor_update_interval) {
     sensor_update_last = micros();                               // update last time update
 
+    pt1_analog = analogRead(pt1_pin);                          // reads value from input pin and assigns to variable
+    pt2_analog = analogRead(pt2_pin);                          // reads value from input pin and assigns to variable.
+
+    // Serially print sensor readings
+    Serial.print("P1:"); Serial.print(pressureCalculation(pt1_analog));              // print pressure calculation in psi
+    Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog));              // print pressure calculation in psi
+  }
+
+  // Send volume since last signal
   /*
   -------------------------------------------------------------------
   VALVE ACTUATION
   -------------------------------------------------------------------
   */
+  // Normally closed solenoid valve 1
+  if (input == "NCS1:0\r\n") {
+    digitalWrite(NCS1_pin, HIGH); // Open
+  }
+  if (input == "NCS1:1\r\n") {
+    digitalWrite(NCS1_pin, LOW);  // Closed
+  }
+
+  // Normally closed solenoid valve 2
+  if (input == "NCS2:0\r\n") {
+    digitalWrite(NCS2_pin, HIGH);
+  }
+  if (input == "NCS2:1\r\n") {
+    digitalWrite(NCS2_pin, LOW);
+  }
+
+  // Linearly Actuated Ball Valve 1
+  if (input == "LA-BV 1:0\r\n") {
+    digitalWrite(LABV1_pin, HIGH);
+    is_LABV1_open = true;
+  }
+  if (input == "LA-BV 1:1\r\n") {
+    digitalWrite(LABV1_pin, LOW);
+    is_LABV1_open = false;
+  }
+
+  // Linearly Actuated Ball Valve 2
+  if (input == "LA-BV 2:0\r\n") {
+    digitalWrite(LABV2_pin, HIGH);
+  }
+  if (input == "LA-BV 2:1\r\n") {
+    digitalWrite(LABV2_pin, LOW);
+  }
 
   /*
   -------------------------------------------------------------------
   FLOW METER READING
   -------------------------------------------------------------------
   */
-
-  // Send volume
-  if (pulseCount >= pulseReading) { // determine if this should just send then time of pulse to be logged for post test calculation
+  if (pulseCount >= pulseReading) {   // determine if this should just send then time of pulse to be logged for post test calculation
     float volume = pulseCount * mlPerPulse;
     Serial.println(volume);
     pulseCount = 0;

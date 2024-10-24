@@ -1,15 +1,10 @@
 /*
 -------------------------------------------------------------------
-Elysium Teensy
--------------------------------------------------------------------
-(Add text for what this program does)
-*/
-
-/*
--------------------------------------------------------------------
 VARIABLES & USER INPUT
 -------------------------------------------------------------------
 */
+
+#include <Arduino.h>
 
 // time variables
 long unsigned sensor_update_last = 0;
@@ -22,6 +17,8 @@ long unsigned last_update_time = 0;
 // BAUD rate 
 const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
 
+// LABV 1 state variable
+bool is_LABV1_open = false;
 
 /*
 VALVE SETUP
@@ -32,13 +29,45 @@ const int NCS1_pin = 0;           // <-- USER INPUT
 const int NCS2_pin = 0;           // <-- USER INPUT
 const int NCS3_pin = 0;           // <-- USER INPUT
 const int NCS4_pin = 0;           // <-- USER INPUT
-const int LABV1_pin = 0;           // <-- USER INPUT
-const int LABV2_pin = 0;           // <-- USER INPUT
+const int LABV1_pin = 0;          // <-- USER INPUT
+const int LABV2_pin = 0;          // <-- USER INPUT
 
 // Igniter
-const int Igniter_pin = 0;           // <-- USER INPUT
+const int Igniter1_pin = 0;
+const int Igniter2_pin = 0;
+const int Igniter3_pin = 0;
 
+// serial input variables
+String ln1 = "";
+String ln2 = "";
+String valveName = "";
 
+const int valve_count = 9;  // Total number of valves (NCS1, NCS2, NCS3, NCS4, LABV1, LABV2, Igniter1, Igniter2, Igniter3)
+
+enum Valve {
+    NCS1,
+    NCS2,
+    NCS3,
+    NCS4,
+    LABV1,
+    LABV2,
+    IGNITER1,
+    IGNITER2,
+    IGNITER3
+};
+
+// Array of valve pin numbers
+const int valvePins[valve_count] = {
+    NCS1_pin,  // Pin number for NCS1
+    NCS2_pin,  // Pin number for NCS2
+    NCS3_pin,  // Pin number for NCS3
+    NCS4_pin,  // Pin number for NCS4
+    LABV1_pin, // Pin number for LABV1
+    LABV2_pin, // Pin number for LABV2
+    Igniter1_pin, // Pin number for Igniter1
+    Igniter2_pin, // Pin number for Igniter2
+    Igniter3_pin, // Pin number for Igniter3
+};
 
 /*
 LOAD CELL SET UP
@@ -92,41 +121,22 @@ const int pt3_pin = 0;                    // <-- USER INPUT
 const int pt4_pin = 0;                    // <-- USER INPUT
 const int pt5_pin = 0;                    // <-- USER INPUT
 
-
-// callibration parameters for the pts
-const float pt1_ref1 = 0;                       // known pressure low                <-- USER INPUT
-const float pt1_ref2 = 0 + pt1_ref1;            // known pressure high               <-- USER INPUT
-const float pt2_ref1 = 0;                       // known pressure low                <-- USER INPUT
-const float pt2_ref2 = 0 + pt2_ref1;            // known pressure high               <-- USER INPUT
-const float pt3_ref1 = 0;                       // known pressure low                <-- USER INPUT
-const float pt3_ref2 = 0 + pt3_ref1;            // known pressure high               <-- USER INPUT
-const float pt4_ref1 = 0;                       // known pressure low                <-- USER INPUT
-const float pt4_ref2 = 0 + pt4_ref1;            // known pressure high               <-- USER INPUT
-const float pt5_ref1 = 0;                       // known pressure low                <-- USER INPUT
-const float pt5_ref2 = 0 + pt5_ref1;            // known pressure high               <-- USER INPUT
-
-const int pt1_analog_ref1 = 0;         // analog at known pressure small    <-- USER INPUT
-const int pt1_analog_ref2 = 0;         // analog at known pressure high     <-- USER INPUT
-const int pt2_analog_ref1 = 0;         // analog at known pressure small    <-- USER INPUT
-const int pt2_analog_ref2 = 0;         // analog at known pressure high     <-- USER INPUT
-const int pt3_analog_ref1 = 0;         // analog at known pressure small    <-- USER INPUT
-const int pt3_analog_ref2 = 0;         // analog at known pressure high     <-- USER INPUT
-const int pt4_analog_ref1 = 0;         // analog at known pressure small    <-- USER INPUT
-const int pt4_analog_ref2 = 0;         // analog at known pressure high     <-- USER INPUT
-const int pt5_analog_ref1 = 0;         // analog at known pressure small    <-- USER INPUT
-const int pt5_analog_ref2 = 0;         // analog at known pressure high     <-- USER INPUT
-
 // analog and digital reading variables setup
 int pt1_analog = 0;                        // analog reading from PT output signal
 int pt2_analog = 0;                        // analog reading from PT output signal
 int pt3_analog = 0;                        // analog reading from PT output signal
 int pt4_analog = 0;                        // analog reading from PT output signal
 int pt5_analog = 0;                        // analog reading from PT output signal
-float pt1_pressure = 0.0;                  // calculated pressure using calibration eq
-float pt2_pressure = 0.0;                  // calculated pressure using calibration eq
-float pt3_pressure = 0.0;                  // calculated pressure using calibration eq
-float pt4_pressure = 0.0;                  // calculated pressure using calibration eq
-float pt5_pressure = 0.0;                  // calculated pressure using calibration eq
+
+const float pt_slope = 0;
+const float pt_intercept = 0;
+
+// Function to calculate pressure
+float pressureCalculation(float analog) {
+    // Calculate pressure based on analog input
+    float pressure = pt_slope * analog + pt_intercept;
+    return pressure;  // Return the calculated pressure
+}
 
 /*
 ACCELEROMETER SET UP
@@ -231,14 +241,7 @@ void loop() {
     pt4_analog = analogRead(pt4_pin);
     pt5_analog = analogRead(pt5_pin);
 
-    // Calculate pressure value
-    pt1_pressure = pt1_ref1 + (pt1_ref2 - pt1_ref1)/(pt1_analog_ref2 - pt1_analog_ref1)*(pt1_analog - pt1_analog_ref1); // calculates pressure reading using calibration parameters
-    pt2_pressure = pt2_ref1 + (pt2_ref2 - pt2_ref1)/(pt2_analog_ref2 - pt2_analog_ref1)*(pt2_analog - pt2_analog_ref1); // calculates pressure reading using calibration parameters
-    pt3_pressure = pt3_ref1 + (pt3_ref2 - pt3_ref1)/(pt3_analog_ref2 - pt3_analog_ref1)*(pt3_analog - pt3_analog_ref1); // calculates pressure reading using calibration parameters
-    pt4_pressure = pt4_ref1 + (pt4_ref2 - pt4_ref1)/(pt4_analog_ref2 - pt4_analog_ref1)*(pt4_analog - pt4_analog_ref1); // calculates pressure reading using calibration parameters
-    pt5_pressure = pt5_ref1 + (pt5_ref2 - pt5_ref1)/(pt5_analog_ref2 - pt5_analog_ref1)*(pt5_analog - pt5_analog_ref1); // calculates pressure reading using calibration parameters
-
-    // measure acceleration
+    // read acceleration
     readACC(buff);
     accRaw[0] = (int16_t)(buff[0] | (buff[1] << 8)); 
     accRaw[1] = (int16_t)(buff[2] | (buff[3] << 8));
@@ -252,16 +255,14 @@ void loop() {
     weight2 = scale2.get_units(1); // Get the weight in kilograms
 
     // send data to serial monitor 
-    Serial.print("t:"); Serial.print(sensor_update_last);                                  // print time reading
-    // Serial.print(","); Serial.print(pt1_analog);             // print analog pressure reading (comment out when using GUI)
-    // Serial.print(","); Serial.print(pt2_analog);             // print analog pressure reading (comment out when using GUI)
-    Serial.print(",P1:"); Serial.print(pt1_pressure);             // print pressure calculation in psi
-    Serial.print(",P2:"); Serial.print(pt2_pressure);              // print pressure calculation in psi
-    Serial.print(",P3:"); Serial.print(pt2_pressure);              // print pressure calculation in psi
-    Serial.print(",P4:"); Serial.print(pt2_pressure);              // print pressure calculation in psi
-    Serial.print(",P5:"); Serial.print(pt2_pressure);              // print pressure calculation in psi
+    Serial.print("t:"); Serial.print(sensor_update_last);          // print time reading
+    Serial.print(",P1:"); Serial.print(pressureCalculation(pt1_analog));              // print pressure calculation in psi
+    Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog));              // print pressure calculation in psi
+    Serial.print(",P3:"); Serial.print(pressureCalculation(pt3_analog));              // print pressure calculation in psi
+    Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog));              // print pressure calculation in psi
+    Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog));              // print pressure calculation in psi
     Serial.print(",T1:"); Serial.print(mcp.readThermocouple());    // print thermocouple temperature in C
-    Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());    // print thermocouple temperature in C
+    Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());   // print thermocouple temperature in C
     Serial.print(",L1:"); Serial.print(weight1);                   // print load cell 1 in kg
     Serial.print(",L2:"); Serial.print(weight2);                   // print load cell 2 in kg
     Serial.print(",Ax:"); Serial.print(accx);                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
@@ -274,13 +275,48 @@ void loop() {
   // checks if user input is available to read
   if (Serial.available() > 0) {
     // read user input
-    String input = Serial.read();
+    String input_signal = Serial.readStringUntil("\n");
+    char delimiter = ':';
+    int delimiterIndex = input_signal.indexOf(delimiter);
 
+    // break string into identifier and control state
+    if (delimiterIndex != -1) {
+      ln1 = input_signal.substring(0, delimiterIndex);
+      ln2 = input_signal.substring(delimiterIndex + 1).toInt();
+    }
+
+    // Map string input to enum
+    Valve valveToControl;
+    if (valveName == "NCS1") valveToControl = NCS1;
+    else if (ln1 == "NCS2") valveToControl = NCS2;
+    else if (ln1 == "NCS3") valveToControl = NCS3;
+    else if (ln1 == "NCS4") valveToControl = NCS4;
+    else if (ln1 == "LA-BV1") valveToControl = LABV1;
+    else if (ln1 == "LA-BV2") valveToControl = LABV2;
+    else if (ln1 == "IGNITER1") valveToControl = IGNITER1;
+    else if (ln1 == "IGNITER2") valveToControl = IGNITER2;
+    else if (ln1 == "IGNITER3") valveToControl = IGNITER3;
+    else {
+      Serial.println("not recognized");
+    }
+    
     // update last time of communication variable
     last_update_time = micros();
 
     // convert input to corresponding state, actuate pins, and set valve control state
+    switch (ln2) {
+      case 0:
+        digitalWrite(valvePins[valveToControl], LOW);
+        break;
+      case 1:
+        digitalWrite(valvePins[valveToControl], HIGH);
+        break;
+      default:
+        Serial.println("Unknown");
+        break;
+    }
 
+/*
     // Normally closed solenoid valve 1
     if (input == "NCS1:0\r\n") {
       digitalWrite(NCS1_pin, HIGH); // Open
@@ -297,14 +333,6 @@ void loop() {
       digitalWrite(NCS2_pin, LOW);
     }
 
-    // Normally closed solenoid valve 3
-    if (input == "NCS3:0\r\n") {
-      digitalWrite(NCS3_pin, HIGH);
-    }
-    if (input == "NCS3:1\r\n") {
-      digitalWrite(NCS3_pin, LOW);
-    }
-
     // Normally closed solenoid valve 4
     if (input == "NCS4:0\r\n") {
       digitalWrite(NCS4_pin, HIGH);
@@ -316,9 +344,11 @@ void loop() {
     // Linearly Actuated Ball Valve 1
     if (input == "LA-BV 1:0\r\n") {
       digitalWrite(LABV1_pin, HIGH);
+      is_LABV1_open = true;
     }
     if (input == "LA-BV 1:1\r\n") {
       digitalWrite(LABV1_pin, LOW);
+      is_LABV1_open = false;
     }
 
     // Linearly Actuated Ball Valve 2
@@ -329,17 +359,28 @@ void loop() {
       digitalWrite(LABV2_pin, LOW);
     }
 
-    // Igniter
+    // Igniter 1
     if (input == "IGNITE:1\r\n") {
       digitalWrite(Igniter_pin, HIGH);
     }
+
+    // Igniter 2
+    if (input == "IGNITE:1\r\n") {
+      digitalWrite(Igniter_pin, HIGH);
+    }
+
+    // Igniter 3
+    if (input == "IGNITE:1\r\n") {
+      digitalWrite(Igniter_pin, HIGH);
+    }
+    */
   }
 
   // Shutdown engine if teensy is not communicating with computer
   if ((micros() - last_update_time) > shutdown_time) {
     // Shutdown engine
 
-    // Open NCS2 & NCS3
+    // Open NCS2
     digitalWrite(NCS2_pin, HIGH);
     digitalWrite(NCS3_pin, HIGH);
 
@@ -348,13 +389,14 @@ void loop() {
     digitalWrite(LABV1_pin, LOW);
     digitalWrite(LABV2_pin, LOW);
 
-    // Open NCS4 for 3 seconds
-    digitalWrite(NCS4_pin, HIGH);
-    delay(3000);
-    digitalWrite(NCS4_pin, LOW);
+    if (is_LABV1_open) {
+      // Open NCS4 for 3 seconds
+      digitalWrite(NCS4_pin, HIGH);
+      delay(3000);
+      digitalWrite(NCS4_pin, LOW);
+    }
 
     // End program
-    abort(); // maybe break command? Maybe while?
     while(1);
   }
 }
