@@ -130,36 +130,36 @@ if (Serial.available() > 0) {
 
   // Normally closed solenoid valve 1
   if (input == "NCS1:0\r\n") {
-    digitalWrite(NCS1_pin, HIGH); // Open
+    digitalWrite(NCS1_pin, LOW); // Open
   }
   if (input == "NCS1:1\r\n") {
-    digitalWrite(NCS1_pin, LOW);  // Closed
+    digitalWrite(NCS1_pin, HIGH);  // Closed
   }
 
   // Normally closed solenoid valve 2
   if (input == "NCS2:0\r\n") {
-    digitalWrite(NCS2_pin, HIGH);
+    digitalWrite(NCS2_pin, LOW);
   }
   if (input == "NCS2:1\r\n") {
-    digitalWrite(NCS2_pin, LOW);
+    digitalWrite(NCS2_pin, HIGH);
   }
 
   // Linearly Actuated Ball Valve 1
   if (input == "LA-BV 1:0\r\n") {
-    digitalWrite(LABV1_pin, HIGH);
+    digitalWrite(LABV1_pin, LOW);
     is_LABV1_open = true;
   }
   if (input == "LA-BV 1:1\r\n") {
-    digitalWrite(LABV1_pin, LOW);
+    digitalWrite(LABV1_pin, HIGH);
     is_LABV1_open = false;
   }
 
   // Linearly Actuated Ball Valve 2
   if (input == "LA-BV 2:0\r\n") {
-    digitalWrite(LABV2_pin, HIGH);
+    digitalWrite(LABV2_pin, LOW);
   }
   if (input == "LA-BV 2:1\r\n") {
-    digitalWrite(LABV2_pin, LOW);
+    digitalWrite(LABV2_pin, HIGH);
   }
   }
 
