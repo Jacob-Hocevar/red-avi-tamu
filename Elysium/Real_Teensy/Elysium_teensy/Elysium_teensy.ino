@@ -27,7 +27,6 @@ VALVE SETUP
 // Valves
 const int NCS1_pin = 0;           // <-- USER INPUT
 const int NCS2_pin = 0;           // <-- USER INPUT
-const int NCS3_pin = 0;           // <-- USER INPUT
 const int NCS4_pin = 0;           // <-- USER INPUT
 const int LABV1_pin = 0;          // <-- USER INPUT
 const int LABV2_pin = 0;          // <-- USER INPUT
@@ -42,12 +41,11 @@ String ln1 = "";
 String ln2 = "";
 String valveName = "";
 
-const int valve_count = 9;  // Total number of valves (NCS1, NCS2, NCS3, NCS4, LABV1, LABV2, Igniter1, Igniter2, Igniter3)
+const int valve_count = 9;  // Total number of valves (NCS1, NCS2, NCS4, LABV1, LABV2, Igniter1, Igniter2, Igniter3)
 
 enum Valve {
     NCS1,
     NCS2,
-    NCS3,
     NCS4,
     LABV1,
     LABV2,
@@ -60,7 +58,6 @@ enum Valve {
 const int valvePins[valve_count] = {
     NCS1_pin,  // Pin number for NCS1
     NCS2_pin,  // Pin number for NCS2
-    NCS3_pin,  // Pin number for NCS3
     NCS4_pin,  // Pin number for NCS4
     LABV1_pin, // Pin number for LABV1
     LABV2_pin, // Pin number for LABV2
@@ -173,7 +170,6 @@ void setup() {
 
   pinMode(NCS1_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 1 MOSFET
   pinMode(NCS2_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 2 MOSFET
-  pinMode(NCS3_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 3 MOSFET
   pinMode(NCS4_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 4 MOSFET
   pinMode(LABV1_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 5 MOSFET
   pinMode(LABV2_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 6 MOSFET
@@ -289,7 +285,6 @@ void loop() {
     Valve valveToControl;
     if (valveName == "NCS1") valveToControl = NCS1;
     else if (ln1 == "NCS2") valveToControl = NCS2;
-    else if (ln1 == "NCS3") valveToControl = NCS3;
     else if (ln1 == "NCS4") valveToControl = NCS4;
     else if (ln1 == "LA-BV1") valveToControl = LABV1;
     else if (ln1 == "LA-BV2") valveToControl = LABV2;
@@ -382,7 +377,6 @@ void loop() {
 
     // Open NCS2
     digitalWrite(NCS2_pin, HIGH);
-    digitalWrite(NCS3_pin, HIGH);
 
     // Close ball valves & NCS1
     digitalWrite(NCS1_pin, LOW);
