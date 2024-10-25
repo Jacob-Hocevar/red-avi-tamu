@@ -47,10 +47,6 @@ float pressureCalculation(float analog) {
     return pressure;  // Return the calculated pressure
 }
 
-// analog and digital reading variables setup
-int pt1_analog = 0;                        // analog reading from PT output signal
-int pt2_analog = 0;                        // analog reading from PT output signal
-
 /*
 -------------------------------------------------------------------
 FLOW METER SET UP
@@ -58,7 +54,7 @@ FLOW METER SET UP
 */
 
 // Constants
-const int flowMeterPin = 0;   // Digital pin connected to the flow meter
+const int flowMeterPin = 5;   // Digital pin connected to the flow meter
 const float mlPerPulse = 2.5; // Volume per pulse in mL
 volatile int pulseCount = 0;  // Counter for pulse counts
 
@@ -72,7 +68,6 @@ int pulseReading = 20;
 
 void setup() {
   Serial.begin(BAUD);           // initializes serial communication at set baud rate
-  Wire.begin();
 
   /*
   -------------------------------------------------------------------
@@ -116,6 +111,8 @@ void loop() {
     // Serially print sensor readings
     Serial.print("P1:"); Serial.print(pressureCalculation(pt1_analog));              // print pressure calculation in psi
     Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog));              // print pressure calculation in psi
+    Serial.print(",N:"); Serial.print(pulseCount);              // print total number of pulses
+    Serial.println();
   }
 
   /*
@@ -124,54 +121,41 @@ void loop() {
   -------------------------------------------------------------------
   */
 
-if (Serial.available() > 0) {
-  // read signal
-  String input = Serial.readStringUntil("\n");
+  if (Serial.available() > 0) {
+    // read signal
+    String input = Serial.readStringUntil('\n');
 
-  // Normally closed solenoid valve 1
-  if (input == "NCS1:0\r\n") {
-    digitalWrite(NCS1_pin, LOW); // Open
-  }
-  if (input == "NCS1:1\r\n") {
-    digitalWrite(NCS1_pin, HIGH);  // Closed
-  }
+    // Normally closed solenoid valve 1
+    if (input == "NCS1:0\r\n") {
+      digitalWrite(NCS1_pin, LOW); // Open
+    }
+    if (input == "NCS1:1\r\n") {
+      digitalWrite(NCS1_pin, HIGH);  // Closed
+    }
 
-  // Normally closed solenoid valve 2
-  if (input == "NCS2:0\r\n") {
-    digitalWrite(NCS2_pin, LOW);
-  }
-  if (input == "NCS2:1\r\n") {
-    digitalWrite(NCS2_pin, HIGH);
-  }
+    // Normally closed solenoid valve 2
+    if (input == "NCS2:0\r\n") {
+      digitalWrite(NCS2_pin, LOW);
+    }
+    if (input == "NCS2:1\r\n") {
+      digitalWrite(NCS2_pin, HIGH);
+    }
 
-  // Linearly Actuated Ball Valve 1
-  if (input == "LA-BV 1:0\r\n") {
-    digitalWrite(LABV1_pin, LOW);
-    is_LABV1_open = true;
-  }
-  if (input == "LA-BV 1:1\r\n") {
-    digitalWrite(LABV1_pin, HIGH);
-    is_LABV1_open = false;
-  }
+    // Linearly Actuated Ball Valve 1
+    if (input == "LA-BV 1:0\r\n") {
+      digitalWrite(LABV1_pin, LOW);
+    }
+    if (input == "LA-BV 1:1\r\n") {
+      digitalWrite(LABV1_pin, HIGH);
+    }
 
-  // Linearly Actuated Ball Valve 2
-  if (input == "LA-BV 2:0\r\n") {
-    digitalWrite(LABV2_pin, LOW);
-  }
-  if (input == "LA-BV 2:1\r\n") {
-    digitalWrite(LABV2_pin, HIGH);
-  }
-  }
-
-  /*
-  -------------------------------------------------------------------
-  FLOW METER READING
-  -------------------------------------------------------------------
-  */
-  if (pulseCount >= pulseReading) { 
-    float volume = pulseCount * mlPerPulse;
-    Serial.println(volume);
-    pulseCount = 0;
+    // Linearly Actuated Ball Valve 2
+    if (input == "LA-BV 2:0\r\n") {
+      digitalWrite(LABV2_pin, LOW);
+    }
+    if (input == "LA-BV 2:1\r\n") {
+      digitalWrite(LABV2_pin, HIGH);
+    }
   }
 
 }
