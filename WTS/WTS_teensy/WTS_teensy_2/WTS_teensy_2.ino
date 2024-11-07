@@ -12,6 +12,8 @@ long unsigned sensor_update_interval = 100000;    // sensor update interval (mic
 // BAUD rate 
 const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
 
+bool is_LABV1_open = false;
+
 /*
 -------------------------------------------------------------------
 VALVE SETUP
@@ -19,10 +21,10 @@ VALVE SETUP
 */
 
 // Valve pins
-const int NCS1_pin = 0;           // <-- USER INPUT
-const int NCS2_pin = 0;           // <-- USER INPUT
-const int LABV1_pin = 0;          // <-- USER INPUT
-const int LABV2_pin = 0;          // <-- USER INPUT
+const int NCS1_pin = 9;           // <-- USER INPUT
+const int NCS2_pin = 10;           // <-- USER INPUT
+const int LABV1_pin = 7;          // <-- USER INPUT
+const int LABV2_pin = 8;          // <-- USER INPUT
 
 /*
 -------------------------------------------------------------------
@@ -31,8 +33,8 @@ PRESSURE TRANSDUCER SET UP
 */
 
 // teensy pins to read signals
-const int pt1_pin = 0;                    // <-- USER INPUT
-const int pt2_pin = 0;                    // <-- USER INPUT
+const int pt1_pin = 45;                    // <-- USER INPUT
+const int pt2_pin = 44;                    // <-- USER INPUT
 
 int pt1_analog = 0;                        // analog reading from PT output signal
 int pt2_analog = 0;                        // analog reading from PT output signal
@@ -54,7 +56,7 @@ FLOW METER SET UP
 */
 
 // Constants
-const int flowMeterPin = 5;   // Digital pin connected to the flow meter
+const int flowMeterPin = 0;   // Digital pin connected to the flow meter
 const float mlPerPulse = 2.5; // Volume per pulse in mL
 volatile int pulseCount = 0;  // Counter for pulse counts
 
@@ -66,8 +68,25 @@ void countPulse() {
 // Number of pulse counts until sending flow rate
 int pulseReading = 20;
 
+/*
+-------------------------------------------------------------------
+THERMOCOUPLE SET UP
+-------------------------------------------------------------------
+*/
+
+// Thermocouple libraries
+#include <Wire.h>
+#include <Adafruit_MCP9600.h>
+
+// Thermocouple I2C addresses
+#define I2C_ADDRESS1 (0x67)
+
+// Thermocouple mcp identifier
+Adafruit_MCP9600 mcp;
+
 void setup() {
   Serial.begin(BAUD);           // initializes serial communication at set baud rate
+  Wire.begin();
 
   /*
   -------------------------------------------------------------------
@@ -92,6 +111,21 @@ void setup() {
   // Attach an interrupt to the flow meter pin
   // RISING means the interrupt will trigger on the rising edge of the pulse
   attachInterrupt(digitalPinToInterrupt(flowMeterPin), countPulse, RISING);
+
+  /*
+  -------------------------------------------------------------------
+  THERMOCOUPLE SET UP
+  -------------------------------------------------------------------
+  */
+
+  // Initialize MCP9600 sensors
+  mcp.begin(I2C_ADDRESS1);
+
+  // Configure sensors
+  mcp.setADCresolution(MCP9600_ADCRESOLUTION_18);
+  mcp.setThermocoupleType(MCP9600_TYPE_K);
+  mcp.setFilterCoefficient(3);
+  mcp.enable(true);
 }
 
 void loop() {
@@ -111,8 +145,7 @@ void loop() {
     // Serially print sensor readings
     Serial.print("P1:"); Serial.print(pressureCalculation(pt1_analog));              // print pressure calculation in psi
     Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog));              // print pressure calculation in psi
-    Serial.print(",N:"); Serial.print(pulseCount);              // print total number of pulses
-    Serial.println();
+    Serial.print(",T1:"); Serial.print(mcp.readThermocouple());    // print thermocouple temperature in C
   }
 
   /*
@@ -121,41 +154,54 @@ void loop() {
   -------------------------------------------------------------------
   */
 
-  if (Serial.available() > 0) {
-    // read signal
-    String input = Serial.readStringUntil('\n');
+if (Serial.available() > 0) {
+  // read signal
+  String input = Serial.readStringUntil('\n');
 
-    // Normally closed solenoid valve 1
-    if (input == "NCS1:0\r\n") {
-      digitalWrite(NCS1_pin, LOW); // Open
-    }
-    if (input == "NCS1:1\r\n") {
-      digitalWrite(NCS1_pin, HIGH);  // Closed
-    }
+  // Normally closed solenoid valve 1
+  if (input == "NCS1:0\r") {
+    digitalWrite(NCS1_pin, LOW); // Open
+  }
+  if (input == "NCS1:1\r") {
+    digitalWrite(NCS1_pin, HIGH);  // Closed
+  }
 
-    // Normally closed solenoid valve 2
-    if (input == "NCS2:0\r\n") {
-      digitalWrite(NCS2_pin, LOW);
-    }
-    if (input == "NCS2:1\r\n") {
-      digitalWrite(NCS2_pin, HIGH);
-    }
+  // Normally closed solenoid valve 2
+  if (input == "NCS2:0\r") {
+    digitalWrite(NCS2_pin, LOW);
+  }
+  if (input == "NCS2:1\r") {
+    digitalWrite(NCS2_pin, HIGH);
+  }
 
-    // Linearly Actuated Ball Valve 1
-    if (input == "LA-BV 1:0\r\n") {
-      digitalWrite(LABV1_pin, LOW);
-    }
-    if (input == "LA-BV 1:1\r\n") {
-      digitalWrite(LABV1_pin, HIGH);
-    }
+  // Linearly Actuated Ball Valve 1
+  if (input == "LA-BV1:0\r") {
+    digitalWrite(LABV1_pin, LOW);
+    is_LABV1_open = true;
+  }
+  if (input == "LA-BV1:1\r") {
+    digitalWrite(LABV1_pin, HIGH);
+    is_LABV1_open = false;
+  }
 
-    // Linearly Actuated Ball Valve 2
-    if (input == "LA-BV 2:0\r\n") {
-      digitalWrite(LABV2_pin, LOW);
-    }
-    if (input == "LA-BV 2:1\r\n") {
-      digitalWrite(LABV2_pin, HIGH);
-    }
+  // Linearly Actuated Ball Valve 2
+  if (input == "LA-BV2:0\r") {
+    digitalWrite(LABV2_pin, LOW);
+  }
+  if (input == "LA-BV2:1\r") {
+    digitalWrite(LABV2_pin, HIGH);
+  }
+  }
+
+  /*
+  -------------------------------------------------------------------
+  FLOW METER READING
+  -------------------------------------------------------------------
+  */
+  if (pulseCount >= pulseReading) { 
+    float volume = pulseCount * mlPerPulse;
+    Serial.println(volume);
+    pulseCount = 0;
   }
 
 }
