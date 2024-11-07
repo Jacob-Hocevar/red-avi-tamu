@@ -17,6 +17,10 @@
 // Forward declaration of mainwindow to avoid circular dependencies
 class GUI_Main_Window;
 
+// Constant Declaration, not definition to avoid multiply defined objects with all files that include this header
+// Defined in the .cpp file
+extern const int CONNECTION_CONFRIM_INTERVAL;
+
 /*
     The Main Window for the GUI.
     Contains the layout which all major elements are attached to.
@@ -60,6 +64,7 @@ private slots:
     void update_port(const QString& text);
     void update_baud(const QString& text);
     void connect_to_serial();
+    void send_nop();
 };
 
 

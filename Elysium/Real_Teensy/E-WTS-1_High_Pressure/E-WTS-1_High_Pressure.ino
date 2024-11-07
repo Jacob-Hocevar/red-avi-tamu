@@ -124,7 +124,7 @@ void loop() {
     String input = Serial.readStringUntil('\n');
 
     // nop is the no operation command, which is merely to confirm that the connection is active
-    if (input == "nop") { return; }
+    if (input == "nop\r") { return; }
 
     // Parse message into ID and value, convert to pin number and an int
     // If message cannot be split, it is meaningless

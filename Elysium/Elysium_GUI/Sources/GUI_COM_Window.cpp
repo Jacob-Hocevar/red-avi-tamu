@@ -24,6 +24,10 @@
 using std::cout;
 using std::endl;
 
+// Constants (user set parameters)
+// Number of milliseconds between nop signals to confirm that the connection is live
+const int CONNECTION_CONFIRM_INTERVAL = 50;
+
 /*
     Initializes the Communications Window for the GUI.
 */
@@ -249,12 +253,21 @@ void GUI_COM_Window::connect_to_serial() {
 
 void GUI_COM_Window::serial_open() {
     cout << "Attempting to connect to serial" << endl;
+    QString startup_command = "Start\r\n";
     if (this->ser) {
         try {
             if (this->ser->isOpen()) {
                 cout << "Already Open" << endl;
                 this->ser->flush();
                 this->is_connected = true;
+
+                // Startup/Restart Teensy
+                this->ser->write(startup_command.toUtf8());
+                // Send "nop" (no operation) at regular interval to confirm active connection
+                QTimer* nop_timer = new QTimer();
+                QObject::connect(nop_timer, SIGNAL(timeout()), this, SLOT(send_nop()));
+                nop_timer->start(CONNECTION_CONFIRM_INTERVAL);
+
                 return;
             } else {
                 delete this->ser;
@@ -276,6 +289,13 @@ void GUI_COM_Window::serial_open() {
         if (this->ser->isOpen()) {
             this->ser->flush();
             this->is_connected = true;
+
+            // Startup/Restart Teensy
+            this->ser->write(startup_command.toUtf8());
+            // Send "nop" (no operation) at regular interval to confirm active connection
+            QTimer* nop_timer = new QTimer();
+            QObject::connect(nop_timer, SIGNAL(timeout()), this, SLOT(send_nop()));
+            nop_timer->start(CONNECTION_CONFIRM_INTERVAL);
         } else {
             return;
         }
@@ -290,4 +310,9 @@ void GUI_COM_Window::serial_close() {
         this->ser->close();
         this->is_connected = false;
     } catch (...) { }
+}
+
+void GUI_COM_Window::send_nop() {
+    QString nop = "nop\r\n";
+    this->ser->write(nop.toUtf8());
 }
