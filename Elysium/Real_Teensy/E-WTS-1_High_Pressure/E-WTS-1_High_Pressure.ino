@@ -1,32 +1,52 @@
 /*
 -------------------------------------------------------------------
-VARIABLES & USER INPUT
+TIME AND COMMUNICATION SETUP
 -------------------------------------------------------------------
 */
 
-#include <arduino.h>
-#include <Wire.h>
+// time variables
+long unsigned sensor_update_last = 0;
+long unsigned connection_last = 0;
+const long unsigned SENSOR_UPDATE_INTERVAL = 0;       // Time between remeasuring sensors (microsec)               <-- USER INPUT
+const long unsigned CONNECTION_TIMEOUT = 200000;      // Time without comms before automated shutdown (microsec)   <-- USER INPUT
+const long unsigned TIMEOUT_PRINT_INTERVAL = 50000;   // Time betweeen alerts when comms are out (microsec)        <-- USER INPUT
 
 // BAUD rate 
-const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
+const int BAUD = 115200;    // serial com in bits per second     <-- USER INPUT
 
 /*
 -------------------------------------------------------------------
-VALVE SETUP
+VALVE & IGNITER SETUP
 -------------------------------------------------------------------
 */
 
 // Valve pins
-const int NCS1_pin = 9;           // <-- USER INPUT
-const int NCS2_pin = 10;           // <-- USER INPUT
-const int LABV1_pin = 7;          // <-- USER INPUT
-const int LABV2_pin = 8;          // <-- USER INPUT
+const int NCS1_PIN = 9;           // <-- USER INPUT
+const int NCS2_PIN = 10;          // <-- USER INPUT
+const int NCS4_PIN = 11;          // <-- USER INPUT
+const int LABV1_PIN = 7;          // <-- USER INPUT
 
 // Igniter pins
-const int igniter1_pin = 13;           // <-- USER INPUT
-const int igniter2_pin = 14;           // <-- USER INPUT
+const int IG1_PIN = 13;           // <-- USER INPUT
+const int IG2_PIN = 14;           // <-- USER INPUT
 
-bool is_LABV1_open = false;
+// Function to get pin number from string
+int get_pin(String id) {
+  if (id == "NCS1") {
+    return NCS1_PIN;
+  } else if (id =="NSC2") {
+    return NCS2_PIN;
+  } else if (id =="NCS4") {
+    return NCS4_PIN;
+  } else if (id =="LA-BV1") {
+    return LABV1_PIN;
+  } else if (id == "IGNITE") {
+    return IG1_PIN;
+  }
+
+  // Return -1 if no match was found
+  return -1;
+}
 
 /*
 -------------------------------------------------------------------
@@ -35,69 +55,34 @@ PRESSURE TRANSDUCER SET UP
 */
 
 // teensy pins to read signals
-const int pt1_pin = 45;                    // <-- USER INPUT
-const int pt2_pin = 44;                    // <-- USER INPUT
+const int PT1_PIN = 45;                    // <-- USER INPUT
+const int PT2_PIN = 44;                    // <-- USER INPUT
 
 int pt1_analog = 0;                        // analog reading from PT output signal
 int pt2_analog = 0;                        // analog reading from PT output signal
 
-const float pt_slope = 0;                    // <-- USER INPUT
-const float pt_intercept = 0;                // <-- USER INPUT
+// Calibration constants
+const float PT_SLOPES[] = {0, 0};         // <-- USER INPUT
+const float PT_INTERCEPTS[] = {0, 0};     // <-- USER INPUT
 
 // Function to calculate pressure
-float pressureCalculation(float analog) {
-    // Calculate pressure based on analog input
-    float pressure = pt_slope * analog + pt_intercept;
-    return pressure;  // Return the calculated pressure
+float get_pressure(float analog_reading, size_t id) {
+  // Convert Voltage reading to measurement in psi with the correct calibration factors
+  // PTs are 1-indexed, the lists are 0-indexed
+  return PT_SLOPES[id-1] * analog_reading + PT_INTERCEPTS[id-1];
 }
 
-/*
--------------------------------------------------------------------
-THERMOCOUPLE SET UP
--------------------------------------------------------------------
-*/
-
-// Thermocouple libraries
-#include <Wire.h>
-#include <Adafruit_MCP9600.h>
-
-// Thermocouple I2C addresses
-#define I2C_ADDRESS1 (0x67)
-
-// Thermocouple mcp identifier
-Adafruit_MCP9600 mcp;
 
 void setup() {
-  Serial.begin(BAUD);           // initializes serial communication at set baud rate
-  Wire.begin();
+  // Initialize serial communication as configured and start thermocouple library
+  Serial.begin(BAUD);
 
-  /*
-  -------------------------------------------------------------------
-  VALVE SET UP
-  -------------------------------------------------------------------
-  */
-
-  pinMode(NCS1_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 1 MOSFET
-  pinMode(NCS2_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 2 MOSFET
-  pinMode(LABV1_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 5 MOSFET
-  pinMode(LABV2_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 6 MOSFET
-  pinMode(igniter1_pin, OUTPUT);
-  pinMode(igniter2_pin, OUTPUT);
-
-    /*
-  -------------------------------------------------------------------
-  THERMOCOUPLE SET UP
-  -------------------------------------------------------------------
-  */
-
-  // Initialize MCP9600 sensors
-  mcp.begin(I2C_ADDRESS1);
-
-  // Configure sensors
-  mcp.setADCresolution(MCP9600_ADCRESOLUTION_18);
-  mcp.setThermocoupleType(MCP9600_TYPE_K);
-  mcp.setFilterCoefficient(3);
-  mcp.enable(true);
+  // VALVES & IGNITERS
+  // Configure digital pins for actuating valves and igniteres as output only
+  pinMode(NCS1_PIN, OUTPUT);
+  pinMode(NCS2_PIN, OUTPUT);
+  pinMode(NCS4_PIN, OUTPUT);
+  pinMode(LABV1_PIN, OUTPUT);
 }
 
 void loop() {
@@ -106,66 +91,111 @@ void loop() {
   SENSOR READING
   -------------------------------------------------------------------
   */
-  pt1_analog = analogRead(pt1_pin);                          // reads value from input pin and assigns to variable
-  pt2_analog = analogRead(pt2_pin);                          // reads value from input pin and assigns to variable.
 
-  // Serially print sensor readings
-  Serial.print("P1:"); Serial.print(pressureCalculation(pt1_analog));              // print pressure calculation in psi
-  Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog));              // print pressure calculation in psi
-  Serial.print(",T1:"); Serial.print(mcp.readThermocouple());    // print thermocouple temperature in C
+  // Check how long it has been since the last measurement
+  if ((micros() - sensor_update_last) > SENSOR_UPDATE_INTERVAL) {
+    // Update the time of last reading
+    sensor_update_last = micros();
+
+    // Read Pressure Transducer analog data
+    pt1_analog = analogRead(PT1_PIN);
+    pt2_analog = analogRead(PT2_PIN);
+
+    // Print sensor readings to the serial output
+    // Convert pressures to psi
+    Serial.print("P1:"); Serial.print(get_pressure(pt1_analog, 1));
+    Serial.print(",P2:"); Serial.print(get_pressure(pt2_analog, 2));
+
+    // End the line to signify the end of message
+    Serial.println();
+  }
 
   /*
   -------------------------------------------------------------------
-  VALVE ACTUATION
+  VALVE & IGNITER ACTUATION
   -------------------------------------------------------------------
   */
 
-if (Serial.available() > 0) {
-  // read signal
-  String input = Serial.readStringUntil('\n');
+  if (Serial.available() > 0) {
+    // Update the time since last communication
+    connection_last = micros();
 
-  // Normally closed solenoid valve 1
-  if (input == "NCS1:0\r") {
-    digitalWrite(NCS1_pin, LOW);
-  }
-  if (input == "NCS1:1\r") {
-    digitalWrite(NCS1_pin, HIGH);
+    // read communication until end of message
+    String input = Serial.readStringUntil('\n');
+
+    // nop is the no operation command, which is merely to confirm that the connection is active
+    if (input == "nop") { return; }
+
+    // Parse message into ID and value, convert to pin number and an int
+    // If message cannot be split, it is meaningless
+    int split_index = input.indexOf(':');
+    if (-1 == split_index) { return; }
+
+    // If the pin number cannot be resolved, it is meaningless
+    int pin = get_pin(input.substring(0, split_index));
+    if (-1 == pin) { return; }
+
+    // Convert the second half of the string to the integer value
+    int value = input.substring(split_index + 1).toInt();
+  
+
+    // Use the pin and value to actuate the specified valve
+    switch (value) {
+      case 0:
+        digitalWrite(pin, LOW);   // Close Valve, Unpower Igniter
+
+        // Two igniters from the same signal
+        if (IG1_PIN == pin) {
+          digitalWrite(IG2_PIN, LOW);
+        }
+        break;
+      case 1:
+        digitalWrite(pin, HIGH);  // Open Valve, Power Igniter
+
+        // Two igniters from the same signal
+        if (IG1_PIN == pin) {
+          digitalWrite(IG2_PIN, HIGH);
+        }
+    }
   }
 
-  // Normally closed solenoid valve 2
-  if (input == "NCS2:0\r") {
-    digitalWrite(NCS2_pin, LOW);
-  }
-  if (input == "NCS2:1\r") {
-    digitalWrite(NCS2_pin, HIGH);
-  }
+  /*
+  -------------------------------------------------------------------
+  COMMUNICATIONS LOSS CHECK
+  -------------------------------------------------------------------
+  */
+  // Check if the time since last communication exceeds the allowable timeout
+  if ((micros() - connection_last) > CONNECTION_TIMEOUT) {
+    // Guarantee a return to a safe state by Opening NCS2
+    digitalWrite(NCS2_PIN, HIGH);
+    
+    // And then closing all other valves, unpowering igniters
+    digitalWrite(NCS1_PIN, LOW);
+    digitalWrite(NCS4_PIN, LOW);
+    digitalWrite(LABV1_PIN, LOW);
+    digitalWrite(IG1_PIN, LOW);
+    digitalWrite(IG2_PIN, LOW);
 
-  // Linearly Actuated Ball Valve 1
-  if (input == "LA-BV1:0\r") {
-    digitalWrite(LABV1_pin, LOW);
-    is_LABV1_open = true;
-  }
-  if (input == "LA-BV1:1\r") {
-    digitalWrite(LABV1_pin, HIGH);
-    is_LABV1_open = false;
-  }
+    // Enter a fixed loop until connection is reestablished and reinitiated
+    bool connection_lost = true;
+    long unsigned print_last = 0;
+    while (connection_lost) {
+      // Every TIMEOUT_PRINT_INTERAVAL, output the aborted message to alert the operator of the current state
+      if ((micros() - print_last) > TIMEOUT_PRINT_INTERVAL) {
+        print_last = micros();
+        Serial.println("Aborted");
+      }
 
-  // Linearly Actuated Ball Valve 2
-  if (input == "LA-BV2:0\r") {
-    digitalWrite(LABV2_pin, LOW);
-  }
-  if (input == "LA-BV2:1\r") {
-    digitalWrite(LABV2_pin, HIGH);
-  }
+      // Check for input from the operator
+      if (Serial.available() > 0) {
+        String input = Serial.readStringUntil('\n');
 
-  // Igniter 1
-  if (input == "IGNITE:1\r") {
-    digitalWrite(igniter1_pin, HIGH);
-    digitalWrite(igniter2_pin, HIGH);
-  }
-  if (input == "IGNITE:1\r") {
-    digitalWrite(igniter1_pin, LOW);
-    digitalWrite(igniter2_pin, LOW);
-  }
+        // Only respond if the specific string is encountered
+        if (input == "Start\r") {
+          // Exit the connection_lost loop
+          connection_lost = false;
+        }
+      }
+    }
   }
 }

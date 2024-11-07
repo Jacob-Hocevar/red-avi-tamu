@@ -1,18 +1,18 @@
-
 /*
 -------------------------------------------------------------------
-VARIABLES & USER INPUT
+TIME AND COMMUNICATION SETUP
 -------------------------------------------------------------------
 */
 
 // time variables
 long unsigned sensor_update_last = 0;
-long unsigned sensor_update_interval = 100000;    // sensor update interval (microsec)     <-- USER INPUT
+long unsigned connection_last = 0;
+const long unsigned SENSOR_UPDATE_INTERVAL = 50000;   // Time between remeasuring sensors (microsec)               <-- USER INPUT
+const long unsigned CONNECTION_TIMEOUT = 200000;      // Time without comms before automated shutdown (microsec)   <-- USER INPUT
+const long unsigned TIMEOUT_PRINT_INTERVAL = 50000;   // Time betweeen alerts when comms are out (microsec)        <-- USER INPUT
 
 // BAUD rate 
-const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
-
-bool is_LABV1_open = false;
+const int BAUD = 115200;    // serial com in bits per second     <-- USER INPUT
 
 /*
 -------------------------------------------------------------------
@@ -21,10 +21,26 @@ VALVE SETUP
 */
 
 // Valve pins
-const int NCS1_pin = 9;           // <-- USER INPUT
-const int NCS2_pin = 10;           // <-- USER INPUT
-const int LABV1_pin = 7;          // <-- USER INPUT
-const int LABV2_pin = 8;          // <-- USER INPUT
+const int NCS1_PIN = 9;           // <-- USER INPUT
+const int NCS2_PIN = 10;          // <-- USER INPUT
+const int LABV1_PIN = 7;          // <-- USER INPUT
+const int LABV2_PIN = 8;          // <-- USER INPUT
+
+// Function to get pin number from string
+int get_pin(String id) {
+  if (id == "NCS1") {
+    return NCS1_PIN;
+  } else if (id =="NSC2") {
+    return NCS2_PIN;
+  } else if (id =="LA-BV1") {
+    return LABV1_PIN;
+  } else if (id =="LA-BV2") {
+    return LABV2_PIN;
+  }
+
+  // Return -1 if no match was found
+  return -1;
+}
 
 /*
 -------------------------------------------------------------------
@@ -33,20 +49,21 @@ PRESSURE TRANSDUCER SET UP
 */
 
 // teensy pins to read signals
-const int pt1_pin = 45;                    // <-- USER INPUT
-const int pt2_pin = 44;                    // <-- USER INPUT
+const int PT1_PIN = 45;                    // <-- USER INPUT
+const int PT2_PIN = 44;                    // <-- USER INPUT
 
 int pt1_analog = 0;                        // analog reading from PT output signal
 int pt2_analog = 0;                        // analog reading from PT output signal
 
-const float pt_slope = 0;                    // <-- USER INPUT
-const float pt_intercept = 0;                    // <-- USER INPUT
+// Calibration constants
+const float PT_SLOPES[] = {0, 0};         // <-- USER INPUT
+const float PT_INTERCEPTS[] = {0, 0};     // <-- USER INPUT
 
 // Function to calculate pressure
-float pressureCalculation(float analog) {
-    // Calculate pressure based on analog input
-    float pressure = pt_slope * analog + pt_intercept;
-    return pressure;  // Return the calculated pressure
+float get_pressure(float analog_reading, size_t id) {
+  // Convert Voltage reading to measurement in psi with the correct calibration factors
+  // PTs are 1-indexed, the lists are 0-indexed
+  return PT_SLOPES[id-1] * analog_reading + PT_INTERCEPTS[id-1];
 }
 
 /*
@@ -55,24 +72,24 @@ FLOW METER SET UP
 -------------------------------------------------------------------
 */
 
-// Constants
-const int flowMeterPin = 0;   // Digital pin connected to the flow meter
-const float mlPerPulse = 2.5; // Volume per pulse in mL
-volatile int pulseCount = 0;  // Counter for pulse counts
+// Configuration
+const int FM_PIN = 43;            // Digital pin connected to the flow meter    <-- USER INPUT
+const float VOL_PER_PULSE = 2.5;  // Volume per pulse in mL
+volatile int pulse_count = 0;     // Counter for pulses
 
 // Interrupt service routine to handle the flow meter pulse
-void countPulse() {
-  pulseCount++;
+void count_pulse() {
+  pulse_count++;
 }
-
-// Number of pulse counts until sending flow rate
-int pulseReading = 20;
 
 /*
 -------------------------------------------------------------------
 THERMOCOUPLE SET UP
 -------------------------------------------------------------------
 */
+
+// Enable/Disable Thermocouple for testing
+const bool USING_THERMO = false;
 
 // Thermocouple libraries
 #include <Wire.h>
@@ -85,47 +102,39 @@ THERMOCOUPLE SET UP
 Adafruit_MCP9600 mcp;
 
 void setup() {
-  Serial.begin(BAUD);           // initializes serial communication at set baud rate
+  // Initialize serial communication as configured and start thermocouple library
+  Serial.begin(BAUD);
   Wire.begin();
 
-  /*
-  -------------------------------------------------------------------
-  VALVE SET UP
-  -------------------------------------------------------------------
-  */
+  // VALVES
+  // Configure digital pins for actuating valves as output only
+  pinMode(NCS1_PIN, OUTPUT);
+  pinMode(NCS2_PIN, OUTPUT);
+  pinMode(LABV1_PIN, OUTPUT);
+  pinMode(LABV2_PIN, OUTPUT);
 
-  pinMode(NCS1_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 1 MOSFET
-  pinMode(NCS2_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 2 MOSFET
-  pinMode(LABV1_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 5 MOSFET
-  pinMode(LABV2_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 6 MOSFET
-
-  /*
-  -------------------------------------------------------------------
-  FLOW METER SET UP
-  -------------------------------------------------------------------
-  */
-
-  // Set up the flow meter pin as an input
-  pinMode(flowMeterPin, INPUT);   // sets the digital pin as input for flow meter
+  // FLOW METER
+  // Set digital pin as input for the flow meter
+  pinMode(FM_PIN, INPUT);
 
   // Attach an interrupt to the flow meter pin
-  // RISING means the interrupt will trigger on the rising edge of the pulse
-  attachInterrupt(digitalPinToInterrupt(flowMeterPin), countPulse, RISING);
+  // RISING means the interrupt will trigger when the signal changes from LOW to HIGH
+  // FALLING means the interrupt will trigger when the signal changes from HIGH to LOW
+  // CHANGE means the interrupt will trigger for a change in either direction
+  attachInterrupt(digitalPinToInterrupt(FM_PIN), count_pulse, CHANGE);
 
-  /*
-  -------------------------------------------------------------------
-  THERMOCOUPLE SET UP
-  -------------------------------------------------------------------
-  */
+  // THERMOCOUPLE
+  // Only initialize if enabled
+  if (USING_THERMO) {
+    // Initialize MCP9600 sensors
+    mcp.begin(I2C_ADDRESS1);
 
-  // Initialize MCP9600 sensors
-  mcp.begin(I2C_ADDRESS1);
-
-  // Configure sensors
-  mcp.setADCresolution(MCP9600_ADCRESOLUTION_18);
-  mcp.setThermocoupleType(MCP9600_TYPE_K);
-  mcp.setFilterCoefficient(3);
-  mcp.enable(true);
+    // Configure sensors
+    mcp.setADCresolution(MCP9600_ADCRESOLUTION_18);
+    mcp.setThermocoupleType(MCP9600_TYPE_K);
+    mcp.setFilterCoefficient(3);
+    mcp.enable(true);
+  }
 }
 
 void loop() {
@@ -135,17 +144,31 @@ void loop() {
   -------------------------------------------------------------------
   */
 
-  // check for last reading update
-  if ((micros() - sensor_update_last) > sensor_update_interval) {
-    sensor_update_last = micros();                               // update last time update
+  // Check how long it has been since the last measurement
+  if ((micros() - sensor_update_last) > SENSOR_UPDATE_INTERVAL) {
+    // Update the time of last reading
+    sensor_update_last = micros();
 
-    pt1_analog = analogRead(pt1_pin);                          // reads value from input pin and assigns to variable
-    pt2_analog = analogRead(pt2_pin);                          // reads value from input pin and assigns to variable.
+    // Read Pressure Transducer analog data
+    pt1_analog = analogRead(PT1_PIN);
+    pt2_analog = analogRead(PT2_PIN);
 
-    // Serially print sensor readings
-    Serial.print("P1:"); Serial.print(pressureCalculation(pt1_analog));              // print pressure calculation in psi
-    Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog));              // print pressure calculation in psi
-    Serial.print(",T1:"); Serial.print(mcp.readThermocouple());    // print thermocouple temperature in C
+    // Print sensor readings to the serial output
+    // Convert pressures to psi
+    Serial.print("P1:"); Serial.print(get_pressure(pt1_analog, 1));
+    Serial.print(",P2:"); Serial.print(get_pressure(pt2_analog, 2));
+
+    // Only read/print thermocouple readings if enabled
+    if (USING_THERMO) {
+      // Outputs in °C
+      Serial.print(",T1:"); Serial.print(mcp.readThermocouple());
+    }
+
+    // Convert number of pulses to total volume and print flow meter readings
+    Serial.print(",V1:"); Serial.print(VOL_PER_PULSE * pulse_count);
+
+    // End the line to signify the end of message
+    Serial.println();
   }
 
   /*
@@ -154,54 +177,72 @@ void loop() {
   -------------------------------------------------------------------
   */
 
-if (Serial.available() > 0) {
-  // read signal
-  String input = Serial.readStringUntil('\n');
+  if (Serial.available() > 0) {
+    // Update the time since last communication
+    connection_last = micros();
 
-  // Normally closed solenoid valve 1
-  if (input == "NCS1:0\r") {
-    digitalWrite(NCS1_pin, LOW); // Open
-  }
-  if (input == "NCS1:1\r") {
-    digitalWrite(NCS1_pin, HIGH);  // Closed
-  }
+    // read communication until end of message
+    String input = Serial.readStringUntil('\n');
 
-  // Normally closed solenoid valve 2
-  if (input == "NCS2:0\r") {
-    digitalWrite(NCS2_pin, LOW);
-  }
-  if (input == "NCS2:1\r") {
-    digitalWrite(NCS2_pin, HIGH);
-  }
+    // nop is the no operation command, which is merely to confirm that the connection is active
+    if (input == "nop") { return; }
 
-  // Linearly Actuated Ball Valve 1
-  if (input == "LA-BV1:0\r") {
-    digitalWrite(LABV1_pin, LOW);
-    is_LABV1_open = true;
-  }
-  if (input == "LA-BV1:1\r") {
-    digitalWrite(LABV1_pin, HIGH);
-    is_LABV1_open = false;
-  }
+    // Parse message into ID and value, convert to pin number and an int
+    // If message cannot be split, it is meaningless
+    int split_index = input.indexOf(':');
+    if (-1 == split_index) { return; }
 
-  // Linearly Actuated Ball Valve 2
-  if (input == "LA-BV2:0\r") {
-    digitalWrite(LABV2_pin, LOW);
-  }
-  if (input == "LA-BV2:1\r") {
-    digitalWrite(LABV2_pin, HIGH);
-  }
+    // If the pin number cannot be resolved, it is meaningless
+    int pin = get_pin(input.substring(0, split_index));
+    if (-1 == pin) { return; }
+
+    // Convert the second half of the string to the integer value
+    int value = input.substring(split_index + 1).toInt();
+  
+
+    // Use the pin and value to actuate the specified valve
+    switch (value) {
+      case 0:
+        digitalWrite(pin, LOW);   // Close Valve
+        break;
+      case 1:
+        digitalWrite(pin, HIGH);  // Open Valve
+    }
   }
 
   /*
   -------------------------------------------------------------------
-  FLOW METER READING
+  COMMUNICATIONS LOSS CHECK
   -------------------------------------------------------------------
   */
-  if (pulseCount >= pulseReading) { 
-    float volume = pulseCount * mlPerPulse;
-    Serial.println(volume);
-    pulseCount = 0;
-  }
+  // Check if the time since last communication exceeds the allowable timeout
+  if ((micros() - connection_last) > CONNECTION_TIMEOUT) {
+    // Guarantee a return to a safe state by closing all valves
+    digitalWrite(NCS1_PIN, LOW);
+    digitalWrite(NCS2_PIN, LOW);
+    digitalWrite(LABV1_PIN, LOW);
+    digitalWrite(LABV2_PIN, LOW);
 
+    // Enter a fixed loop until connection is reestablished and reinitiated
+    bool connection_lost = true;
+    long unsigned print_last = 0;
+    while (connection_lost) {
+      // Every TIMEOUT_PRINT_INTERAVAL, output the aborted message to alert the operator of the current state
+      if ((micros() - print_last) > TIMEOUT_PRINT_INTERVAL) {
+        print_last = micros();
+        Serial.println("Aborted");
+      }
+
+      // Check for input from the operator
+      if (Serial.available() > 0) {
+        String input = Serial.readStringUntil('\n');
+
+        // Only respond if the specific string is encountered
+        if (input == "Start\r") {
+          // Exit the connection_lost loop
+          connection_lost = false;
+        }
+      }
+    }
+  }
 }
