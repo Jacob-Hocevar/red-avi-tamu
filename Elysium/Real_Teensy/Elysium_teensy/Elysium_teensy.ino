@@ -25,21 +25,20 @@ VALVE SETUP
 */
 
 // Valves
-const int NCS1_pin = 0;           // <-- USER INPUT
-const int NCS2_pin = 0;           // <-- USER INPUT
-const int NCS4_pin = 0;           // <-- USER INPUT
-const int LABV1_pin = 0;          // <-- USER INPUT
-const int LABV2_pin = 0;          // <-- USER INPUT
+const int NCS1_pin = 9;           // <-- USER INPUT
+const int NCS2_pin = 10;           // <-- USER INPUT
+const int NCS4_pin = 11;           // <-- USER INPUT
+const int LABV1_pin = 7;          // <-- USER INPUT
+const int LABV2_pin = 8;          // <-- USER INPUT
 
 // Igniter
 const int Igniter1_pin = 0;
 const int Igniter2_pin = 0;
-const int Igniter3_pin = 0;
 
 // serial input variables
 String ln1 = "";
 String ln2 = "";
-String valveName = "";
+int ln2int = 0;
 
 const int valve_count = 9;  // Total number of valves (NCS1, NCS2, NCS4, LABV1, LABV2, Igniter1, Igniter2, Igniter3)
 
@@ -75,15 +74,18 @@ LOAD CELL SET UP
 #include "HX711.h"
 
 // define data and clock pins for each loadcell
-const int LC1_D_OUT_PIN = 0;            // <-- USER INPUT
-const int LC1_CLK_PIN = 0;              // <-- USER INPUT
-const int LC2_D_OUT_PIN2 = 0;           // <-- USER INPUT
-const int LC2_CLK_PIN2 = 0;             // <-- USER INPUT
+const int LC1_D_OUT_PIN = 20;            // <-- USER INPUT
+const int LC1_CLK_PIN = 21;              // <-- USER INPUT
+const int LC2_D_OUT_PIN2 = 18;           // <-- USER INPUT
+const int LC2_CLK_PIN2 = 19;             // <-- USER INPUT
+const int LC2_D_OUT_PIN3 = 16;           // <-- USER INPUT
+const int LC2_CLK_PIN3 = 17;             // <-- USER INPUT
 
 // measurement set up
 float weight1;
 float weight2;
-HX711 scale, scale2;
+float weight3;
+HX711 scale, scale2, scale3;
 
 
 
@@ -108,15 +110,16 @@ Adafruit_MCP9600 mcp2;
 
 /*
 PRESSURE TRANSDUCER SET UP
-----------------
+--------------------------------
 */
 
 // teensy pins to read signals
-const int pt1_pin = 0;                    // <-- USER INPUT
-const int pt2_pin = 0;                    // <-- USER INPUT
-const int pt3_pin = 0;                    // <-- USER INPUT
-const int pt4_pin = 0;                    // <-- USER INPUT
-const int pt5_pin = 0;                    // <-- USER INPUT
+const int pt1_pin = 45;                    // <-- USER INPUT
+const int pt2_pin = 44;                    // <-- USER INPUT
+const int pt3_pin = 43;                    // <-- USER INPUT
+const int pt4_pin = 42;                    // <-- USER INPUT
+const int pt5_pin = 39;                    // <-- USER INPUT
+const int pt6_pin = 38;                    // <-- USER INPUT
 
 // analog and digital reading variables setup
 int pt1_analog = 0;                        // analog reading from PT output signal
@@ -124,6 +127,7 @@ int pt2_analog = 0;                        // analog reading from PT output sign
 int pt3_analog = 0;                        // analog reading from PT output signal
 int pt4_analog = 0;                        // analog reading from PT output signal
 int pt5_analog = 0;                        // analog reading from PT output signal
+int pt6_analog = 0;                        // analog reading from PT output signal
 
 const float pt_slope = 0;
 const float pt_intercept = 0;
@@ -142,9 +146,7 @@ ACCELEROMETER SET UP
 
 // import libraries
 #include "IMU.h"
-
 #include "LSM6DSL.h"
-
 #include "LIS3MDL.h"
 
 // measurement variable setup
@@ -209,6 +211,9 @@ void setup() {
 
   scale2.set_scale(2280.f); // Set the scale factor for conversion to kilograms
   scale2.tare();            // Reset the scale to zero
+
+  scale3.set_scale(2280.f); // Set the scale factor for conversion to kilograms
+  scale3.tare();            // Reset the scale to zero
   
   /*
   ACCELEROMETER SET UP
@@ -271,40 +276,39 @@ void loop() {
   // checks if user input is available to read
   if (Serial.available() > 0) {
     // read user input
-    String input_signal = Serial.readStringUntil("\n");
+    String input_signal = Serial.readStringUntil('\n');
     char delimiter = ':';
     int delimiterIndex = input_signal.indexOf(delimiter);
 
     // break string into identifier and control state
     if (delimiterIndex != -1) {
       ln1 = input_signal.substring(0, delimiterIndex);
-      ln2 = input_signal.substring(delimiterIndex + 1).toInt();
+      ln2 = input_signal.substring(delimiterIndex + 1);
+      ln2int = ln2.toInt();
     }
 
-    // Map string input to enum
+    // Map string input to enum using an array
     Valve valveToControl;
-    if (valveName == "NCS1") valveToControl = NCS1;
-    else if (ln1 == "NCS2") valveToControl = NCS2;
-    else if (ln1 == "NCS4") valveToControl = NCS4;
-    else if (ln1 == "LA-BV1") valveToControl = LABV1;
-    else if (ln1 == "LA-BV2") valveToControl = LABV2;
-    else if (ln1 == "IGNITER1") valveToControl = IGNITER1;
-    else if (ln1 == "IGNITER2") valveToControl = IGNITER2;
-    else if (ln1 == "IGNITER3") valveToControl = IGNITER3;
-    else {
-      Serial.println("not recognized");
-    }
+
     
     // update last time of communication variable
     last_update_time = micros();
 
     // convert input to corresponding state, actuate pins, and set valve control state
-    switch (ln2) {
+    switch (ln2int) {
       case 0:
         digitalWrite(valvePins[valveToControl], LOW);
+        if (valveToControl == LABV1){
+          digitalWrite(valvePins[NCS2], HIGH);
+          is_LABV1_open = false;
+        }
         break;
       case 1:
         digitalWrite(valvePins[valveToControl], HIGH);
+        if (valveToControl == LABV1){
+          digitalWrite(valvePins[NCS2], LOW);
+          is_LABV1_open = true;
+        }
         break;
       default:
         Serial.println("Unknown");
@@ -313,59 +317,54 @@ void loop() {
 
 /*
     // Normally closed solenoid valve 1
-    if (input == "NCS1:0\r\n") {
+    if (input == "NCS1:0\r") {
       digitalWrite(NCS1_pin, LOW); // Open
     }
-    if (input == "NCS1:1\r\n") {
+    if (input == "NCS1:1\r") {
       digitalWrite(NCS1_pin, HIGH);  // Closed
     }
 
     // Normally closed solenoid valve 2
-    if (input == "NCS2:0\r\n") {
+    if (input == "NCS2:0\r") {
       digitalWrite(NCS2_pin, LOW);
     }
-    if (input == "NCS2:1\r\n") {
+    if (input == "NCS2:1\r") {
       digitalWrite(NCS2_pin, HIGH);
     }
 
     // Normally closed solenoid valve 4
-    if (input == "NCS4:0\r\n") {
+    if (input == "NCS4:0\r") {
       digitalWrite(NCS4_pin, LOW);
     }
-    if (input == "NCS4:1\r\n") {
+    if (input == "NCS4:1\r") {
       digitalWrite(NCS4_pin, HIGH);
     }
 
     // Linearly Actuated Ball Valve 1
-    if (input == "LA-BV 1:0\r\n") {
+    if (input == "LA-BV1:0\r") {
       digitalWrite(LABV1_pin, LOW);
       is_LABV1_open = true;
     }
-    if (input == "LA-BV 1:1\r\n") {
+    if (input == "LA-BV1:1\r") {
       digitalWrite(LABV1_pin, HIGH);
       is_LABV1_open = false;
     }
 
     // Linearly Actuated Ball Valve 2
-    if (input == "LA-BV 2:0\r\n") {
+    if (input == "LA-BV2:0\r") {
       digitalWrite(LABV2_pin, LOW);
     }
-    if (input == "LA-BV 2:1\r\n") {
+    if (input == "LA-BV2:1\r") {
       digitalWrite(LABV2_pin, HIGH);
     }
 
     // Igniter 1
-    if (input == "IGNITE:1\r\n") {
+    if (input == "IGNITE:1\r") {
       digitalWrite(Igniter_pin, HIGH);
     }
 
     // Igniter 2
-    if (input == "IGNITE:1\r\n") {
-      digitalWrite(Igniter_pin, HIGH);
-    }
-
-    // Igniter 3
-    if (input == "IGNITE:1\r\n") {
+    if (input == "IGNITE:1\r") {
       digitalWrite(Igniter_pin, HIGH);
     }
     */
