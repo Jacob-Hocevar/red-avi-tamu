@@ -267,6 +267,7 @@ void GUI_COM_Window::serial_open() {
                 QTimer* nop_timer = new QTimer();
                 QObject::connect(nop_timer, SIGNAL(timeout()), this, SLOT(send_nop()));
                 nop_timer->start(CONNECTION_CONFIRM_INTERVAL);
+            this->ser->flush();
 
                 return;
             } else {
@@ -292,6 +293,7 @@ void GUI_COM_Window::serial_open() {
 
             // Startup/Restart Teensy
             this->ser->write(startup_command.toUtf8());
+            this->ser->flush();
             // Send "nop" (no operation) at regular interval to confirm active connection
             QTimer* nop_timer = new QTimer();
             QObject::connect(nop_timer, SIGNAL(timeout()), this, SLOT(send_nop()));
@@ -314,5 +316,8 @@ void GUI_COM_Window::serial_close() {
 
 void GUI_COM_Window::send_nop() {
     QString nop = "nop\r\n";
-    this->ser->write(nop.toUtf8());
+    if (this->ser->isOpen()) {
+        this->ser->write(nop.toUtf8());
+        this->ser->flush();
+    }
 }

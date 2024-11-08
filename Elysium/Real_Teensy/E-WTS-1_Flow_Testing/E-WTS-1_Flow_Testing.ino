@@ -9,7 +9,7 @@ long unsigned sensor_update_last = 0;
 long unsigned connection_last = 0;
 const long unsigned SENSOR_UPDATE_INTERVAL = 50000;   // Time between remeasuring sensors (microsec)               <-- USER INPUT
 const long unsigned CONNECTION_TIMEOUT = 200000;      // Time without comms before automated shutdown (microsec)   <-- USER INPUT
-const long unsigned TIMEOUT_PRINT_INTERVAL = 50000;   // Time betweeen alerts when comms are out (microsec)        <-- USER INPUT
+const long unsigned TIMEOUT_PRINT_INTERVAL = 500000;  // Time betweeen alerts when comms are out (microsec)        <-- USER INPUT
 
 // BAUD rate 
 const int BAUD = 115200;    // serial com in bits per second     <-- USER INPUT
@@ -30,7 +30,7 @@ const int LABV2_PIN = 8;          // <-- USER INPUT
 int get_pin(String id) {
   if (id == "NCS1") {
     return NCS1_PIN;
-  } else if (id =="NSC2") {
+  } else if (id =="NCS2") {
     return NCS2_PIN;
   } else if (id =="LA-BV1") {
     return LABV1_PIN;
@@ -56,8 +56,8 @@ int pt1_analog = 0;                        // analog reading from PT output sign
 int pt2_analog = 0;                        // analog reading from PT output signal
 
 // Calibration constants
-const float PT_SLOPES[] = {0, 0};         // <-- USER INPUT
-const float PT_INTERCEPTS[] = {0, 0};     // <-- USER INPUT
+const float PT_SLOPES[] = {237.5, 237.5};           // <-- USER INPUT
+const float PT_INTERCEPTS[] = {-68.75, -68.75};     // <-- USER INPUT
 
 // Function to calculate pressure
 float get_pressure(float analog_reading, size_t id) {
@@ -236,9 +236,13 @@ void loop() {
       // Check for input from the operator
       if (Serial.available() > 0) {
         String input = Serial.readStringUntil('\n');
+        Serial.println("New Input= " + input);
 
         // Only respond if the specific string is encountered
         if (input == "Start\r") {
+          // Update timer
+          connection_last = micros();
+
           // Exit the connection_lost loop
           connection_lost = false;
         }
