@@ -62,7 +62,7 @@ int pt1_analog = 0;                        // analog reading from PT output sign
 int pt2_analog = 0;                        // analog reading from PT output signal
 
 // Calibration constants
-const float PT_SLOPES[] = {237.5, 237.5};           // <-- USER INPUT
+const float PT_SLOPES[] = {0.927016, 0.927016};     // <-- USER INPUT
 const float PT_INTERCEPTS[] = {-68.75, -68.75};     // <-- USER INPUT
 
 // Function to calculate pressure
