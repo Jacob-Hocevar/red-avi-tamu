@@ -21,14 +21,14 @@ VALVE & IGNITER SETUP
 */
 
 // Valve pins
-const int NCS1_PIN = 9;           // <-- USER INPUT
+const int NCS1_PIN = 7;           // <-- USER INPUT
 const int NCS2_PIN = 10;          // <-- USER INPUT
-const int NCS4_PIN = 11;          // <-- USER INPUT
-const int LABV1_PIN = 7;          // <-- USER INPUT
+const int NCS4_PIN = 9;          // <-- USER INPUT
+const int LABV1_PIN = 5;          // <-- USER INPUT
 
 // Igniter pins
-const int IG1_PIN = 13;           // <-- USER INPUT
-const int IG2_PIN = 14;           // <-- USER INPUT
+const int IG1_PIN = 11;           // <-- USER INPUT
+const int IG2_PIN = 12;           // <-- USER INPUT
 
 // Function to get pin number from string
 int get_pin(String id) {
@@ -55,8 +55,8 @@ PRESSURE TRANSDUCER SET UP
 */
 
 // teensy pins to read signals
-const int PT1_PIN = 45;                    // <-- USER INPUT
-const int PT2_PIN = 44;                    // <-- USER INPUT
+const int PT1_PIN = 15;                    // <-- USER INPUT
+const int PT2_PIN = 16;                    // <-- USER INPUT
 
 int pt1_analog = 0;                        // analog reading from PT output signal
 int pt2_analog = 0;                        // analog reading from PT output signal

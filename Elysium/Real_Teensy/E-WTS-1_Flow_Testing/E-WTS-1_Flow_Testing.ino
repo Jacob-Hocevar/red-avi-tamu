@@ -21,10 +21,10 @@ VALVE SETUP
 */
 
 // Valve pins
-const int NCS1_PIN = 9;           // <-- USER INPUT
+const int NCS1_PIN = 7;           // <-- USER INPUT
 const int NCS2_PIN = 10;          // <-- USER INPUT
-const int LABV1_PIN = 7;          // <-- USER INPUT
-const int LABV2_PIN = 8;          // <-- USER INPUT
+const int LABV1_PIN = 5;          // <-- USER INPUT
+const int LABV2_PIN = 6;          // <-- USER INPUT
 
 // Function to get pin number from string
 int get_pin(String id) {
@@ -73,7 +73,7 @@ FLOW METER SET UP
 */
 
 // Configuration
-const int FM_PIN = 43;            // Digital pin connected to the flow meter    <-- USER INPUT
+const int FM_PIN = 23;            // Digital pin connected to the flow meter    <-- USER INPUT
 const float VOL_PER_PULSE = 2.5;  // Volume per pulse in mL
 volatile int pulse_count = 0;     // Counter for pulses
 
