@@ -23,13 +23,13 @@ This allows for some redundancy in the data transmission. If one value or part o
 Compare to the simpler system used during the WTS campaign: Comma separated values where the position dictates which property it corresponds to. First, the order of the properties had to be explicitly coordinated between the Teensy group and the GUI group and was not in reference to an existing, agreed upon document (such as the P&ID). Second, if a new sensor was added, both sides had to again determine where in the sequence to put the new value and manually hard-code it. Finally, if one value fails to send, all the following values (in that batch) are shifted and thus misread by the system.
 
 ### Example
-Suppose the P&ID has three Pressure Transduces (P1-P3), two Thermocouples (T1 and T2) and one accelerometer (A), which reads accelerations in three directions. The Teensy also outputs the local time with key `t`. Thus, it should output something like:
+Suppose the P&ID has three Pressure Transduces (P1-P3), two Thermocouples (T1 and T2) and one accelerometer (A1), which reads accelerations in three directions. The Teensy also outputs the local time with key `t`. Thus, it should output something like:
 
-`"t:6545450000,P1:685.5422001,P2:14.78512405,P3:500.12124541,T1:7.2301502,T2:312.128575954,Ax:0.784213850,Ay:0.34517850652,Az:2.0006781249\r\n"`
+`"t:6545450000,P1:685.5422001,P2:14.78512405,P3:500.12124541,T1:7.2301502,T2:312.128575954,A1x:0.784213850,A1y:0.34517850652,A1z:2.0006781249\r\n"`
 
 The order of the pairs does not matter, so something like the following is also acceptable, though less readable for debugging:
 
-`"P3:500.12124541,Ax:0.784213850,P1:685.5422001,T2:312.128575954,Az:2.0006781249,P2:14.78512405,T1:7.2301502,t:6545450000,Ay:0.34517850652\r\n"`
+`"P3:500.12124541,A1x:0.784213850,P1:685.5422001,T2:312.128575954,A1z:2.0006781249,P2:14.78512405,T1:7.2301502,t:6545450000,A1y:0.34517850652\r\n"`
 
 ### Valve Example
 For the valves, the solution is nearly identical, except that each command is always sent on its own line (no comma separated strings). Additionally, the value `0` always denotes a closed valve or close operation, and the value `1` always denotes an open valve or operation. For any extra electrical components (such as the ignition system), `0` will correspond to no power and `1` will correspond to providing power.
