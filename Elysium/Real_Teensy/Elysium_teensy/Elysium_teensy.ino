@@ -7,12 +7,15 @@ VARIABLES & USER INPUT
 #include <Arduino.h>
 
 // time variables
-long unsigned sensor_update_last = 0;
-long unsigned sensor_update_interval = 100000;    // sensor update interval (microsec)     <-- USER INPUT
-
-// variable for how long program should wait before shutting system down
-long unsigned shutdown_time = 1000000;                                       // <-- USER INPUT
-long unsigned last_update_time = 0;
+long unsigned LAST_SENSOR_UPDATE = 0;
+const long unsigned SENSOR_UPDATE_INTERVAL = 100000;    // sensor update interval (microsec)     <-- USER INPUT
+const long unsigned CONNECTION_TIMEOUT = 200000;       // automated shutdown timeout (microsec)     
+long unsigned LAST_COMMUNICATION_TIME = 0;
+long unsigned LAST_HUMAN_UPDATE = 0;
+const long unsigned HUMAN_CONNECTION_TIMEOUT = 300000000;
+const long unsigned SHUTDOWN_PURGE_TIME = 5000;        // milliseconds
+long unsigned ABORT_TIME_TRACKING = 0;
+const long unsigned ABORTED_TIME_INTERVAL = 0;
 
 // BAUD rate 
 const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
@@ -25,45 +28,41 @@ VALVE SETUP
 */
 
 // Valves
-const int NCS1_pin = 9;           // <-- USER INPUT
-const int NCS2_pin = 10;           // <-- USER INPUT
-const int NCS4_pin = 11;           // <-- USER INPUT
-const int LABV1_pin = 7;          // <-- USER INPUT
-const int LABV2_pin = 8;          // <-- USER INPUT
+const int NCS1_PIN = 7;           // <-- USER INPUT
+const int NCS2_PIN = 8;           // <-- USER INPUT
+const int NCS4_PIN = 9;           // <-- USER INPUT
+const int LABV1_PIN = 5;          // <-- USER INPUT
+const int LABV2_PIN = 6;          // <-- USER INPUT
 
 // Igniter
-const int Igniter1_pin = 0;
-const int Igniter2_pin = 0;
+const int IGN1_PIN = 11;          // <-- USER INPUT
+const int IGN2_PIN = 12;          // <-- USER INPUT
 
 // serial input variables
-String ln1 = "";
-String ln2 = "";
-int ln2int = 0;
+String IDENTIFIER = "";
+int CONTROL_STATE = 0;
 
-const int valve_count = 9;  // Total number of valves (NCS1, NCS2, NCS4, LABV1, LABV2, Igniter1, Igniter2, Igniter3)
+// Function to get pin number from string
+int get_pin(String id) {
+  if (id == "NCS1") {
+    return NCS1_PIN;
+  } else if (id =="NCS2") {
+    return NCS2_PIN;
+  } else if (id =="NCS4") {
+    return NCS4_PIN;
+  } else if (id =="LA-BV1") {
+    return LABV1_PIN;
+  } else if (id =="LA-BV2") {
+    return LABV2_PIN;
+  } else if (id =="IG1") {
+    return IGN1_PIN;
+  } else if (id =="IG2") {
+    return IGN2_PIN;
+  }
 
-enum Valve {
-    NCS1,
-    NCS2,
-    NCS4,
-    LABV1,
-    LABV2,
-    IGNITER1,
-    IGNITER2,
-    IGNITER3
-};
-
-// Array of valve pin numbers
-const int valvePins[valve_count] = {
-    NCS1_pin,  // Pin number for NCS1
-    NCS2_pin,  // Pin number for NCS2
-    NCS4_pin,  // Pin number for NCS4
-    LABV1_pin, // Pin number for LABV1
-    LABV2_pin, // Pin number for LABV2
-    Igniter1_pin, // Pin number for Igniter1
-    Igniter2_pin, // Pin number for Igniter2
-    Igniter3_pin, // Pin number for Igniter3
-};
+  // Return -1 if no match was found
+  return -1;
+}
 
 /*
 LOAD CELL SET UP
@@ -74,12 +73,12 @@ LOAD CELL SET UP
 #include "HX711.h"
 
 // define data and clock pins for each loadcell
-const int LC1_D_OUT_PIN = 20;            // <-- USER INPUT
-const int LC1_CLK_PIN = 21;              // <-- USER INPUT
-const int LC2_D_OUT_PIN2 = 18;           // <-- USER INPUT
-const int LC2_CLK_PIN2 = 19;             // <-- USER INPUT
-const int LC2_D_OUT_PIN3 = 16;           // <-- USER INPUT
-const int LC2_CLK_PIN3 = 17;             // <-- USER INPUT
+const int LC1_D_OUT_PIN = 28;            // <-- USER INPUT
+const int LC1_CLK_PIN = 29;              // <-- USER INPUT
+const int LC2_D_OUT_PIN2 = 26;           // <-- USER INPUT
+const int LC2_CLK_PIN2 = 27;             // <-- USER INPUT
+const int LC2_D_OUT_PIN3 = 24;           // <-- USER INPUT
+const int LC2_CLK_PIN3 = 25;             // <-- USER INPUT
 
 // measurement set up
 float weight1;
@@ -114,12 +113,12 @@ PRESSURE TRANSDUCER SET UP
 */
 
 // teensy pins to read signals
-const int pt1_pin = 45;                    // <-- USER INPUT
-const int pt2_pin = 44;                    // <-- USER INPUT
-const int pt3_pin = 43;                    // <-- USER INPUT
-const int pt4_pin = 42;                    // <-- USER INPUT
-const int pt5_pin = 39;                    // <-- USER INPUT
-const int pt6_pin = 38;                    // <-- USER INPUT
+const int PT1_PIN = 14;                    // <-- USER INPUT
+const int PT2_PIN = 15;                    // <-- USER INPUT
+const int PT3_PIN = 16;                    // <-- USER INPUT
+const int PT4_PIN = 17;                    // <-- USER INPUT
+const int PT5_PIN = 20;                    // <-- USER INPUT
+const int PT6_PIN = 21;                    // <-- USER INPUT
 
 // analog and digital reading variables setup
 int pt1_analog = 0;                        // analog reading from PT output signal
@@ -170,11 +169,11 @@ void setup() {
   -----------------------
   */
 
-  pinMode(NCS1_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 1 MOSFET
-  pinMode(NCS2_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 2 MOSFET
-  pinMode(NCS4_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 4 MOSFET
-  pinMode(LABV1_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 5 MOSFET
-  pinMode(LABV2_pin, OUTPUT);    // sets the digital pin as output for controlling Valve 6 MOSFET
+  pinMode(NCS1_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 1 MOSFET
+  pinMode(NCS2_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 2 MOSFET
+  pinMode(NCS4_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 4 MOSFET
+  pinMode(LABV1_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 5 MOSFET
+  pinMode(LABV2_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 6 MOSFET
 
   /*
   THERMOCOUPLE SET UP
@@ -232,15 +231,15 @@ LOOP
 */
 void loop() {
   // check for last reading update
-  if ((micros() - sensor_update_last) > sensor_update_interval) {
-    sensor_update_last = micros();                               // update last time update
+  if ((micros() - LAST_SENSOR_UPDATE) > SENSOR_UPDATE_INTERVAL) {
+    LAST_SENSOR_UPDATE = micros();                               // update time
 
     // read pressure data
-    pt1_analog = analogRead(pt1_pin);                          // reads value from input pin and assigns to variable
-    pt2_analog = analogRead(pt2_pin);                          // reads value from input pin and assigns to variable.
-    pt3_analog = analogRead(pt3_pin);
-    pt4_analog = analogRead(pt4_pin);
-    pt5_analog = analogRead(pt5_pin);
+    pt1_analog = analogRead(PT1_PIN);                          // reads value from input pin and assigns to variable
+    pt2_analog = analogRead(PT2_PIN);                          // reads value from input pin and assigns to variable.
+    pt3_analog = analogRead(PT3_PIN);
+    pt4_analog = analogRead(PT4_PIN);
+    pt5_analog = analogRead(PT5_PIN);
 
     // read acceleration
     readACC(buff);
@@ -251,145 +250,93 @@ void loop() {
     accy = accRaw[1]/accoffset;
     accz = accRaw[2]/accoffset;
 
-    // measure force from each load cell
+    // measure force from load cells
     weight1 = scale.get_units(1);  // Get the weight in kilograms
     weight2 = scale2.get_units(1); // Get the weight in kilograms
 
-    // send data to serial monitor 
-    Serial.print("t:"); Serial.print(sensor_update_last);          // print time reading
+    // send data to serial monitor
+    Serial.print("t:"); Serial.print(LAST_SENSOR_UPDATE);                             // print time reading in microseconds
     Serial.print(",P1:"); Serial.print(pressureCalculation(pt1_analog));              // print pressure calculation in psi
     Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog));              // print pressure calculation in psi
     Serial.print(",P3:"); Serial.print(pressureCalculation(pt3_analog));              // print pressure calculation in psi
     Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog));              // print pressure calculation in psi
     Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog));              // print pressure calculation in psi
-    Serial.print(",T1:"); Serial.print(mcp.readThermocouple());    // print thermocouple temperature in C
-    Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());   // print thermocouple temperature in C
-    Serial.print(",L1:"); Serial.print(weight1);                   // print load cell 1 in kg
-    Serial.print(",L2:"); Serial.print(weight2);                   // print load cell 2 in kg
-    Serial.print(",Ax:"); Serial.print(accx);                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
-    Serial.print(",Ay:"); Serial.print(accy);                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
-    Serial.print(",Az:"); Serial.print(accz);                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
+    Serial.print(",T1:"); Serial.print(mcp.readThermocouple());                       // print thermocouple temperature in C
+    Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());                      // print thermocouple temperature in C
+    Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in kg
+    Serial.print(",L2:"); Serial.print(weight2);                                      // print load cell 2 in kg
+    Serial.print(",Ax:"); Serial.print(accx);                                         // print acceleration in x direction  <-- determine what direction x is in relation to engine
+    Serial.print(",Ay:"); Serial.print(accy);                                         // print acceleration in y direction  <-- determine what direction y is in relation to engine
+    Serial.print(",Az:"); Serial.print(accz);                                         // print acceleration in z direction  <-- determine what direction z is in relation to engine
     Serial.println();
     delay(10);
   }
 
   // checks if user input is available to read
   if (Serial.available() > 0) {
-    // read user input
-    String input_signal = Serial.readStringUntil('\n');
-    char delimiter = ':';
-    int delimiterIndex = input_signal.indexOf(delimiter);
+    LAST_COMMUNICATION_TIME = micros();
+
+    // read communication
+    String input = Serial.readStringUntil('\n');
+
+    // no operation command to confirm connection
+    if (input != "nop\r") {
+      LAST_HUMAN_UPDATE = micros();
+      return;
+      }
+    else { return; }
 
     // break string into identifier and control state
+    int delimiterIndex = input.indexOf(':');
     if (delimiterIndex != -1) {
-      ln1 = input_signal.substring(0, delimiterIndex);
-      ln2 = input_signal.substring(delimiterIndex + 1);
-      ln2int = ln2.toInt();
+      IDENTIFIER = input.substring(0, delimiterIndex);
+      int CONTROL_STATE = input.substring(delimiterIndex + 1).toInt();
     }
 
-    // Map string input to enum using an array
-    Valve valveToControl;
-
-    
-    // update last time of communication variable
-    last_update_time = micros();
-
-    // convert input to corresponding state, actuate pins, and set valve control state
-    switch (ln2int) {
+    int pin = get_pin(IDENTIFIER);
+    switch (CONTROL_STATE) {
       case 0:
-        digitalWrite(valvePins[valveToControl], LOW);
-        if (valveToControl == LABV1){
-          digitalWrite(valvePins[NCS2], HIGH);
-          is_LABV1_open = false;
+        digitalWrite(pin, LOW);   // Close Valve
+        if (IDENTIFIER == "LA-BV1") {
+          digitalWrite(5, LOW);
         }
-        break;
       case 1:
-        digitalWrite(valvePins[valveToControl], HIGH);
-        if (valveToControl == LABV1){
-          digitalWrite(valvePins[NCS2], LOW);
-          is_LABV1_open = true;
-        }
-        break;
-      default:
-        Serial.println("Unknown");
-        break;
+        digitalWrite(pin, HIGH);  // Open Valve
     }
-
-/*
-    // Normally closed solenoid valve 1
-    if (input == "NCS1:0\r") {
-      digitalWrite(NCS1_pin, LOW); // Open
-    }
-    if (input == "NCS1:1\r") {
-      digitalWrite(NCS1_pin, HIGH);  // Closed
-    }
-
-    // Normally closed solenoid valve 2
-    if (input == "NCS2:0\r") {
-      digitalWrite(NCS2_pin, LOW);
-    }
-    if (input == "NCS2:1\r") {
-      digitalWrite(NCS2_pin, HIGH);
-    }
-
-    // Normally closed solenoid valve 4
-    if (input == "NCS4:0\r") {
-      digitalWrite(NCS4_pin, LOW);
-    }
-    if (input == "NCS4:1\r") {
-      digitalWrite(NCS4_pin, HIGH);
-    }
-
-    // Linearly Actuated Ball Valve 1
-    if (input == "LA-BV1:0\r") {
-      digitalWrite(LABV1_pin, LOW);
-      is_LABV1_open = true;
-    }
-    if (input == "LA-BV1:1\r") {
-      digitalWrite(LABV1_pin, HIGH);
-      is_LABV1_open = false;
-    }
-
-    // Linearly Actuated Ball Valve 2
-    if (input == "LA-BV2:0\r") {
-      digitalWrite(LABV2_pin, LOW);
-    }
-    if (input == "LA-BV2:1\r") {
-      digitalWrite(LABV2_pin, HIGH);
-    }
-
-    // Igniter 1
-    if (input == "IGNITE:1\r") {
-      digitalWrite(Igniter_pin, HIGH);
-    }
-
-    // Igniter 2
-    if (input == "IGNITE:1\r") {
-      digitalWrite(Igniter_pin, HIGH);
-    }
-    */
   }
 
-  // Shutdown engine if teensy is not communicating with computer
-  if ((micros() - last_update_time) > shutdown_time) {
-    // Shutdown engine
-
+  // Lost communication shutdown
+  if (((micros() - LAST_COMMUNICATION_TIME) > CONNECTION_TIMEOUT) || ((micros() - LAST_HUMAN_UPDATE) > HUMAN_CONNECTION_TIMEOUT)) {
     // Open NCS2
-    digitalWrite(NCS2_pin, HIGH);
+    digitalWrite(NCS2_PIN, HIGH);
 
     // Close ball valves & NCS1
-    digitalWrite(NCS1_pin, LOW);
-    digitalWrite(LABV1_pin, LOW);
-    digitalWrite(LABV2_pin, LOW);
+    digitalWrite(NCS1_PIN, LOW);
+    digitalWrite(NCS4_PIN, LOW);
+    digitalWrite(LABV1_PIN, LOW);
+    digitalWrite(LABV2_PIN, LOW);
 
+    // If LABV1 is open, system purges with nitrogen
     if (is_LABV1_open) {
       // Open NCS4 for 3 seconds
-      digitalWrite(NCS4_pin, HIGH);
-      delay(3000);
-      digitalWrite(NCS4_pin, LOW);
+      digitalWrite(NCS4_PIN, HIGH);
+      delay(SHUTDOWN_PURGE_TIME);
+      digitalWrite(NCS4_PIN, LOW);
     }
 
-    // End program
-    while(1);
+    // While system is aborted, print "aborted" until a start command is received
+    bool aborted = true;
+    while(aborted) {
+      ABORT_TIME_TRACKING = micros();
+      if ((micros() - ABORT_TIME_TRACKING) > ABORTED_TIME_INTERVAL) {
+      Serial.println("Aborted");
+      }
+
+      if (Serial.available() > 0) {
+        bool aborted = false;
+        LAST_COMMUNICATION_TIME = micros();
+        LAST_HUMAN_UPDATE = micros();
+      }
+    }
   }
 }
