@@ -95,6 +95,8 @@ THERMOCOUPLE SET UP
 
 // Thermocouple libraries
 #include <Wire.h>
+#include <Adafruit_I2CDevice.h>
+#include <Adafruit_I2CRegister.h>
 #include <Adafruit_MCP9600.h>
 
 // Thermocouple I2C addresses
@@ -104,7 +106,6 @@ THERMOCOUPLE SET UP
 // Thermocouple mcp identifier
 Adafruit_MCP9600 mcp;
 Adafruit_MCP9600 mcp2;
-
 
 
 /*
@@ -128,14 +129,14 @@ int pt4_analog = 0;                        // analog reading from PT output sign
 int pt5_analog = 0;                        // analog reading from PT output signal
 int pt6_analog = 0;                        // analog reading from PT output signal
 
-const float pt_slope = 0;
-const float pt_intercept = 0;
+// Calibration constants
+const float pt_slope[] = {1, 1};
+const float pt_intercept[] = {1, 1};
 
 // Function to calculate pressure
-float pressureCalculation(float analog) {
+float pressureCalculation(float analog, size_t id) {
     // Calculate pressure based on analog input
-    float pressure = pt_slope * analog + pt_intercept;
-    return pressure;  // Return the calculated pressure
+    return pt_slope[id-1] * analog + pt_intercept[id-1];
 }
 
 /*
@@ -240,6 +241,7 @@ void loop() {
     pt3_analog = analogRead(PT3_PIN);
     pt4_analog = analogRead(PT4_PIN);
     pt5_analog = analogRead(PT5_PIN);
+    pt6_analog = analogRead(PT6_PIN);
 
     // read acceleration
     readACC(buff);
@@ -256,11 +258,12 @@ void loop() {
 
     // send data to serial monitor
     Serial.print("t:"); Serial.print(LAST_SENSOR_UPDATE);                             // print time reading in microseconds
-    Serial.print(",P1:"); Serial.print(pressureCalculation(pt1_analog));              // print pressure calculation in psi
-    Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog));              // print pressure calculation in psi
-    Serial.print(",P3:"); Serial.print(pressureCalculation(pt3_analog));              // print pressure calculation in psi
-    Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog));              // print pressure calculation in psi
-    Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog));              // print pressure calculation in psi
+    Serial.print(",P1:"); Serial.print(pressureCalculation(pt1_analog, 1));           // print pressure calculation in psi
+    Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog, 2));           // print pressure calculation in psi
+    Serial.print(",P3:"); Serial.print(pressureCalculation(pt3_analog), 3);           // print pressure calculation in psi
+    Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog), 4);           // print pressure calculation in psi
+    Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog), 5);           // print pressure calculation in psi
+    Serial.print(",P6:"); Serial.print(pressureCalculation(pt6_analog), 6);           // print pressure calculation in psi
     Serial.print(",T1:"); Serial.print(mcp.readThermocouple());                       // print thermocouple temperature in C
     Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());                      // print thermocouple temperature in C
     Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in kg
@@ -282,9 +285,7 @@ void loop() {
     // no operation command to confirm connection
     if (input != "nop\r") {
       LAST_HUMAN_UPDATE = micros();
-      return;
       }
-    else { return; }
 
     // break string into identifier and control state
     int delimiterIndex = input.indexOf(':');
@@ -298,7 +299,7 @@ void loop() {
       case 0:
         digitalWrite(pin, LOW);   // Close Valve
         if (IDENTIFIER == "LA-BV1") {
-          digitalWrite(5, LOW);
+          digitalWrite(5, HIGH);
         }
       case 1:
         digitalWrite(pin, HIGH);  // Open Valve
