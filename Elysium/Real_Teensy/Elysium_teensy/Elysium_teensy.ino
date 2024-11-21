@@ -8,14 +8,14 @@ VARIABLES & USER INPUT
 
 // time variables
 long unsigned LAST_SENSOR_UPDATE = 0;
-const long unsigned SENSOR_UPDATE_INTERVAL = 100000;    // sensor update interval (microsec)     <-- USER INPUT
+const long unsigned SENSOR_UPDATE_INTERVAL = 10000;    // sensor update interval (microsec)     <-- USER INPUT
 const long unsigned CONNECTION_TIMEOUT = 200000;       // automated shutdown timeout (microsec)     
 long unsigned LAST_COMMUNICATION_TIME = 0;
 long unsigned LAST_HUMAN_UPDATE = 0;
 const long unsigned HUMAN_CONNECTION_TIMEOUT = 300000000;
 const long unsigned SHUTDOWN_PURGE_TIME = 5000;        // milliseconds
 long unsigned ABORT_TIME_TRACKING = 0;
-const long unsigned ABORTED_TIME_INTERVAL = 0;
+const long unsigned ABORTED_TIME_INTERVAL = 500000;
 
 // BAUD rate 
 const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
@@ -77,8 +77,8 @@ const int LC1_D_OUT_PIN = 28;            // <-- USER INPUT
 const int LC1_CLK_PIN = 29;              // <-- USER INPUT
 const int LC2_D_OUT_PIN2 = 26;           // <-- USER INPUT
 const int LC2_CLK_PIN2 = 27;             // <-- USER INPUT
-const int LC2_D_OUT_PIN3 = 24;           // <-- USER INPUT
-const int LC2_CLK_PIN3 = 25;             // <-- USER INPUT
+const int LC3_D_OUT_PIN3 = 24;           // <-- USER INPUT
+const int LC3_CLK_PIN3 = 25;             // <-- USER INPUT
 
 // measurement set up
 float weight1;
@@ -101,7 +101,7 @@ THERMOCOUPLE SET UP
 
 // Thermocouple I2C addresses
 #define I2C_ADDRESS1 (0x67)
-#define I2C_ADDRESS2 (0x60)
+#define I2C_ADDRESS2 (0x67)
 
 // Thermocouple mcp identifier
 Adafruit_MCP9600 mcp;
@@ -155,7 +155,6 @@ int accRaw[3];
 float accx, accy, accz;
 const float accoffset = 4180;
 
-
 /*
 -------------------------------------------------------------------
 SETUP LOOP
@@ -169,12 +168,17 @@ void setup() {
   VALVE SET UP
   -----------------------
   */
+  Serial.println("test1");
 
   pinMode(NCS1_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 1 MOSFET
   pinMode(NCS2_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 2 MOSFET
   pinMode(NCS4_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 4 MOSFET
   pinMode(LABV1_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 5 MOSFET
   pinMode(LABV2_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 6 MOSFET
+  pinMode(IGN1_PIN, OUTPUT);
+  pinMode(IGN2_PIN, OUTPUT);
+
+  Serial.println("test2_Pins");
 
   /*
   THERMOCOUPLE SET UP
@@ -182,19 +186,21 @@ void setup() {
   */
 
   // Initialize MCP9600 sensors
-  mcp.begin(I2C_ADDRESS1);
-  mcp2.begin(I2C_ADDRESS2);
+  //mcp.begin(I2C_ADDRESS1);
+  //mcp2.begin(I2C_ADDRESS2);
 
   // Configure both sensors
-  mcp.setADCresolution(MCP9600_ADCRESOLUTION_18);
-  mcp.setThermocoupleType(MCP9600_TYPE_K);
-  mcp.setFilterCoefficient(3);
-  mcp.enable(true);
+  //mcp.setADCresolution(MCP9600_ADCRESOLUTION_18);
+  //mcp.setThermocoupleType(MCP9600_TYPE_K);
+  //mcp.setFilterCoefficient(3);
+  //mcp.enable(true);
 
-  mcp2.setADCresolution(MCP9600_ADCRESOLUTION_18);
-  mcp2.setThermocoupleType(MCP9600_TYPE_K);
-  mcp2.setFilterCoefficient(3);
-  mcp2.enable(true);
+  //mcp2.setADCresolution(MCP9600_ADCRESOLUTION_18);
+  //mcp2.setThermocoupleType(MCP9600_TYPE_K);
+  //mcp2.setFilterCoefficient(3);
+  //mcp2.enable(true);
+
+  Serial.println("test3_TC");
 
   /*
   LOAD CELL SET UP
@@ -204,25 +210,27 @@ void setup() {
   // load cell setup
   scale.begin(LC1_D_OUT_PIN, LC1_CLK_PIN);
   scale2.begin(LC2_D_OUT_PIN2, LC2_CLK_PIN2);
+  scale3.begin(LC3_D_OUT_PIN3, LC3_CLK_PIN3);
 
   // scale and tare load cells
-  scale.set_scale(2280.f);  // Set the scale factor for conversion to kilograms
+  scale.set_scale(-3980.f);  // Set the scale factor for conversion to kilograms
   scale.tare();             // Reset the scale to zero
 
-  scale2.set_scale(2280.f); // Set the scale factor for conversion to kilograms
+  scale2.set_scale(-3880.f); // Set the scale factor for conversion to kilograms
   scale2.tare();            // Reset the scale to zero
 
-  scale3.set_scale(2280.f); // Set the scale factor for conversion to kilograms
+  scale3.set_scale(-3780.f); // Set the scale factor for conversion to kilograms
   scale3.tare();            // Reset the scale to zero
   
+  Serial.println("test4_LC");
   /*
   ACCELEROMETER SET UP
   -----------------------
   */
 
   // detect and enable IMU
-  detectIMU();
-  enableIMU();
+  // detectIMU();
+  // enableIMU();
 }
 
 /*
@@ -244,33 +252,35 @@ void loop() {
     pt6_analog = analogRead(PT6_PIN);
 
     // read acceleration
-    readACC(buff);
-    accRaw[0] = (int16_t)(buff[0] | (buff[1] << 8)); 
-    accRaw[1] = (int16_t)(buff[2] | (buff[3] << 8));
-    accRaw[2] = (int16_t)(buff[4] | (buff[5] << 8));
-    accx = accRaw[0]/accoffset;
-    accy = accRaw[1]/accoffset;
-    accz = accRaw[2]/accoffset;
+    // readACC(buff);
+    // accRaw[0] = (int16_t)(buff[0] | (buff[1] << 8)); 
+    // accRaw[1] = (int16_t)(buff[2] | (buff[3] << 8));
+    // accRaw[2] = (int16_t)(buff[4] | (buff[5] << 8));
+    // accx = accRaw[0]/accoffset;
+    // accy = accRaw[1]/accoffset;
+    // accz = accRaw[2]/accoffset;
 
     // measure force from load cells
     weight1 = scale.get_units(1);  // Get the weight in kilograms
     weight2 = scale2.get_units(1); // Get the weight in kilograms
+    weight3 = scale3.get_units(1);
 
     // send data to serial monitor
     Serial.print("t:"); Serial.print(LAST_SENSOR_UPDATE);                             // print time reading in microseconds
     Serial.print(",P1:"); Serial.print(pressureCalculation(pt1_analog, 1));           // print pressure calculation in psi
     Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog, 2));           // print pressure calculation in psi
-    Serial.print(",P3:"); Serial.print(pressureCalculation(pt3_analog), 3);           // print pressure calculation in psi
-    Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog), 4);           // print pressure calculation in psi
-    Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog), 5);           // print pressure calculation in psi
-    Serial.print(",P6:"); Serial.print(pressureCalculation(pt6_analog), 6);           // print pressure calculation in psi
-    Serial.print(",T1:"); Serial.print(mcp.readThermocouple());                       // print thermocouple temperature in C
-    Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());                      // print thermocouple temperature in C
+    Serial.print(",P3:"); Serial.print(pressureCalculation(pt3_analog, 3));           // print pressure calculation in psi
+    Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog, 4));           // print pressure calculation in psi
+    Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog, 5));           // print pressure calculation in psi
+    Serial.print(",P6:"); Serial.print(pressureCalculation(pt6_analog, 6));           // print pressure calculation in psi
+    // Serial.print(",T1:"); Serial.print(mcp.readThermocouple());                    // print thermocouple temperature in C
+    // Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());                   // print thermocouple temperature in C
     Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in kg
     Serial.print(",L2:"); Serial.print(weight2);                                      // print load cell 2 in kg
-    Serial.print(",Ax:"); Serial.print(accx);                                         // print acceleration in x direction  <-- determine what direction x is in relation to engine
-    Serial.print(",Ay:"); Serial.print(accy);                                         // print acceleration in y direction  <-- determine what direction y is in relation to engine
-    Serial.print(",Az:"); Serial.print(accz);                                         // print acceleration in z direction  <-- determine what direction z is in relation to engine
+    Serial.print(",L3:"); Serial.print(weight3);                                      // print load cell 3 in kg
+    // Serial.print(",Ax:"); Serial.print(accx);                                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
+    // Serial.print(",Ay:"); Serial.print(accy);                                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
+    // Serial.print(",Az:"); Serial.print(accz);                                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
     Serial.println();
     delay(10);
   }
@@ -291,18 +301,24 @@ void loop() {
     int delimiterIndex = input.indexOf(':');
     if (delimiterIndex != -1) {
       IDENTIFIER = input.substring(0, delimiterIndex);
-      int CONTROL_STATE = input.substring(delimiterIndex + 1).toInt();
+      CONTROL_STATE = input.substring(delimiterIndex + 1).toInt();
     }
+    else { return; }
 
     int pin = get_pin(IDENTIFIER);
+    if (pin == -1) {
+      return;
+    }
     switch (CONTROL_STATE) {
       case 0:
         digitalWrite(pin, LOW);   // Close Valve
         if (IDENTIFIER == "LA-BV1") {
-          digitalWrite(5, HIGH);
+          digitalWrite(NCS2_PIN, HIGH);
         }
+        break;
       case 1:
         digitalWrite(pin, HIGH);  // Open Valve
+        break;
     }
   }
 
@@ -328,13 +344,13 @@ void loop() {
     // While system is aborted, print "aborted" until a start command is received
     bool aborted = true;
     while(aborted) {
-      ABORT_TIME_TRACKING = micros();
       if ((micros() - ABORT_TIME_TRACKING) > ABORTED_TIME_INTERVAL) {
-      Serial.println("Aborted");
+        ABORT_TIME_TRACKING = micros();
+        Serial.println("Aborted");
       }
 
       if (Serial.available() > 0) {
-        bool aborted = false;
+        aborted = false;
         LAST_COMMUNICATION_TIME = micros();
         LAST_HUMAN_UPDATE = micros();
       }
