@@ -8,10 +8,11 @@
 
 // Constant Declarations, not definitions to avoid multiply defined objects with all files that include this header
 // Defined in the .cpp file
+extern const int SEQUENCE_DELAY;
+extern const int PURGE_DELAY;
+extern const int IGNITION_DELAY;
 extern const int PURGE_DURATION;
 extern const int FIRE_DURATION;
-extern const int IGNITION_DELAY;
-extern const int UNDER_PRESSURE;
 
 // TODO: Consider using derived classes for each configuration. Make update_signals() a pure virtual function.
 // This class must derive from QObject to use signals/slots

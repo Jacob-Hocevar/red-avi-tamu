@@ -7,18 +7,20 @@ using std::cout;
 using std::endl;
 
 // Constants (user set parameters)
+// Number of milliseconds that the ignition system should be delayed
+const int SEQUENCE_DELAY = 7400;
+
+// Number of milliseconds that the ignition system should be delayed
+const int PURGE_DELAY = 500;
+
+// Number of milliseconds that the ignition system should be delayed
+const int IGNITION_DELAY = 100;
+
 // Number of milliseconds that the pre-fire and post-fire purges should last
-const int PURGE_DURATION = 5000;
+const int PURGE_DURATION = 2000;
 
 // Number of milliseconds that the Fire should last
 const int FIRE_DURATION = 3500;
-
-// Number of milliseconds that the ignition system or ball valve signals should be delayed
-const int IGNITION_DELAY = 0;
-
-// Underpressure [psi]. If Pressure in the fuel manifold drops below this value immediately shutdown.
-// TODO: Confirm value w/ TCA and FSYS.
-const int UNDER_PRESSURE = 450;
 
 // Constructor
 State_Machine::State_Machine(QString name, QHash<QString, double>* data):
@@ -44,7 +46,7 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
     // Handle aborts first: 2 cases
     if (abort) {
         // If the main ball valves are open, do a purge
-        if ("Fire" == this->cur_state) {
+        if (("Fire" == this->cur_state) || ("Main Valves Open" == this->cur_state)) {
             this->cur_state = "Shutdown Ph. 1";
         
         // Otherwise, go straight to non-purge shutdown procedure
@@ -107,15 +109,36 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
         }
     
     } else if ("Pressurization"         == this->cur_state) {
-        // TODO: Consider blocking Purge unless relevant pressure > UNDER_PRESSURE
+        // TODO: Consider blocking Terminal Count unless relevant pressure > UNDER_PRESSURE
 
         // Personnel must be at a safe distance before changing the state
         if (this->people_safe_dist) {
             new_allowed_states << "Pre-Pressurization"; // Return to previous state
-            new_allowed_states << "Purge";              // Advance
+            new_allowed_states << "Terminal Count";     // Advance
             new_allowed_states << "Shutdown Ph. 2";     // Non-emergency abort
         }
     
+    } else if ("Terminal Count"         == this->cur_state) {
+        // TODO: Consider blocking Purge unless relevant pressure > UNDER_PRESSURE
+
+        // Personnel must be at a safe distance before changing the state
+        if (this->people_safe_dist) {
+            new_allowed_states << "Pressurization";     // Return to previous state
+            new_allowed_states << "Purge";              // Advance
+            new_allowed_states << "Shutdown Ph. 2";     // Non-emergency abort
+        }
+
+        // Once this state is reached, after SEQUENCE_DELAY, move to purge shutdown
+        if (new_state) {
+            QTimer* delay = new QTimer(this);
+            delay->setSingleShot(true);
+            QObject::connect(delay, &QTimer::timeout, this, [this]() {emit this->new_state("Purge");});
+            
+            // If the state is changed, the timer should stop to prevent multiple state changes.
+            QObject::connect(this, SIGNAL(new_state(QString)), delay, SLOT(stop()));
+            delay->start(SEQUENCE_DELAY);
+        }
+
     } else if ("Purge"                  == this->cur_state) {
         // Terminal sequence (no returning to previous state)
         // Personnel must be at a safe distance before changing the state
@@ -139,9 +162,31 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
         // Terminal sequence (no returning to previous state)
         // Personnel must be at a safe distance before changing the state
         if (this->people_safe_dist) {
-            new_allowed_states << "Fire";           // Advance
-            // TODO: If Purge Shutdown is modified to open the ball valves, change to Shutdown Ph. 1
-            new_allowed_states << "Shutdown Ph. 2"; // Non-emergency abort
+            new_allowed_states << "Main Valves Open";   // Advance
+            new_allowed_states << "Shutdown Ph. 2";     // Non-emergency abort
+        }
+
+        // Once this state is reached, after PURGE_DELAY, move to main valves open
+        if (new_state) {
+            QTimer* main_valves = new QTimer(this);
+            main_valves->setSingleShot(true);
+            // See GUI_CTRL_Window for lambda function example (near bottom of contructor)
+            QObject::connect(main_valves, &QTimer::timeout, this, [this]() {emit this->new_state("Main Valves Open");});
+
+            // If the state is changed, the timer should stop to prevent multiple state changes.
+            QObject::connect(this, SIGNAL(new_state(QString)), main_valves, SLOT(stop()));
+            main_valves->start(PURGE_DELAY);
+        }
+    
+    } else if ("Main Valves Open"       == this->cur_state) {
+        // Terminal sequence (no returning to previous state)
+        // This state change makes the system safer, so while there should be no one near the engine,
+        // the button should never be disabled.
+
+        new_allowed_states << "Shutdown Ph. 1";     // Non-emergency abort
+        // Personnel must be at a safe distance before changing the state
+        if (this->people_safe_dist) {
+            new_allowed_states << "Fire";               // Advance
         }
 
         // Once this state is reached, after IGNITION_DELAY, move to fire
