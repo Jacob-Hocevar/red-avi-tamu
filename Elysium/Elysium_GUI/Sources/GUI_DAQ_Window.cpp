@@ -95,7 +95,7 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
 
     // Attach to the main window
     this->setLayout(layout);
-    this->root->add_to_main_window(this, 3, 0);
+    this->root->add_to_main_window(this, 1, 1, 2, 1);
 
     // Connect the serial connection to the private slot so that it automatically updates the sensors
     QObject::connect(this->ser, SIGNAL(readyRead()), this, SLOT(update_sensors()));
@@ -105,7 +105,7 @@ GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
     this->check_connection_timer->start(CHECK_CONNECTION_INTERVAL);
 
     // Create graphs module
-    graphs = new GUI_Graph_Window(this->root, this);
+    //graphs = new GUI_Graph_Window(this->root, this);
 }
 
 GUI_DAQ_Window::~GUI_DAQ_Window() {
