@@ -178,7 +178,7 @@ void setup() {
   pinMode(IGN1_PIN, OUTPUT);
   pinMode(IGN2_PIN, OUTPUT);
 
-  Serial.println("test2_Pins");
+  // Serial.println("test2_Pins");
 
   /*
   THERMOCOUPLE SET UP
@@ -200,7 +200,7 @@ void setup() {
   //mcp2.setFilterCoefficient(3);
   //mcp2.enable(true);
 
-  Serial.println("test3_TC");
+  // Serial.println("test3_TC");
 
   /*
   LOAD CELL SET UP
@@ -208,21 +208,21 @@ void setup() {
   */
 
   // load cell setup
-  scale.begin(LC1_D_OUT_PIN, LC1_CLK_PIN);
-  scale2.begin(LC2_D_OUT_PIN2, LC2_CLK_PIN2);
-  scale3.begin(LC3_D_OUT_PIN3, LC3_CLK_PIN3);
+  // scale.begin(LC1_D_OUT_PIN, LC1_CLK_PIN);
+  // scale2.begin(LC2_D_OUT_PIN2, LC2_CLK_PIN2);
+  // scale3.begin(LC3_D_OUT_PIN3, LC3_CLK_PIN3);
 
   // scale and tare load cells
-  scale.set_scale(-3980.f);  // Set the scale factor for conversion to kilograms
-  scale.tare();             // Reset the scale to zero
+  // scale.set_scale(-3980.f);  // Set the scale factor for conversion to kilograms
+  // scale.tare();             // Reset the scale to zero
 
-  scale2.set_scale(-3880.f); // Set the scale factor for conversion to kilograms
-  scale2.tare();            // Reset the scale to zero
+  // scale2.set_scale(-3880.f); // Set the scale factor for conversion to kilograms
+  // scale2.tare();            // Reset the scale to zero
 
-  scale3.set_scale(-3780.f); // Set the scale factor for conversion to kilograms
-  scale3.tare();            // Reset the scale to zero
+  // scale3.set_scale(-3780.f); // Set the scale factor for conversion to kilograms
+  // scale3.tare();            // Reset the scale to zero
   
-  Serial.println("test4_LC");
+  // Serial.println("test4_LC");
   /*
   ACCELEROMETER SET UP
   -----------------------
@@ -261,9 +261,9 @@ void loop() {
     // accz = accRaw[2]/accoffset;
 
     // measure force from load cells
-    weight1 = scale.get_units(1);  // Get the weight in kilograms
-    weight2 = scale2.get_units(1); // Get the weight in kilograms
-    weight3 = scale3.get_units(1);
+    // weight1 = scale.get_units(1);  // Get the weight in kilograms
+    // weight2 = scale2.get_units(1); // Get the weight in kilograms
+    // weight3 = scale3.get_units(1);
 
     // send data to serial monitor
     Serial.print("t:"); Serial.print(LAST_SENSOR_UPDATE);                             // print time reading in microseconds
@@ -275,9 +275,9 @@ void loop() {
     Serial.print(",P6:"); Serial.print(pressureCalculation(pt6_analog, 6));           // print pressure calculation in psi
     // Serial.print(",T1:"); Serial.print(mcp.readThermocouple());                    // print thermocouple temperature in C
     // Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());                   // print thermocouple temperature in C
-    Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in kg
-    Serial.print(",L2:"); Serial.print(weight2);                                      // print load cell 2 in kg
-    Serial.print(",L3:"); Serial.print(weight3);                                      // print load cell 3 in kg
+    // Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in kg
+    // Serial.print(",L2:"); Serial.print(weight2);                                      // print load cell 2 in kg
+    // Serial.print(",L3:"); Serial.print(weight3);                                      // print load cell 3 in kg
     // Serial.print(",Ax:"); Serial.print(accx);                                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
     // Serial.print(",Ay:"); Serial.print(accy);                                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
     // Serial.print(",Az:"); Serial.print(accz);                                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
@@ -350,9 +350,15 @@ void loop() {
       }
 
       if (Serial.available() > 0) {
-        aborted = false;
-        LAST_COMMUNICATION_TIME = micros();
-        LAST_HUMAN_UPDATE = micros();
+        String input = Serial.readStringUntil('\n');
+        Serial.println("New Input= " + input);
+
+        if (input == "start\r" || "Start\r"){
+          aborted = false;
+          LAST_COMMUNICATION_TIME = micros();
+          LAST_HUMAN_UPDATE = micros();
+          digitalWrite(NCS2_PIN, LOW);
+        }
       }
     }
   }
