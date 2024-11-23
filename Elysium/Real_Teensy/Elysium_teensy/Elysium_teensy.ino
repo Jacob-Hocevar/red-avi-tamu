@@ -8,14 +8,14 @@ VARIABLES & USER INPUT
 
 // time variables
 long unsigned LAST_SENSOR_UPDATE = 0;
-const long unsigned SENSOR_UPDATE_INTERVAL = 10000;    // sensor update interval (microsec)     <-- USER INPUT
+const long unsigned SENSOR_UPDATE_INTERVAL = 5000;     // sensor update interval (microsec)     <-- USER INPUT
 const long unsigned CONNECTION_TIMEOUT = 200000;       // automated shutdown timeout (microsec)     
 long unsigned LAST_COMMUNICATION_TIME = 0;
 long unsigned LAST_HUMAN_UPDATE = 0;
 const long unsigned HUMAN_CONNECTION_TIMEOUT = 300000000;
-const long unsigned SHUTDOWN_PURGE_TIME = 5000;        // milliseconds
+const long unsigned SHUTDOWN_PURGE_TIME = 2000;        // milliseconds
 long unsigned ABORT_TIME_TRACKING = 0;
-const long unsigned ABORTED_TIME_INTERVAL = 500000;
+const long unsigned ABORTED_TIME_INTERVAL = 500000; // microsec between printing "aborted" (when aborted)
 
 // BAUD rate 
 const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
@@ -101,11 +101,11 @@ THERMOCOUPLE SET UP
 
 // Thermocouple I2C addresses
 #define I2C_ADDRESS1 (0x67)
-#define I2C_ADDRESS2 (0x67)
+//#define I2C_ADDRESS2 (0x66)
 
 // Thermocouple mcp identifier
 Adafruit_MCP9600 mcp;
-Adafruit_MCP9600 mcp2;
+//Adafruit_MCP9600 mcp2;
 
 
 /*
@@ -130,8 +130,8 @@ int pt5_analog = 0;                        // analog reading from PT output sign
 int pt6_analog = 0;                        // analog reading from PT output signal
 
 // Calibration constants
-const float pt_slope[] = {1, 1};
-const float pt_intercept[] = {1, 1};
+const float pt_slope[] = {1, 1, 1, 1, 1, 1};
+const float pt_intercept[] = {0, 0, 0, 0, 0, 0};
 
 // Function to calculate pressure
 float pressureCalculation(float analog, size_t id) {
@@ -186,21 +186,21 @@ void setup() {
   */
 
   // Initialize MCP9600 sensors
-  //mcp.begin(I2C_ADDRESS1);
+  mcp.begin(I2C_ADDRESS1);
   //mcp2.begin(I2C_ADDRESS2);
 
   // Configure both sensors
-  //mcp.setADCresolution(MCP9600_ADCRESOLUTION_18);
-  //mcp.setThermocoupleType(MCP9600_TYPE_K);
-  //mcp.setFilterCoefficient(3);
-  //mcp.enable(true);
+  mcp.setADCresolution(MCP9600_ADCRESOLUTION_18);
+  mcp.setThermocoupleType(MCP9600_TYPE_K);
+  mcp.setFilterCoefficient(3);
+  mcp.enable(true);
 
   //mcp2.setADCresolution(MCP9600_ADCRESOLUTION_18);
   //mcp2.setThermocoupleType(MCP9600_TYPE_K);
   //mcp2.setFilterCoefficient(3);
   //mcp2.enable(true);
 
-  // Serial.println("test3_TC");
+  Serial.println("test3_TC");
 
   /*
   LOAD CELL SET UP
@@ -208,21 +208,21 @@ void setup() {
   */
 
   // load cell setup
-  // scale.begin(LC1_D_OUT_PIN, LC1_CLK_PIN);
-  // scale2.begin(LC2_D_OUT_PIN2, LC2_CLK_PIN2);
-  // scale3.begin(LC3_D_OUT_PIN3, LC3_CLK_PIN3);
+  scale.begin(LC1_D_OUT_PIN, LC1_CLK_PIN);
+  scale2.begin(LC2_D_OUT_PIN2, LC2_CLK_PIN2);
+  scale3.begin(LC3_D_OUT_PIN3, LC3_CLK_PIN3);
 
   // scale and tare load cells
-  // scale.set_scale(-3980.f);  // Set the scale factor for conversion to kilograms
-  // scale.tare();             // Reset the scale to zero
+  scale.set_scale(-3980.f);  // Set the scale factor for conversion to pounds
+  scale.tare();             // Reset the scale to zero
 
-  // scale2.set_scale(-3880.f); // Set the scale factor for conversion to kilograms
-  // scale2.tare();            // Reset the scale to zero
+  scale2.set_scale(-3880.f); // Set the scale factor for conversion to pounds
+  scale2.tare();            // Reset the scale to zero
 
-  // scale3.set_scale(-3780.f); // Set the scale factor for conversion to kilograms
-  // scale3.tare();            // Reset the scale to zero
+  scale3.set_scale(-3780.f); // Set the scale factor for conversion to pounds
+  scale3.tare();            // Reset the scale to zero
   
-  // Serial.println("test4_LC");
+  Serial.println("test4_LC");
   /*
   ACCELEROMETER SET UP
   -----------------------
@@ -261,9 +261,9 @@ void loop() {
     // accz = accRaw[2]/accoffset;
 
     // measure force from load cells
-    // weight1 = scale.get_units(1);  // Get the weight in kilograms
-    // weight2 = scale2.get_units(1); // Get the weight in kilograms
-    // weight3 = scale3.get_units(1);
+    weight1 = scale.get_units(1);  // Get the weight in lbs
+    weight2 = scale2.get_units(1); // Get the weight in lbs
+    weight3 = scale3.get_units(1); // Get the weight in lbs
 
     // send data to serial monitor
     Serial.print("t:"); Serial.print(LAST_SENSOR_UPDATE);                             // print time reading in microseconds
@@ -273,29 +273,32 @@ void loop() {
     Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog, 4));           // print pressure calculation in psi
     Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog, 5));           // print pressure calculation in psi
     Serial.print(",P6:"); Serial.print(pressureCalculation(pt6_analog, 6));           // print pressure calculation in psi
-    // Serial.print(",T1:"); Serial.print(mcp.readThermocouple());                    // print thermocouple temperature in C
+    Serial.print(",T1:"); Serial.print(mcp.readThermocouple());                    // print thermocouple temperature in C
     // Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());                   // print thermocouple temperature in C
-    // Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in kg
-    // Serial.print(",L2:"); Serial.print(weight2);                                      // print load cell 2 in kg
-    // Serial.print(",L3:"); Serial.print(weight3);                                      // print load cell 3 in kg
+    Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in lbs
+    Serial.print(",L2:"); Serial.print(weight2);                                      // print load cell 2 in lbs
+    Serial.print(",L3:"); Serial.print(weight3);                                      // print load cell 3 in lbs
     // Serial.print(",Ax:"); Serial.print(accx);                                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
     // Serial.print(",Ay:"); Serial.print(accy);                                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
     // Serial.print(",Az:"); Serial.print(accz);                                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
+    float t_loc = (HUMAN_CONNECTION_TIMEOUT - (LAST_SENSOR_UPDATE -LAST_HUMAN_UPDATE)) / 1000000.0;
+    Serial.print("t_loc:"); Serial.print(t_loc);      // print time until loss of communications occurs, in seconds (only due to human inaction)
     Serial.println();
-    delay(10);
+    //delay(10);
   }
 
   // checks if user input is available to read
   if (Serial.available() > 0) {
-    LAST_COMMUNICATION_TIME = micros();
-
     // read communication
     String input = Serial.readStringUntil('\n');
+    LAST_COMMUNICATION_TIME = micros();
 
     // no operation command to confirm connection
     if (input != "nop\r") {
       LAST_HUMAN_UPDATE = micros();
-      }
+    } else {
+      return;
+    }
 
     // break string into identifier and control state
     int delimiterIndex = input.indexOf(':');
@@ -313,11 +316,15 @@ void loop() {
       case 0:
         digitalWrite(pin, LOW);   // Close Valve
         if (IDENTIFIER == "LA-BV1") {
+          is_LABV1_open = false;
           digitalWrite(NCS2_PIN, HIGH);
         }
         break;
       case 1:
         digitalWrite(pin, HIGH);  // Open Valve
+        if (IDENTIFIER == "LA-BV1") {
+          is_LABV1_open = true;
+        }
         break;
     }
   }
@@ -332,6 +339,10 @@ void loop() {
     digitalWrite(NCS4_PIN, LOW);
     digitalWrite(LABV1_PIN, LOW);
     digitalWrite(LABV2_PIN, LOW);
+
+    // Unpower igniters
+    digitalWrite(IGN1_PIN, LOW);
+    digitalWrite(IGN2_PIN, LOW);
 
     // If LABV1 is open, system purges with nitrogen
     if (is_LABV1_open) {
@@ -353,7 +364,7 @@ void loop() {
         String input = Serial.readStringUntil('\n');
         Serial.println("New Input= " + input);
 
-        if (input == "start\r" || "Start\r"){
+        if ((input == "start\r") || (input == "Start\r")){
           aborted = false;
           LAST_COMMUNICATION_TIME = micros();
           LAST_HUMAN_UPDATE = micros();
