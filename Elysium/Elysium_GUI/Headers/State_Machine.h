@@ -13,6 +13,7 @@ extern const int PURGE_DELAY;
 extern const int IGNITION_DELAY;
 extern const int PURGE_DURATION;
 extern const int FIRE_DURATION;
+extern const int APG_ABORT_DURATION;
 
 // TODO: Consider using derived classes for each configuration. Make update_signals() a pure virtual function.
 // This class must derive from QObject to use signals/slots
@@ -34,6 +35,9 @@ private:
     // Another option is to make a hash map here, and use a slot/signal
     // to update only the relevant data, though it is still stored twice.
     QHash<QString, double>* cur_data;
+
+    // List of timestamps for autoaborts
+    QList<int>* apg_times;
 
     void hotfire_1(bool new_state, bool abort);
 private slots:

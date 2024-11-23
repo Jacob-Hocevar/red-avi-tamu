@@ -20,7 +20,8 @@ using std::endl;
 const int CHECK_CONNECTION_INTERVAL = 100;
 
 GUI_DAQ_Window::GUI_DAQ_Window(GUI_Main_Window* parent, QSerialPort* ser):
-    QWidget(), root(parent), ser(ser), sensors(), derived_IDs(), data(nullptr), is_saving(false),
+    QWidget(), root(parent), ser(ser), sensors(), derived_IDs(), teensy_time(),
+    data(new QHash<QString, double>()), is_saving(false),
     data_file(nullptr), start_save_btn(new QPushButton("Start Save")),
     end_save_btn(new QPushButton("End Save")), check_connection_timer(new QTimer(this)), graphs(nullptr) {
     
@@ -152,11 +153,16 @@ void GUI_DAQ_Window::update_sensors() {
                 cout << "Not enough data: " << info.at(i).toStdString() << endl;
                 continue;
             } if (!sensors.contains(cur_info.at(0))) {
+                if ("t" == cur_info.at(0)) {
+                    // Teensy local time is not a sensor, but still relevant
+                    this->teensy_time = cur_info.at(1);
+                }
                 cout << "No sensor with ID: " << cur_info.at(0).toStdString() << endl;
                 continue;
             }
 
-            // Update sensors
+            // Update sensors and internal data stores
+            this->data->insert(cur_info.at(0), cur_info.at(1).toDouble());
             sensors[cur_info.at(0)]->update_data(cur_info.at(1));
         }
     }
@@ -206,7 +212,7 @@ void GUI_DAQ_Window::start_save() {
 
     // Write the header for the .csv file
     QTextStream out(this->data_file);
-    out << "Global Time (ns from Epoch),Local Time (ms from Teensy boot)";
+    out << "Global Time (ms from Epoch),Local Time (micro s from Teensy boot)";
     QStringList keys = this->sensors.keys();
     for (int i = 0; i < keys.size(); ++i) {
         out << ',' << this->sensors[keys[i]]->get_full_name();
@@ -235,8 +241,8 @@ void GUI_DAQ_Window::save() {
     QTextStream out(this->data_file);
     out << QDateTime::currentMSecsSinceEpoch();
 
-    // TODO: Local time
-    out << ',';
+    // Records the local time from the Teensy
+    out << this->teensy_time << ',';
 
     QStringList keys = this->sensors.keys();
     for (int i = 0; i < keys.size(); ++i) {

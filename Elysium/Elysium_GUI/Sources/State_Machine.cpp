@@ -1,5 +1,6 @@
 #include "State_Machine.h"
 #include <QTimer>
+#include <QDateTime>
 
 // For Testing only
 #include <iostream>
@@ -22,15 +23,24 @@ const int PURGE_DURATION = 2000;
 // Number of milliseconds that the Fire should last
 const int FIRE_DURATION = 3500;
 
+// Number of milliseconds that a negative pressure gradient must be sustained before an abort
+const int APG_ABORT_DURATION = 150;
+
 // Constructor
 State_Machine::State_Machine(QString name, QHash<QString, double>* data):
     config_name(name), cur_state("Fully Closed"), people_safe_dist(false),
-    cur_allowed_states(new QStringList()), cur_data(data) {
+    cur_allowed_states(new QStringList()), cur_data(data), apg_times(new QList<int>()) {
     // If the system autonomously updates the state, it should update the change the same as a manual update
     QObject::connect(this, SIGNAL(new_state(QString)), this, SLOT(set_state(QString)));
+
+    // Initialize the apg times to 0
+    for (size_t i = 0; i < 7; ++i) {
+        this->apg_times->append(0);
+    }
 }
 
 void State_Machine::start() {
+    cout << "State Machine Startup" << endl;
     // Set Initial State (cannot do in constructor because it needs external connections)
     if ("hotfire_1" == this->config_name) {
         emit new_state("Fully Closed");
@@ -291,9 +301,121 @@ void State_Machine::set_people_safe_dist(int safe) {
 }
 
 void State_Machine::new_data() {
+    // Only abort from "Main Valves Open" or "Fire" states
+    if ("Main Valves Open" == this->cur_state || "Fire" == this->cur_state) {
+        try {
+            // Access relevant data
+            double p1 = this->cur_data->value("P1");
+            double p2 = this->cur_data->value("P2");
+            double p3 = this->cur_data->value("P3");
+            double p4 = this->cur_data->value("P4");
+            double p5 = this->cur_data->value("P5");
+            double p6 = this->cur_data->value("P6");
+
+            // Variable to store if any of the checks fail
+            bool shutdown = false;
+            qint64 time = QDateTime::currentMSecsSinceEpoch();
+
+            // Check for a sustained adverse pressure gradient
+            // Combustion chamber vs fuel injector manifold
+            if (p6 > (p4 + 5)) {
+                if (0 == this->apg_times->at(0)) {
+                    this->apg_times->replace(0, time);
+                } else if ((time - this->apg_times->at(0)) > APG_ABORT_DURATION) {
+                    shutdown = true;
+                }
+            } else {
+                this->apg_times->replace(0, 0);
+            }
+            
+            // Combustion chamber vs oxidizer injector inlet
+            if (p6 > (p3 + 5)) {
+                if (0 == this->apg_times->at(1)) {
+                    this->apg_times->replace(1, time);
+                } else if ((time - this->apg_times->at(1)) > APG_ABORT_DURATION) {
+                    shutdown = true;
+                }
+            } else {
+                this->apg_times->replace(1, 0);
+            }
+            
+            // Fuel injector manifold vs fuel tank
+            if (p4 > (p2 + 5)) {
+                if (0 == this->apg_times->at(2)) {
+                    this->apg_times->replace(2, time);
+                } else if ((time - this->apg_times->at(2)) > APG_ABORT_DURATION) {
+                    shutdown = true;
+                } 
+            } else {
+                this->apg_times->replace(2, 0);
+            }
+            
+            // Oxidizer injector inlet vs oxidizer tank
+            if (p3 > (p1 + 5)) {
+                if (0 == this->apg_times->at(3)) {
+                    this->apg_times->replace(3, time);
+                } else if ((time - this->apg_times->at(3)) > APG_ABORT_DURATION) {
+                    shutdown = true;
+                }
+            } else {
+                this->apg_times->replace(3, 0);
+            }
+            
+            // Fuel tank vs upper line pressure
+            if (p2 > (p5 + 5)) {
+                if (0 == this->apg_times->at(4)) {
+                    this->apg_times->replace(4, time);
+                } else if ((time - this->apg_times->at(4)) > APG_ABORT_DURATION) {
+                    shutdown = true;
+                }
+            } else {
+                this->apg_times->replace(4, 0);
+            }
+
+            // Not sure if this applies
+            // Fuel injector manifold vs upper line pressure
+            // if (p4 > (p5 + 5)) {
+            //     if (0 == this->apg_times->at(5)) {
+            //         this->apg_times->replace(5, time);
+            //     } else if ((time - this->apg_times->at(5)) > APG_ABORT_DURATION) {
+            //         shutdown = true;
+            //     }
+            // } else {
+            //     this->apg_times->replace(5, 0);
+            // }
+
+            // Oxidizer injector inlet vs upper line pressure
+            // if (p3 > (p5 + 5)) {
+            //     if (0 == this->apg_times->at(6)) {
+            //         this->apg_times->replace(6, time);
+            //     } else if ((time - this->apg_times->at(6)) > APG_ABORT_DURATION) {
+            //         shutdown = true;
+            //     }
+            // } else {
+            //     this->apg_times->replace(6, 0);
+            // }
+
+            // Immediatetly shutdown if any case is confirmed
+            if (shutdown) {
+                emit new_state("Shutdown Ph. 1");
+                return;
+            }
+        } catch (...) {
+            cout << "Could not access data: (Pressure)" << endl;
+        }
+    } else {
+        // If we are not in either of the fail states, the timers should be set to 0.
+        for (int i = 0; i < this->apg_times->size(); ++i) {
+            this->apg_times->replace(i, 0);
+        }
+    }
+
+
+    //////////////
+    // Outdated //
+    //////////////
 
     // TODO: Consider Overpressure during Pressurization - Fire. (check PT resolution, FSYS).
-
     // TODO: Figure out a filter/way of better checking P4.
     // It is in the injector manifold, so when fire is called, it should be ambient (<<< UNDER_PRESSURE)
     // Maybe check if it has been higher than UNDER_PRESSURE, then dropped below?

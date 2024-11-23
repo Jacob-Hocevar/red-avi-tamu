@@ -33,6 +33,7 @@ private:
 
     QHash<QString, Sensor*> sensors;
     QStringList derived_IDs;
+    QString teensy_time;
     QHash<QString, double>* data;
 
     bool is_saving;
