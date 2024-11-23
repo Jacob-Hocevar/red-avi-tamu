@@ -130,8 +130,8 @@ int pt5_analog = 0;                        // analog reading from PT output sign
 int pt6_analog = 0;                        // analog reading from PT output signal
 
 // Calibration constants
-const float pt_slope[] = {1, 1, 1, 1, 1, 1};
-const float pt_intercept[] = {0, 0, 0, 0, 0, 0};
+const float pt_slope[] = {1.22983871, 1.22983871, 1.22983871, 1.22983871, 1.22983871, 1.22983871};
+const float pt_intercept[] = {-125, -125, -125, -125, -125, -125};
 
 // Function to calculate pressure
 float pressureCalculation(float analog, size_t id) {
