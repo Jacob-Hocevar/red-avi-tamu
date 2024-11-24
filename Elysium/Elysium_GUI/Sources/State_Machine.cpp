@@ -24,7 +24,7 @@ const int PURGE_DURATION = 2000;
 const int FIRE_DURATION = 3500;
 
 // Number of milliseconds that a negative pressure gradient must be sustained before an abort
-const int APG_ABORT_DURATION = 150;
+const int APG_ABORT_DURATION = 4000;
 
 // Constructor
 State_Machine::State_Machine(QString name, QHash<QString, double>* data):
@@ -314,7 +314,7 @@ void State_Machine::new_data() {
 
             // Variable to store if any of the checks fail
             bool shutdown = false;
-            qint64 time = QDateTime::currentMSecsSinceEpoch();
+            int time = QDateTime::currentMSecsSinceEpoch();
 
             // Check for a sustained adverse pressure gradient
             // Combustion chamber vs fuel injector manifold

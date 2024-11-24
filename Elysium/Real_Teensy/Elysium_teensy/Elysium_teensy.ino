@@ -8,8 +8,8 @@ VARIABLES & USER INPUT
 
 // time variables
 long unsigned LAST_SENSOR_UPDATE = 0;
-const long unsigned SENSOR_UPDATE_INTERVAL = 5000;     // sensor update interval (microsec)     <-- USER INPUT
-const long unsigned CONNECTION_TIMEOUT = 200000;       // automated shutdown timeout (microsec)     
+const long unsigned SENSOR_UPDATE_INTERVAL = 100000;     // sensor update interval (microsec)     <-- USER INPUT
+const long unsigned CONNECTION_TIMEOUT = 200000000;       // automated shutdown timeout (microsec)     
 long unsigned LAST_COMMUNICATION_TIME = 0;
 long unsigned LAST_HUMAN_UPDATE = 0;
 const long unsigned HUMAN_CONNECTION_TIMEOUT = 300000000;
@@ -117,7 +117,7 @@ PRESSURE TRANSDUCER SET UP
 const int PT1_PIN = 14;                    // <-- USER INPUT
 const int PT2_PIN = 15;                    // <-- USER INPUT
 const int PT3_PIN = 16;                    // <-- USER INPUT
-const int PT4_PIN = 17;                    // <-- USER INPUT
+const int PT4_PIN = 22;                    // <-- USER INPUT
 const int PT5_PIN = 20;                    // <-- USER INPUT
 const int PT6_PIN = 21;                    // <-- USER INPUT
 
@@ -131,7 +131,11 @@ int pt6_analog = 0;                        // analog reading from PT output sign
 
 // Calibration constants
 const float pt_slope[] = {1.22983871, 1.22983871, 1.22983871, 1.22983871, 1.22983871, 1.22983871};
-const float pt_intercept[] = {-125, -125, -125, -125, -125, -125};
+const float pt_intercept[] = {-111.9733871, -105.8241935, -109.5137097, -111.9733871, -108.283871, -113.2032258};
+
+// Calibration constants for pure analog readings
+//const float pt_slope[] = {1, 1, 1, 1, 1, 1};
+//const float pt_intercept[] = {0, 0, 0, 0, 0, 0};
 
 // Function to calculate pressure
 float pressureCalculation(float analog, size_t id) {
@@ -282,9 +286,9 @@ void loop() {
     // Serial.print(",Ay:"); Serial.print(accy);                                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
     // Serial.print(",Az:"); Serial.print(accz);                                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
     float t_loc = (HUMAN_CONNECTION_TIMEOUT - (LAST_SENSOR_UPDATE -LAST_HUMAN_UPDATE)) / 1000000.0;
-    Serial.print("t_loc:"); Serial.print(t_loc);      // print time until loss of communications occurs, in seconds (only due to human inaction)
+    Serial.print(",t_loc:"); Serial.print(t_loc);      // print time until loss of communications occurs, in seconds (only due to human inaction)
     Serial.println();
-    //delay(10);
+    delay(10);
   }
 
   // checks if user input is available to read
@@ -316,8 +320,10 @@ void loop() {
       case 0:
         digitalWrite(pin, LOW);   // Close Valve
         if (IDENTIFIER == "LA-BV1") {
+          if (is_LABV1_open) {
+            digitalWrite(NCS2_PIN, HIGH);
+          }
           is_LABV1_open = false;
-          digitalWrite(NCS2_PIN, HIGH);
         }
         break;
       case 1:
