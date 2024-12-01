@@ -102,12 +102,24 @@ void Virtual_Teensy::set_interval(int interval) {
 }
 
 void Virtual_Teensy::read_data() {
-    cout << "Read:";
     QTextStream in(this->ser->readAll());
+    bool first = true;
     while (!in.atEnd()) {
-        cout << '\t' << in.readLine().toStdString() << "\r\n";
+        QString text = in.readLine();
+        if ("nop" == text) {
+            continue;
+        }
+        if (first) {
+            cout << "Read:";
+            first = false;
+        }
+
+        cout << '\t' << text.toStdString() << "\r\n";
+        //cout << '\t' << text.size() << "\r\n";
     }
-    cout << endl;
+    if (!first) {
+        cout << endl;
+    }
 }
 
 void Virtual_Teensy::write_data() {

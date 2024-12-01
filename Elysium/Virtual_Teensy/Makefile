@@ -380,12 +380,14 @@ compiler_moc_header_make_all: moc_Virtual_Teensy.cpp moc_VT_Main_Window.cpp moc_
 compiler_moc_header_clean:
 	-$(DEL_FILE) moc_Virtual_Teensy.cpp moc_VT_Main_Window.cpp moc_VT_Sensor.cpp
 moc_Virtual_Teensy.cpp: Headers/Virtual_Teensy.h \
+		Headers/VT_Sensor.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Virtual_Teensy.h -o moc_Virtual_Teensy.cpp
 
 moc_VT_Main_Window.cpp: Headers/VT_Main_Window.h \
 		Headers/Virtual_Teensy.h \
+		Headers/VT_Sensor.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include '/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/moc_predefs.h' -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy' -I'/mnt/c/Users/tenor/OneDrive/Current Classes/RED/Local RED Test/RED_AVI_GitHub/Elysium/Virtual_Teensy/Headers' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/VT_Main_Window.h -o moc_VT_Main_Window.cpp
@@ -412,14 +414,17 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 ####### Compile
 
 main.o: Sources/main.cpp Headers/VT_Main_Window.h \
-		Headers/Virtual_Teensy.h
+		Headers/Virtual_Teensy.h \
+		Headers/VT_Sensor.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o Sources/main.cpp
 
-Virtual_Teensy.o: Sources/Virtual_Teensy.cpp Headers/Virtual_Teensy.h
+Virtual_Teensy.o: Sources/Virtual_Teensy.cpp Headers/Virtual_Teensy.h \
+		Headers/VT_Sensor.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Virtual_Teensy.o Sources/Virtual_Teensy.cpp
 
 VT_Main_Window.o: Sources/VT_Main_Window.cpp Headers/VT_Main_Window.h \
-		Headers/Virtual_Teensy.h
+		Headers/Virtual_Teensy.h \
+		Headers/VT_Sensor.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o VT_Main_Window.o Sources/VT_Main_Window.cpp
 
 VT_Sensor.o: Sources/VT_Sensor.cpp Headers/VT_Sensor.h
