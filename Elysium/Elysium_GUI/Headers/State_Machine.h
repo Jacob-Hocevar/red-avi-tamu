@@ -29,14 +29,11 @@ private:
     bool people_safe_dist;
     QStringList* cur_allowed_states;
 
-    // TODO: Determine best way to get access to relevant data.
-    // One option is to modify the GUI_DAQ to have hash map on the heap,
-    // then share the pointer here.
-    // Another option is to make a hash map here, and use a slot/signal
-    // to update only the relevant data, though it is still stored twice.
+    // Pointer to data managed by GUI_DAQ_Window, must be given during initialization
     QHash<QString, double>* cur_data;
 
     // List of timestamps for autoaborts
+    bool auto_aborts_enabled;
     QList<int>* apg_times;
 
     void hotfire_1(bool new_state, bool abort);
@@ -45,6 +42,7 @@ private slots:
     void set_people_safe_dist(int safe);
     void new_data();
     void update_signals(bool new_state, bool abort=false);
+    void set_auto_aborts_enabled(int enabled);
 
 signals:
     void new_state(QString state);

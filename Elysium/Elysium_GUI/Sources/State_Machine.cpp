@@ -24,12 +24,13 @@ const int PURGE_DURATION = 2000;
 const int FIRE_DURATION = 3500;
 
 // Number of milliseconds that a negative pressure gradient must be sustained before an abort
-const int APG_ABORT_DURATION = 4000;
+const int APG_ABORT_DURATION = 200;
 
 // Constructor
 State_Machine::State_Machine(QString name, QHash<QString, double>* data):
     config_name(name), cur_state("Fully Closed"), people_safe_dist(false),
-    cur_allowed_states(new QStringList()), cur_data(data), apg_times(new QList<int>()) {
+    cur_allowed_states(new QStringList()), cur_data(data), auto_aborts_enabled(true),
+    apg_times(new QList<int>()) {
     // If the system autonomously updates the state, it should update the change the same as a manual update
     QObject::connect(this, SIGNAL(new_state(QString)), this, SLOT(set_state(QString)));
 
@@ -301,6 +302,17 @@ void State_Machine::set_people_safe_dist(int safe) {
 }
 
 void State_Machine::new_data() {
+    // Only abort if aborts are enabled
+    if (!this->auto_aborts_enabled) {
+        // Set the timers to 0, so it doesn't instantly trigger when set
+        for (int i = 0; i < this->apg_times->size(); ++i) {
+            this->apg_times->replace(i, 0);
+        }
+        
+        // Do not continue to check
+        return;
+    }
+    
     // Only abort from "Main Valves Open" or "Fire" states
     if ("Main Valves Open" == this->cur_state || "Fire" == this->cur_state) {
         try {
@@ -395,7 +407,7 @@ void State_Machine::new_data() {
             //     this->apg_times->replace(6, 0);
             // }
 
-            // Immediatetly shutdown if any case is confirmed
+            // Immediately shutdown if any case is confirmed
             if (shutdown) {
                 emit new_state("Shutdown Ph. 1");
                 return;
@@ -404,7 +416,7 @@ void State_Machine::new_data() {
             cout << "Could not access data: (Pressure)" << endl;
         }
     } else {
-        // If we are not in either of the fail states, the timers should be set to 0.
+        // If we are not in either of the abort-capable states, the timers should be set to 0.
         for (int i = 0; i < this->apg_times->size(); ++i) {
             this->apg_times->replace(i, 0);
         }
@@ -443,4 +455,8 @@ void State_Machine::update_signals(bool new_state, bool abort) {
     } else {
         cout << "State Machine: Unknown configuration: " << this->config_name.toStdString() << endl;
     }
+}
+
+void State_Machine::set_auto_aborts_enabled(int enabled) {
+    this->auto_aborts_enabled = (Qt::Checked == enabled);
 }

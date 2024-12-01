@@ -69,6 +69,14 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     QWidget* save_btns = new QWidget();
     save_btns->setLayout(save_btns_layout);
 
+    // Checkbox to enable/disable automated aborts
+    QCheckBox* auto_abort_check_box = new QCheckBox();
+    auto_abort_check_box->setText("Auto-aborts\nenabled");
+    auto_abort_check_box->setCheckState(Qt::Checked);
+    save_btns_layout->addWidget(auto_abort_check_box, 3, 1);
+    QObject::connect(auto_abort_check_box, SIGNAL(stateChanged(int)),
+                     this, SIGNAL(auto_aborts_enabled(int)));
+    
     // TODO: Create a checkbox to enable the state machine
     /*
     QCheckBox* sm_check_box = new QCheckBox();
@@ -82,7 +90,7 @@ GUI_CTRL_Window::GUI_CTRL_Window(GUI_Main_Window* parent, QSerialPort* ser):
     QCheckBox* safety_check_box = new QCheckBox();
     safety_check_box->setText("All personnel at\na safe distance");
     safety_check_box->setCheckState(Qt::Unchecked);
-    save_btns_layout->addWidget(safety_check_box, 3, 1);
+    save_btns_layout->addWidget(safety_check_box, 4, 1);
     QObject::connect(safety_check_box, SIGNAL(stateChanged(int)),
                      this, SIGNAL(people_safe_dist(int)));
 

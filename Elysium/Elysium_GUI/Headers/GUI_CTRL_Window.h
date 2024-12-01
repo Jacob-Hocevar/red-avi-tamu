@@ -45,6 +45,7 @@ private slots:
 signals:
     void new_state_signal(QString state);
     void people_safe_dist(int people_safe_dist);
+    void auto_aborts_enabled(int auto_aborts_enabled);
 };
 
 
