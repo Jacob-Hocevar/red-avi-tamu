@@ -34,9 +34,9 @@ The order of the pairs does not matter, so something like the following is also 
 ### Valve Example
 For the valves, the solution is nearly identical, except that each command is always sent on its own line (no comma separated strings). Additionally, the value `0` always denotes a closed valve or close operation, and the value `1` always denotes an open valve or operation. For any extra electrical components (such as the ignition system), `0` will correspond to no power and `1` will correspond to providing power.
 
-Consider a system with four normally closed solenoid valves (NCS1-NCS4) and two linearly-actuated ball valves (LA-BV 1 and LA-BV 2), and an igniter (IGNITE).
+Consider a system with four normally closed solenoid valves (NCS1-NCS4) and two linearly-actuated ball valves (LA-BV 1 and LA-BV 2), and an igniter (IG1).
 
-The signals to close all solenoids, open all ball valves and power the igniter would be given by:
+The signals to close all solenoids, open all ball valves and power igniter #1 would be given by:
 
 `"NCS1:0\r\n"`
 `"NCS2:0\r\n"`
@@ -44,6 +44,24 @@ The signals to close all solenoids, open all ball valves and power the igniter w
 `"NCS4:0\r\n"`
 `"LA-BV 1:1\r\n"`
 `"LA-BV 2:1\r\n"`
-`"IGNITE:1\r\n"`
+`"IG1:1\r\n"`
 
 Spaces in the IDs do not affect anything in either system. Again, these could be given in any order.
+
+## Known Issues
+There are a couple issues which have evaded all attempts to remove, but have simple methods to circumvent.
+
+### GUI Freezes when connecting to Teensy
+Identify: This typically results in the GUI freezing for several seconds, then expanding to full size, but not detecting any data inbound. It also will freeze upon shutdown or disconnect.
+
+Cause: The connection to the Teensy is really sensitive with repeated connections and disconnections, especially with the WSL forwarding.
+
+Solution: Unplug/replug the Teensy, and immediately attach it to WSL and attempt the connection again.<br>
+A similar fix is to detach from WSL, and open the serial monitor in the Arduino IDE. Try opening and closing the serial monitor menu, and it should alternate between correct functionality, and a blank screen. When it is on a blank screen, close it, attach to WSL and attempt the connection again.
+
+### GUI Connects, but the Teensy stays in the aborted state
+Identify: GUI immediately "connects", but all data fields remain blank and the terminal is filled with `Not enough data: Aborted` and `Not enough data: New Input= nop`.
+
+Cause: The connection to the Teensy is really sensitive and the first data sent over the connection often is lost/corrupted (buffer overriden?). This only occurs the first time after the Teensy is restarted.
+
+Solution: Close the GUI and relaunch it. Not totally sure why, but it only ever happens the first time.

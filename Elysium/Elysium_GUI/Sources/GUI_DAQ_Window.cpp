@@ -156,6 +156,7 @@ void GUI_DAQ_Window::update_sensors() {
                 if ("t" == cur_info.at(0)) {
                     // Teensy local time is not a sensor, but still relevant
                     this->teensy_time = cur_info.at(1);
+                    continue;
                 }
                 cout << "No sensor with ID: " << cur_info.at(0).toStdString() << endl;
                 continue;

@@ -7,15 +7,21 @@ VARIABLES & USER INPUT
 #include <Arduino.h>
 
 // time variables
-long unsigned LAST_SENSOR_UPDATE = 0;
-const long unsigned SENSOR_UPDATE_INTERVAL = 100000;     // sensor update interval (microsec)     <-- USER INPUT
-const long unsigned CONNECTION_TIMEOUT = 200000000;       // automated shutdown timeout (microsec)     
-long unsigned LAST_COMMUNICATION_TIME = 0;
-long unsigned LAST_HUMAN_UPDATE = 0;
-const long unsigned HUMAN_CONNECTION_TIMEOUT = 300000000;
-const long unsigned SHUTDOWN_PURGE_TIME = 2000;        // milliseconds
+long unsigned LAST_SENSOR_UPDATE = 0;                     // Timestamp of last sensor reading (microsec)
+const long unsigned SENSOR_UPDATE_INTERVAL = 1000;        // sensor update interval (microsec)              <-- USER INPUT
+
+long unsigned LAST_LC_UPDATE = 0;                         // Timestamp of last Load Cell reading (microsec)
+const long unsigned LC_UPDATE_INTERVAL = 100000;          // Load Cell update interval (microsec)           <-- USER INPUT
+
+long unsigned LAST_COMMUNICATION_TIME = 0;                // Timestamp of last communication of any type (microsec)
+const long unsigned CONNECTION_TIMEOUT = 200000;          // automated shutdown timeout for complete comms failure (microsec)           <-- USER INPUT
+
+long unsigned LAST_HUMAN_UPDATE = 0;                      // Timestamp of last human communication(microsec)
+const long unsigned HUMAN_CONNECTION_TIMEOUT = 300000000; // automated shutdown timeout for human comms failure (microsec)              <-- USER INPUT
+
 long unsigned ABORT_TIME_TRACKING = 0;
-const long unsigned ABORTED_TIME_INTERVAL = 500000; // microsec between printing "aborted" (when aborted)
+const long unsigned ABORTED_TIME_INTERVAL = 500000;       // microsec between printing "aborted" (when aborted)
+const long unsigned SHUTDOWN_PURGE_TIME = 2000;           // duration of purge for shutdown, in milliseconds
 
 // BAUD rate 
 const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
@@ -81,9 +87,9 @@ const int LC3_D_OUT_PIN3 = 24;           // <-- USER INPUT
 const int LC3_CLK_PIN3 = 25;             // <-- USER INPUT
 
 // measurement set up
-float weight1;
-float weight2;
-float weight3;
+float weight1 = 0;
+float weight2 = 0;
+float weight3 = 0;
 HX711 scale, scale2, scale3;
 
 
@@ -243,54 +249,6 @@ LOOP
 -------------------------------------------------------------------
 */
 void loop() {
-  // check for last reading update
-  if ((micros() - LAST_SENSOR_UPDATE) > SENSOR_UPDATE_INTERVAL) {
-    LAST_SENSOR_UPDATE = micros();                               // update time
-
-    // read pressure data
-    pt1_analog = analogRead(PT1_PIN);                          // reads value from input pin and assigns to variable
-    pt2_analog = analogRead(PT2_PIN);                          // reads value from input pin and assigns to variable.
-    pt3_analog = analogRead(PT3_PIN);
-    pt4_analog = analogRead(PT4_PIN);
-    pt5_analog = analogRead(PT5_PIN);
-    pt6_analog = analogRead(PT6_PIN);
-
-    // read acceleration
-    // readACC(buff);
-    // accRaw[0] = (int16_t)(buff[0] | (buff[1] << 8)); 
-    // accRaw[1] = (int16_t)(buff[2] | (buff[3] << 8));
-    // accRaw[2] = (int16_t)(buff[4] | (buff[5] << 8));
-    // accx = accRaw[0]/accoffset;
-    // accy = accRaw[1]/accoffset;
-    // accz = accRaw[2]/accoffset;
-
-    // measure force from load cells
-    weight1 = scale.get_units(1);  // Get the weight in lbs
-    weight2 = scale2.get_units(1); // Get the weight in lbs
-    weight3 = scale3.get_units(1); // Get the weight in lbs
-
-    // send data to serial monitor
-    Serial.print("t:"); Serial.print(LAST_SENSOR_UPDATE);                             // print time reading in microseconds
-    Serial.print(",P1:"); Serial.print(pressureCalculation(pt1_analog, 1));           // print pressure calculation in psi
-    Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog, 2));           // print pressure calculation in psi
-    Serial.print(",P3:"); Serial.print(pressureCalculation(pt3_analog, 3));           // print pressure calculation in psi
-    Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog, 4));           // print pressure calculation in psi
-    Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog, 5));           // print pressure calculation in psi
-    Serial.print(",P6:"); Serial.print(pressureCalculation(pt6_analog, 6));           // print pressure calculation in psi
-    Serial.print(",T1:"); Serial.print(mcp.readThermocouple());                    // print thermocouple temperature in C
-    // Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());                   // print thermocouple temperature in C
-    Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in lbs
-    Serial.print(",L2:"); Serial.print(weight2);                                      // print load cell 2 in lbs
-    Serial.print(",L3:"); Serial.print(weight3);                                      // print load cell 3 in lbs
-    // Serial.print(",Ax:"); Serial.print(accx);                                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
-    // Serial.print(",Ay:"); Serial.print(accy);                                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
-    // Serial.print(",Az:"); Serial.print(accz);                                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
-    float t_loc = (HUMAN_CONNECTION_TIMEOUT - (LAST_SENSOR_UPDATE -LAST_HUMAN_UPDATE)) / 1000000.0;
-    Serial.print(",t_loc:"); Serial.print(t_loc);      // print time until loss of communications occurs, in seconds (only due to human inaction)
-    Serial.println();
-    delay(10);
-  }
-
   // checks if user input is available to read
   if (Serial.available() > 0) {
     // read communication
@@ -333,6 +291,61 @@ void loop() {
         }
         break;
     }
+  }
+
+  // check for last reading update
+  if ((micros() - LAST_SENSOR_UPDATE) > SENSOR_UPDATE_INTERVAL) {
+    LAST_SENSOR_UPDATE = micros();                               // update time
+
+    // read pressure data
+    pt1_analog = analogRead(PT1_PIN);                          // reads value from input pin and assigns to variable
+    pt2_analog = analogRead(PT2_PIN);                          // reads value from input pin and assigns to variable.
+    pt3_analog = analogRead(PT3_PIN);
+    pt4_analog = analogRead(PT4_PIN);
+    pt5_analog = analogRead(PT5_PIN);
+    pt6_analog = analogRead(PT6_PIN);
+
+    // read acceleration
+    // readACC(buff);
+    // accRaw[0] = (int16_t)(buff[0] | (buff[1] << 8)); 
+    // accRaw[1] = (int16_t)(buff[2] | (buff[3] << 8));
+    // accRaw[2] = (int16_t)(buff[4] | (buff[5] << 8));
+    // accx = accRaw[0]/accoffset;
+    // accy = accRaw[1]/accoffset;
+    // accz = accRaw[2]/accoffset;
+
+    // measure force from load cells, only update at slower interval
+    if ((LAST_SENSOR_UPDATE - LAST_LC_UPDATE) > LC_UPDATE_INTERVAL) {
+      LAST_LC_UPDATE = LAST_SENSOR_UPDATE;
+      weight1 = scale.get_units(1);  // Get the weight in lbs
+      weight2 = scale2.get_units(1); // Get the weight in lbs
+      weight3 = scale3.get_units(1); // Get the weight in lbs
+    }
+
+    // measure temp from thermocouples in °C
+    float t1 = mcp.readThermocouple();
+    
+    // send data to serial monitor
+    Serial.print("t:"); Serial.print(LAST_SENSOR_UPDATE);                             // print time reading in microseconds
+    Serial.print(",P1:"); Serial.print(pressureCalculation(pt1_analog, 1));           // print pressure calculation in psi
+    Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog, 2));           // print pressure calculation in psi
+    Serial.print(",P3:"); Serial.print(pressureCalculation(pt3_analog, 3));           // print pressure calculation in psi
+    Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog, 4));           // print pressure calculation in psi
+    Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog, 5));           // print pressure calculation in psi
+    Serial.print(",P6:"); Serial.print(pressureCalculation(pt6_analog, 6));           // print pressure calculation in psi
+
+    Serial.print(",T1:"); Serial.print(t1);                                           // print thermocouple temperature in C
+    // Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());                   // print thermocouple temperature in C
+    Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in lbs
+    Serial.print(",L2:"); Serial.print(weight2);                                      // print load cell 2 in lbs
+    Serial.print(",L3:"); Serial.print(weight3);                                      // print load cell 3 in lbs
+    // Serial.print(",Ax:"); Serial.print(accx);                                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
+    // Serial.print(",Ay:"); Serial.print(accy);                                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
+    // Serial.print(",Az:"); Serial.print(accz);                                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
+    float t_loc = (HUMAN_CONNECTION_TIMEOUT - (LAST_SENSOR_UPDATE -LAST_HUMAN_UPDATE)) / 1000000.0;
+    Serial.print(",t_loc:"); Serial.println(t_loc);                                     // print time until loss of communications occurs, in seconds (only due to human inaction)
+    //Serial.println();
+    //delay(10);
   }
 
   // Lost communication shutdown
