@@ -243,7 +243,7 @@ void GUI_DAQ_Window::save() {
     out << QDateTime::currentMSecsSinceEpoch();
 
     // Records the local time from the Teensy
-    out << this->teensy_time << ',';
+    out << ',' << this->teensy_time;
 
     QStringList keys = this->sensors.keys();
     for (int i = 0; i < keys.size(); ++i) {

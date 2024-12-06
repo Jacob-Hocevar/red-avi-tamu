@@ -142,6 +142,7 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
         // Once this state is reached, after SEQUENCE_DELAY, move to purge shutdown
         if (new_state) {
             QTimer* delay = new QTimer(this);
+            delay->setTimerType(Qt::PreciseTimer);
             delay->setSingleShot(true);
             QObject::connect(delay, &QTimer::timeout, this, [this]() {emit this->new_state("Purge");});
             
@@ -161,6 +162,7 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
         // Once this state is reached, after PURGE_DURATION, move to purge shutdown
         if (new_state) {
             QTimer* purge = new QTimer(this);
+            purge->setTimerType(Qt::PreciseTimer);
             purge->setSingleShot(true);
             QObject::connect(purge, &QTimer::timeout, this, [this]() {emit this->new_state("Purge Shutdown");});
             
@@ -180,6 +182,7 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
         // Once this state is reached, after PURGE_DELAY, move to main valves open
         if (new_state) {
             QTimer* main_valves = new QTimer(this);
+            main_valves->setTimerType(Qt::PreciseTimer);
             main_valves->setSingleShot(true);
             // See GUI_CTRL_Window for lambda function example (near bottom of contructor)
             QObject::connect(main_valves, &QTimer::timeout, this, [this]() {emit this->new_state("Main Valves Open");});
@@ -203,6 +206,7 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
         // Once this state is reached, after IGNITION_DELAY, move to fire
         if (new_state) {
             QTimer* ignition = new QTimer(this);
+            ignition->setTimerType(Qt::PreciseTimer);
             ignition->setSingleShot(true);
             // See GUI_CTRL_Window for lambda function example (near bottom of contructor)
             QObject::connect(ignition, &QTimer::timeout, this, [this]() {emit this->new_state("Fire");});
@@ -223,6 +227,7 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
         // Once this state is reached, after FIRE_DURATION, move to shutdown ph 1
         if (new_state) {
             QTimer* fire = new QTimer(this);
+            fire->setTimerType(Qt::PreciseTimer);
             fire->setSingleShot(true);
             QObject::connect(fire, &QTimer::timeout, this, [this]() {emit this->new_state("Shutdown Ph. 1");});
 
@@ -240,6 +245,7 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
         // Once this state is reached, after PURGE_DURATION, move to shutdown ph 2
         if (new_state) {
             QTimer* purge = new QTimer(this);
+            purge->setTimerType(Qt::PreciseTimer);
             purge->setSingleShot(true);
             QObject::connect(purge, &QTimer::timeout, this, [this]() {emit this->new_state("Shutdown Ph. 2");});
 
