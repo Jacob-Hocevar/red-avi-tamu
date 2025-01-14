@@ -9,22 +9,25 @@ using std::endl;
 
 // Constants (user set parameters)
 // Number of milliseconds that the ignition system should be delayed
-const int SEQUENCE_DELAY = 7400;
-
-// Number of milliseconds that the ignition system should be delayed
 const int PURGE_DELAY = 500;
 
-// Number of milliseconds that the ignition system should be delayed
+// Number of milliseconds that the ignition system should be delayed (from main valves open)
 const int IGNITION_DELAY = 100;
+
+// Number of milliseconds that the second ignition system should be delayed (from first ignition system)
+const int IGNITION_2_DELAY = 900;
 
 // Number of milliseconds that the pre-fire and post-fire purges should last
 const int PURGE_DURATION = 2000;
 
-// Number of milliseconds that the Fire should last
-const int FIRE_DURATION = 3500;
+// Number of milliseconds that Fire Ph. 2 should last (plan for main valves open for 6000 ms)
+const int FIRE_DURATION = 6000 - (IGNITION_DELAY + IGNITION_2_DELAY);
 
 // Number of milliseconds that a negative pressure gradient must be sustained before an abort
 const int APG_ABORT_DURATION = 200;
+
+// Number of milliseconds that the before purge to allow for T-10 countdown
+const int SEQUENCE_DELAY = 10000 - (PURGE_DURATION + PURGE_DELAY + IGNITION_DELAY);
 
 // Constructor
 State_Machine::State_Machine(QString name, QHash<QString, double>* data):
@@ -57,7 +60,7 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
     // Handle aborts first: 2 cases
     if (abort) {
         // If the main ball valves are open, do a purge
-        if (("Fire" == this->cur_state) || ("Main Valves Open" == this->cur_state)) {
+        if (("Fire Ph. 1" == this->cur_state) || ("Fire Ph. 2" == this->cur_state) || ("Main Valves Open" == this->cur_state)) {
             this->cur_state = "Shutdown Ph. 1";
         
         // Otherwise, go straight to non-purge shutdown procedure
@@ -200,7 +203,7 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
         new_allowed_states << "Shutdown Ph. 1";     // Non-emergency abort
         // Personnel must be at a safe distance before changing the state
         if (this->people_safe_dist) {
-            new_allowed_states << "Fire";               // Advance
+            new_allowed_states << "Fire Ph. 1";               // Advance
         }
 
         // Once this state is reached, after IGNITION_DELAY, move to fire
@@ -209,16 +212,39 @@ void State_Machine::hotfire_1(bool new_state, bool abort) {
             ignition->setTimerType(Qt::PreciseTimer);
             ignition->setSingleShot(true);
             // See GUI_CTRL_Window for lambda function example (near bottom of contructor)
-            QObject::connect(ignition, &QTimer::timeout, this, [this]() {emit this->new_state("Fire");});
+            QObject::connect(ignition, &QTimer::timeout, this, [this]() {emit this->new_state("Fire Ph. 1");});
 
             // If the state is changed, the timer should stop to prevent multiple state changes.
             QObject::connect(this, SIGNAL(new_state(QString)), ignition, SLOT(stop()));
             ignition->start(IGNITION_DELAY);
         }
     
-    } else if ("Fire"                   == this->cur_state) {
+    } else if ("Fire Ph. 1"             == this->cur_state) {
         // TODO: Consider skipping (straight to Shutdown Ph. 2) if relevant pressure < UNDER_PRESSURE
 
+        // Terminal sequence (no returning to previous state)
+        // This state change makes the system safer, so while there should be no one near the engine,
+        // the button should never be disabled.
+        new_allowed_states << "Shutdown Ph. 1"; // Abort
+
+        // Personnel must be at a safe distance before changing the state
+        if (this->people_safe_dist) {
+            new_allowed_states << "Fire Ph. 2";               // Advance
+        }
+
+        // Once this state is reached, after FIRE_DURATION, move to shutdown ph 1
+        if (new_state) {
+            QTimer* ignition_2 = new QTimer(this);
+            ignition_2->setTimerType(Qt::PreciseTimer);
+            ignition_2->setSingleShot(true);
+            QObject::connect(ignition_2, &QTimer::timeout, this, [this]() {emit this->new_state("Fire Ph. 2");});
+
+            // If the state is changed, the timer should stop to prevent multiple state changes.
+            QObject::connect(this, SIGNAL(new_state(QString)), ignition_2, SLOT(stop()));
+            ignition_2->start(IGNITION_2_DELAY);
+        }
+    
+    } else if ("Fire Ph. 2"             == this->cur_state) {
         // Terminal sequence (no returning to previous state)
         // This state change makes the system safer, so while there should be no one near the engine,
         // the button should never be disabled.

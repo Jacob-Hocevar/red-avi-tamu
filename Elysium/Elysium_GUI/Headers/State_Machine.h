@@ -11,6 +11,7 @@
 extern const int SEQUENCE_DELAY;
 extern const int PURGE_DELAY;
 extern const int IGNITION_DELAY;
+extern const int IGNITION_2_DELAY;
 extern const int PURGE_DURATION;
 extern const int FIRE_DURATION;
 extern const int APG_ABORT_DURATION;
