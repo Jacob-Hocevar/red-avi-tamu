@@ -173,12 +173,12 @@ PRESSURE TRANSDUCER SET UP
 */
 
 // teensy pins to read signals
-const int PT1_PIN = 14;                    // <-- USER INPUT
-const int PT2_PIN = 15;                    // <-- USER INPUT
-const int PT3_PIN = 16;                    // <-- USER INPUT
-const int PT4_PIN = 22;                    // <-- USER INPUT
-const int PT5_PIN = 20;                    // <-- USER INPUT
-const int PT6_PIN = 21;                    // <-- USER INPUT
+const int PT1_PIN = 23;                    // <-- USER INPUT
+const int PT2_PIN = 22;                    // <-- USER INPUT
+const int PT3_PIN = 21;                    // <-- USER INPUT
+const int PT4_PIN = 20;                    // <-- USER INPUT
+const int PT5_PIN = 17;                    // <-- USER INPUT
+const int PT6_PIN = 16;                    // <-- USER INPUT
 
 // analog and digital reading variables setup
 int pt1_analog = 0;                        // analog reading from PT output signal
