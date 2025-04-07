@@ -38,6 +38,7 @@ void loop() {
     while (Serial.available()) {
       udp.write(Serial.read());
     }
+    udp.write('\0');
     udp.endPacket();
   }
 
