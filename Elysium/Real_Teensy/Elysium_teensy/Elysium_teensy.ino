@@ -70,59 +70,6 @@ int get_pin(String id) {
   return -1;
 }
 
-#include <NativeEthernet.h>
-#include <NativeEthernetUdp.h>
-#include <IPAddress.h>
-
-unsigned int PORT = 8888;
-char packetBuffer[UDP_TX_PACKET_MAX_SIZE];  // buffer to hold incoming packet,
-// An EthernetUDP instance to let us send and receive packets over UDP
-EthernetUDP udp;
-byte MAC_ADDRESS[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-IPAddress REMOTE(192, 168, 1, 175);
-IPAddress LOCAL(192, 168, 1, 174);
-
-void output_string(unsigned int port, const char *to_write) {
-  udp.beginPacket(REMOTE, port);
-  udp.write(to_write);
-  udp.endPacket();
-}
-
-void output_float(unsigned int port, float to_write) {
-  char buf[100]; // *slaps roof* yeah that'll do nicely
-  constexpr unsigned long PRECISION = 5;
-  dtostrf(to_write, 1, PRECISION, buf);
-  udp.beginPacket(REMOTE, port);
-  udp.write(buf);
-  udp.endPacket();
-}
-
-String input_until(char stop_character) {
-  String ret = "";
-  char c = udp.read();
-  while (c != stop_character) {
-    ret += c;
-    c = udp.read();
-  }
-  return ret;
-}
-
-bool init_comms(byte* mac, unsigned int port) {
-  EthernetUDP ret;
-  IPAddress GATEWAY(192, 168, 1, 1);   // there is no router, so this is meaningless 
-  IPAddress SUBNET(255, 255, 255, 0);  // could be almost anything else tbh
-  Ethernet.begin(mac, LOCAL, GATEWAY, SUBNET);
-  if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-    Serial.println("ERR: No Ethernet board detected");
-    return false;
-  } else if (Ethernet.linkStatus() == LinkOFF) {
-    Serial.println("ERR: Ethernet cable disconnected");
-    return false;
-  }
-  udp.begin(port);
-  return true;
-}
-
 /*
 LOAD CELL SET UP
 ----------------
@@ -173,12 +120,12 @@ PRESSURE TRANSDUCER SET UP
 */
 
 // teensy pins to read signals
-const int PT1_PIN = 23;                    // <-- USER INPUT
-const int PT2_PIN = 22;                    // <-- USER INPUT
-const int PT3_PIN = 21;                    // <-- USER INPUT
-const int PT4_PIN = 20;                    // <-- USER INPUT
-const int PT5_PIN = 17;                    // <-- USER INPUT
-const int PT6_PIN = 16;                    // <-- USER INPUT
+const int PT1_PIN = 14;                    // <-- USER INPUT
+const int PT2_PIN = 15;                    // <-- USER INPUT
+const int PT3_PIN = 16;                    // <-- USER INPUT
+const int PT4_PIN = 22;                    // <-- USER INPUT
+const int PT5_PIN = 20;                    // <-- USER INPUT
+const int PT6_PIN = 21;                    // <-- USER INPUT
 
 // analog and digital reading variables setup
 int pt1_analog = 0;                        // analog reading from PT output signal
@@ -224,16 +171,14 @@ SETUP LOOP
 -------------------------------------------------------------------
 */
 void setup() {
-  // Serial.begin(BAUD);           // initializes serial communication at set baud rate
-  init_comms(MAC_ADDRESS, PORT);  // does what it says on the tin
+  Serial.begin(BAUD);           // initializes serial communication at set baud rate
   Wire.begin();
 
   /*
   VALVE SET UP
   -----------------------
   */
-  output_string(PORT, "test1");
-  // Serial.println("test1");
+  Serial.println("test1");
 
   pinMode(NCS1_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 1 MOSFET
   pinMode(NCS2_PIN, OUTPUT);    // sets the digital pin as output for controlling Valve 2 MOSFET
@@ -244,7 +189,6 @@ void setup() {
   pinMode(IGN2_PIN, OUTPUT);
 
   // Serial.println("test2_Pins");
-  output_string(PORT, "test2_Pins");
 
   /*
   THERMOCOUPLE SET UP
@@ -266,8 +210,7 @@ void setup() {
   //mcp2.setFilterCoefficient(3);
   //mcp2.enable(true);
 
-  // Serial.println("test3_TC");
-  output_string(PORT, "test3_TC");
+  Serial.println("test3_TC");
 
   /*
   LOAD CELL SET UP
@@ -289,8 +232,7 @@ void setup() {
   scale3.set_scale(-3780.f); // Set the scale factor for conversion to pounds
   scale3.tare();            // Reset the scale to zero
   
-  // Serial.println("test4_LC");
-  output_string(PORT, "test4_LC");
+  Serial.println("test4_LC");
   /*
   ACCELEROMETER SET UP
   -----------------------
@@ -308,10 +250,9 @@ LOOP
 */
 void loop() {
   // checks if user input is available to read
-  udp.parsePacket();
-  if (udp.available() > 0) {
+  if (Serial.available() > 0) {
     // read communication
-    String input = input_until('\n');
+    String input = Serial.readStringUntil('\n');
     LAST_COMMUNICATION_TIME = micros();
 
     // no operation command to confirm connection
@@ -385,51 +326,24 @@ void loop() {
     float t1 = mcp.readThermocouple();
     
     // send data to serial monitor
-    output_string(PORT, "t:");
-    output_float(PORT, LAST_SENSOR_UPDATE);
-    output_string(PORT, ",P1:");
-    output_float(PORT, pressureCalculation(pt1_analog, 1));
-    output_string(PORT, ",P2:");
-    output_float(PORT, pressureCalculation(pt2_analog, 2));
-    output_string(PORT, ",P3:");
-    output_float(PORT, pressureCalculation(pt3_analog, 3));
-    output_string(PORT, ",P4:");
-    output_float(PORT, pressureCalculation(pt4_analog, 4));
-    output_string(PORT, ",P5:");
-    output_float(PORT, pressureCalculation(pt5_analog, 5));
-    output_string(PORT, ",P6:");
-    output_float(PORT, pressureCalculation(pt6_analog, 6));
-    output_string(PORT, ",T1:");
-    output_float(PORT, t1);
-    output_string(PORT, ",L1:");
-    output_float(PORT, weight1);
-    output_string(PORT, ",L2:");
-    output_float(PORT, weight2);
-    output_string(PORT, ",L3:");
-    output_float(PORT, weight3);
-    output_string(PORT, ",t_loc:");
-    float t_loc = (HUMAN_CONNECTION_TIMEOUT - (LAST_SENSOR_UPDATE -LAST_HUMAN_UPDATE)) / 1000000.0;
-    output_float(PORT, t_loc);
-    output_string(PORT, "\n");
-    delay(10);
-    // Serial.print("t:"); Serial.print(LAST_SENSOR_UPDATE);                             // print time reading in microseconds
-    // Serial.print(",P1:"); Serial.print(pressureCalculation(pt1_analog, 1));           // print pressure calculation in psi
-    // Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog, 2));           // print pressure calculation in psi
-    // Serial.print(",P3:"); Serial.print(pressureCalculation(pt3_analog, 3));           // print pressure calculation in psi
-    // Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog, 4));           // print pressure calculation in psi
-    // Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog, 5));           // print pressure calculation in psi
-    // Serial.print(",P6:"); Serial.print(pressureCalculation(pt6_analog, 6));           // print pressure calculation in psi
+    Serial.print("t:"); Serial.print(LAST_SENSOR_UPDATE);                             // print time reading in microseconds
+    Serial.print(",P1:"); Serial.print(pressureCalculation(pt1_analog, 1));           // print pressure calculation in psi
+    Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog, 2));           // print pressure calculation in psi
+    Serial.print(",P3:"); Serial.print(pressureCalculation(pt3_analog, 3));           // print pressure calculation in psi
+    Serial.print(",P4:"); Serial.print(pressureCalculation(pt4_analog, 4));           // print pressure calculation in psi
+    Serial.print(",P5:"); Serial.print(pressureCalculation(pt5_analog, 5));           // print pressure calculation in psi
+    Serial.print(",P6:"); Serial.print(pressureCalculation(pt6_analog, 6));           // print pressure calculation in psi
 
-    // Serial.print(",T1:"); Serial.print(t1);                                           // print thermocouple temperature in C
-    // // Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());                   // print thermocouple temperature in C
-    // Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in lbs
-    // Serial.print(",L2:"); Serial.print(weight2);                                      // print load cell 2 in lbs
-    // Serial.print(",L3:"); Serial.print(weight3);                                      // print load cell 3 in lbs
-    // // Serial.print(",Ax:"); Serial.print(accx);                                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
-    // // Serial.print(",Ay:"); Serial.print(accy);                                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
-    // // Serial.print(",Az:"); Serial.print(accz);                                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
-    // float t_loc = (HUMAN_CONNECTION_TIMEOUT - (LAST_SENSOR_UPDATE -LAST_HUMAN_UPDATE)) / 1000000.0;
-    // Serial.print(",t_loc:"); Serial.println(t_loc);                                     // print time until loss of communications occurs, in seconds (only due to human inaction)
+    Serial.print(",T1:"); Serial.print(t1);                                           // print thermocouple temperature in C
+    // Serial.print(",T2:"); Serial.print(mcp2.readThermocouple());                   // print thermocouple temperature in C
+    Serial.print(",L1:"); Serial.print(weight1);                                      // print load cell 1 in lbs
+    Serial.print(",L2:"); Serial.print(weight2);                                      // print load cell 2 in lbs
+    Serial.print(",L3:"); Serial.print(weight3);                                      // print load cell 3 in lbs
+    // Serial.print(",Ax:"); Serial.print(accx);                                      // print acceleration in x direction  <-- determine what direction x is in relation to engine
+    // Serial.print(",Ay:"); Serial.print(accy);                                      // print acceleration in y direction  <-- determine what direction y is in relation to engine
+    // Serial.print(",Az:"); Serial.print(accz);                                      // print acceleration in z direction  <-- determine what direction z is in relation to engine
+    float t_loc = (HUMAN_CONNECTION_TIMEOUT - (LAST_SENSOR_UPDATE -LAST_HUMAN_UPDATE)) / 1000000.0;
+    Serial.print(",t_loc:"); Serial.println(t_loc);                                     // print time until loss of communications occurs, in seconds (only due to human inaction)
     //Serial.println();
     //delay(10);
   }

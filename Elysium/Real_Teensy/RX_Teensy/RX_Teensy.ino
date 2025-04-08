@@ -34,17 +34,27 @@ void loop() {
   }
 
   if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\n');
+    size_t i = 0;
     udp.beginPacket(REMOTE, PORT);
-    while (Serial.available()) {
-      udp.write(Serial.read());
+    while (i < cmd.length()) {
+      udp.write(cmd.charAt(i));
+      i++;
     }
+    udp.write('\n');
     udp.write('\0');
     udp.endPacket();
   }
 
-  int packetSize = udp.parsePacket();
-  if (packetSize) {
-    udp.read(packetBuffer, packetSize);
-    Serial.print(packetBuffer);
+  while (true) {
+    int packetSize = udp.parsePacket();
+    if (packetSize) {
+      udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
+      packetBuffer[packetSize] = '\0';
+      Serial.print(packetBuffer);
+    } else {
+      break;
+    }
   }
+  delay(1);
 }
