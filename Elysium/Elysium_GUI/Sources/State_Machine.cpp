@@ -9,7 +9,7 @@ using std::endl;
 
 // Constants (user set parameters)
 // Number of milliseconds that the ignition system should be delayed
-const int PURGE_DELAY = 500;
+const int PURGE_DELAY = 0;
 
 // Number of milliseconds that the ignition system should be delayed (from main valves open)
 const int IGNITION_DELAY = 100;
@@ -18,7 +18,7 @@ const int IGNITION_DELAY = 100;
 const int IGNITION_2_DELAY = 900;
 
 // Number of milliseconds that the pre-fire and post-fire purges should last
-const int PURGE_DURATION = 2000;
+const int PURGE_DURATION = 0;
 
 // Number of milliseconds that Fire Ph. 2 should last (plan for main valves open for 6000 ms)
 const int FIRE_DURATION = 6000 - (IGNITION_DELAY + IGNITION_2_DELAY);
@@ -345,8 +345,8 @@ void State_Machine::new_data() {
         return;
     }
     
-    // Only abort from "Main Valves Open" or "Fire" states
-    if ("Main Valves Open" == this->cur_state || "Fire" == this->cur_state) {
+    // Only abort from "Main Valves Open" or "Fire"-based states
+    if ("Main Valves Open" == this->cur_state || "Fire Ph. 1" == this->cur_state || "Fire Ph. 2" == this->cur_state) {
         try {
             // Access relevant data
             double p1 = this->cur_data->value("P1");
@@ -358,11 +358,17 @@ void State_Machine::new_data() {
 
             // Variable to store if any of the checks fail
             bool shutdown = false;
+            bool cond = false;
             int time = QDateTime::currentMSecsSinceEpoch();
 
             // Check for a sustained adverse pressure gradient
             // Combustion chamber vs fuel injector manifold
-            if (p6 > (p4 + 5)) {
+            cond = p6 > (p4 + 10);
+            if ("Fire Ph. 2" == this->cur_state) {
+                cond = p6 > (p4 - 15);
+            }
+
+            if (cond) {
                 if (0 == this->apg_times->at(0)) {
                     this->apg_times->replace(0, time);
                 } else if ((time - this->apg_times->at(0)) > APG_ABORT_DURATION) {
@@ -373,7 +379,12 @@ void State_Machine::new_data() {
             }
             
             // Combustion chamber vs oxidizer injector inlet
-            if (p6 > (p3 + 5)) {
+            cond = p6 > (p3 + 10);
+            if ("Fire Ph. 2" == this->cur_state) {
+                cond = p6 > (p3 - 15);
+            }
+            
+            if (cond) {
                 if (0 == this->apg_times->at(1)) {
                     this->apg_times->replace(1, time);
                 } else if ((time - this->apg_times->at(1)) > APG_ABORT_DURATION) {
@@ -383,8 +394,8 @@ void State_Machine::new_data() {
                 this->apg_times->replace(1, 0);
             }
             
-            // Fuel injector manifold vs fuel tank
-            if (p4 > (p2 + 5)) {
+            
+            if (p4 > (p2 - 15)) {
                 if (0 == this->apg_times->at(2)) {
                     this->apg_times->replace(2, time);
                 } else if ((time - this->apg_times->at(2)) > APG_ABORT_DURATION) {
@@ -395,7 +406,8 @@ void State_Machine::new_data() {
             }
             
             // Oxidizer injector inlet vs oxidizer tank
-            if (p3 > (p1 + 5)) {
+            
+            if (p3 > (p1 - 15)) {
                 if (0 == this->apg_times->at(3)) {
                     this->apg_times->replace(3, time);
                 } else if ((time - this->apg_times->at(3)) > APG_ABORT_DURATION) {
@@ -406,7 +418,7 @@ void State_Machine::new_data() {
             }
             
             // Fuel tank vs upper line pressure
-            if (p2 > (p5 + 5)) {
+            if (p2 > (p5 + 10)) {
                 if (0 == this->apg_times->at(4)) {
                     this->apg_times->replace(4, time);
                 } else if ((time - this->apg_times->at(4)) > APG_ABORT_DURATION) {
@@ -416,28 +428,7 @@ void State_Machine::new_data() {
                 this->apg_times->replace(4, 0);
             }
 
-            // Not sure if this applies
-            // Fuel injector manifold vs upper line pressure
-            // if (p4 > (p5 + 5)) {
-            //     if (0 == this->apg_times->at(5)) {
-            //         this->apg_times->replace(5, time);
-            //     } else if ((time - this->apg_times->at(5)) > APG_ABORT_DURATION) {
-            //         shutdown = true;
-            //     }
-            // } else {
-            //     this->apg_times->replace(5, 0);
-            // }
-
-            // Oxidizer injector inlet vs upper line pressure
-            // if (p3 > (p5 + 5)) {
-            //     if (0 == this->apg_times->at(6)) {
-            //         this->apg_times->replace(6, time);
-            //     } else if ((time - this->apg_times->at(6)) > APG_ABORT_DURATION) {
-            //         shutdown = true;
-            //     }
-            // } else {
-            //     this->apg_times->replace(6, 0);
-            // }
+            
 
             // Immediately shutdown if any case is confirmed
             if (shutdown) {
