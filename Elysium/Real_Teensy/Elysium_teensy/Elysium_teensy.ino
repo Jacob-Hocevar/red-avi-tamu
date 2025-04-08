@@ -376,12 +376,16 @@ void loop() {
     while(aborted) {
       if ((micros() - ABORT_TIME_TRACKING) > ABORTED_TIME_INTERVAL) {
         ABORT_TIME_TRACKING = micros();
-        Serial.println("Aborted");
+        output_string(PORT, "Aborted\n");
+        // Serial.println("Aborted");
       }
 
-      if (Serial.available() > 0) {
-        String input = Serial.readStringUntil('\n');
-        Serial.println("New Input= " + input);
+      udp.parsePacket();
+      if (udp.available() > 0) {
+        // String input = Serial.readStringUntil('\n');
+        String input = input_until('\n');
+        output_string(PORT, ("New Input= " + input).c_str());
+        // Serial.println("New Input= " + input);
 
         if ((input == "start\r") || (input == "Start\r")){
           aborted = false;
