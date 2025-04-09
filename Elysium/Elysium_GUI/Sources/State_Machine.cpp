@@ -12,10 +12,10 @@ using std::endl;
 const int PURGE_DELAY = 0;
 
 // Number of milliseconds that the ignition system should be delayed (from main valves open)
-const int IGNITION_DELAY = 100;
+const int IGNITION_DELAY = 150;
 
 // Number of milliseconds that the second ignition system should be delayed (from first ignition system)
-const int IGNITION_2_DELAY = 900;
+const int IGNITION_2_DELAY = 0;
 
 // Number of milliseconds that the pre-fire and post-fire purges should last
 const int PURGE_DURATION = 0;
@@ -354,45 +354,10 @@ void State_Machine::new_data() {
             double p3 = this->cur_data->value("P3");
             double p4 = this->cur_data->value("P4");
             double p5 = this->cur_data->value("P5");
-            double p6 = this->cur_data->value("P6");
 
             // Variable to store if any of the checks fail
             bool shutdown = false;
-            bool cond = false;
             int time = QDateTime::currentMSecsSinceEpoch();
-
-            // Check for a sustained adverse pressure gradient
-            // Combustion chamber vs fuel injector manifold
-            cond = p6 > (p4 + 10);
-            if ("Fire Ph. 2" == this->cur_state) {
-                cond = p6 > (p4 - 15);
-            }
-
-            if (cond) {
-                if (0 == this->apg_times->at(0)) {
-                    this->apg_times->replace(0, time);
-                } else if ((time - this->apg_times->at(0)) > APG_ABORT_DURATION) {
-                    shutdown = true;
-                }
-            } else {
-                this->apg_times->replace(0, 0);
-            }
-            
-            // Combustion chamber vs oxidizer injector inlet
-            cond = p6 > (p3 + 10);
-            if ("Fire Ph. 2" == this->cur_state) {
-                cond = p6 > (p3 - 15);
-            }
-            
-            if (cond) {
-                if (0 == this->apg_times->at(1)) {
-                    this->apg_times->replace(1, time);
-                } else if ((time - this->apg_times->at(1)) > APG_ABORT_DURATION) {
-                    shutdown = true;
-                }
-            } else {
-                this->apg_times->replace(1, 0);
-            }
             
             
             if (p4 > (p2 - 15)) {
