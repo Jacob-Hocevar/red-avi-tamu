@@ -3,6 +3,7 @@
 #include <QGridLayout>
 #include <QTextStream>
 #include <QPushButton>
+#include "Globals.h"
 #include <Qt>
 
 #include <QDebug>
@@ -10,12 +11,11 @@
 using std::cout;
 using std::endl;
 
-const QString PORT = "/dev/Virtual_Teensy";
-const int BAUD = 115200;
+
 
 Virtual_Teensy::Virtual_Teensy(int interval, QFile* config):
     QWidget(), layout(new QGridLayout()), cur_row(3), interval(interval), config(config), sensors(),
-    interval_label(new QLabel()), interval_slider(new QSlider()), ser(new QSerialPort()), timer(new QTimer()) {
+    interval_label(new QLabel()), interval_slider(new QSlider()), timer(new QTimer()) {
     // Layout to attach internal widgets to
     this->layout->setSpacing(10);
     this->layout->setContentsMargins(5,5,5,5);
@@ -57,30 +57,17 @@ Virtual_Teensy::Virtual_Teensy(int interval, QFile* config):
     // Attach the layout to this object
     this->setLayout(this->layout);
 
-    /*
-        Non UI Elements
-    */
-
-    // Setup and connect to the GUI
-    this->ser->setPortName(PORT);
-    this->ser->setBaudRate(BAUD);
-    this->ser->open(QSerialPort::ReadWrite);
-
-    // If connection fails, print debug info
-    if (!this->ser->isOpen()) {
-        qDebug() << this->ser->error();
-    }
 
     // Reads are detected automatically, writes every this->interval
-    QObject::connect(this->ser, SIGNAL(readyRead()), this, SLOT(read_data()));
+    QObject::connect(shared_ser, SIGNAL(readyRead()), this, SLOT(read_data()));
     QObject::connect(this->timer, SIGNAL(timeout()), this, SLOT(write_data()));
     this->timer->start(this->interval);
 }
 
 Virtual_Teensy::~Virtual_Teensy() {
     // Close and delete non-UI elements
-    this->ser->close();
-    delete this->ser;
+    shared_ser->close();
+    delete shared_ser;
     delete this->timer;
 
     // Save the current configuration
@@ -102,7 +89,7 @@ void Virtual_Teensy::set_interval(int interval) {
 }
 
 void Virtual_Teensy::read_data() {
-    QTextStream in(this->ser->readAll());
+    QTextStream in(shared_ser->readAll());
     bool first = true;
     while (!in.atEnd()) {
         QString text = in.readLine();
@@ -136,7 +123,7 @@ void Virtual_Teensy::write_data() {
     // cout << "Write:\t" << data.toStdString() << "\\r\\n" << endl;
 
     data += "\r\n";
-    this->ser->write(data.toUtf8()); 
+    shared_ser->write(data.toUtf8()); 
 }
 
 void Virtual_Teensy::add_sensor(QString ID, QString min_data, QString max_data, QString min_error,
@@ -158,19 +145,29 @@ void Virtual_Teensy::remove_sensor(VT_Sensor* sensor_ptr) {
 void Virtual_Teensy::pause() {
     if (timer->isActive()) {
         timer->stop();
+        if (shared_ser->isOpen()) {
+            shared_ser->close();
+            qDebug() << "vt closed";
+        }
     }
-    if (ser->isOpen()) {
-        ser->close();
-    }
+    // if (shared_ser->isOpen()) {
+    //     shared_ser->close();
+    //     qDebug() << "vt closed";
+    // }
 }
 
 void Virtual_Teensy::start() {
-    if (!ser->isOpen()) {
-        ser->setPortName(PORT);
-        ser->setBaudRate(BAUD);
-        ser->open(QSerialPort::ReadWrite);
+    if (!shared_ser->isOpen()) {
+        shared_ser->setPortName(PORT);
+        shared_ser->setBaudRate(BAUD);
+        shared_ser->open(QSerialPort::ReadWrite);
+        qDebug() << "vt connected";
+
+        if (!timer->isActive()) {
+            timer->start(interval);
+        }
     }
-    if (!timer->isActive()) {
-        timer->start(interval);
-    }
+    // if (!timer->isActive()) {
+    //     timer->start(interval);
+    // }
 }

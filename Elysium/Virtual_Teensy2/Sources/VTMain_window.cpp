@@ -1,12 +1,17 @@
 #include "VTMain_window.h"
 #include "Csv_Tab.h"
 #include "Virtual_Teensy.h"
+#include "Globals.h"
 
 #include <QStringList>
 #include <QTabWidget>
 #include <QSettings>
 #include <QDebug>
 #include <QVBoxLayout>
+
+// const QString PORT = "/dev/Virtual_Teensy";
+// const int BAUD = 115200;
+
 VTMain_window::VTMain_window(): QMainWindow(), config(nullptr) {
 
     QWidget *central_widget = new QWidget(this);
@@ -35,6 +40,16 @@ VTMain_window::VTMain_window(): QMainWindow(), config(nullptr) {
         cout << "Could not open main.cfg" << endl;
     }
 
+    // connect ser here
+    shared_ser->setPortName(PORT);
+    shared_ser->setBaudRate(BAUD);
+    shared_ser->open(QSerialPort::ReadWrite);
+
+    if (shared_ser->isOpen()) {
+        qDebug() << shared_ser->error();
+    }
+
+
     //load_config(this->tab_widget);
     tab_widget->addTab(new Virtual_Teensy(50, this->config), tr("Manual mode"));
     tab_widget->addTab(new Csv_Tab(this), tr("Csv mode"));
@@ -50,22 +65,32 @@ void VTMain_window::onTabChange(int tab){
     Csv_Tab* csvTab = qobject_cast<Csv_Tab*>(tab_widget->widget(1));
     if (teensyTab) {
         if (tab == 0) {
+            qDebug()<< "csv tab closed";
+            csvTab->pause(); // Pause CSV processing
+            qDebug()<< "VT tab open";
             teensyTab->start(); // Resume Virtual Teensy operations
+
         } else {
+            qDebug()<< "VT tab closed";
             teensyTab->pause(); // Pause Virtual Teensy operations
+            qDebug()<< "csv tab open";
+            csvTab->start(); // Resume CSV processing
+          
         }
     }
 
-    if (csvTab) {
-        if (tab == 1) {
-            csvTab->start(); // Resume CSV processing
-        } else {
-            csvTab->pause(); // Pause CSV processing
-        }
-    }
+    // if (csvTab) {
+    //     if (tab == 1) {
+    //         qDebug()<< "csv tab open";
+    //         csvTab->start(); // Resume CSV processing
+    //     } else {
+    //         qDebug()<< "csv tab closed";
+    //         csvTab->pause(); // Pause CSV processing
+    //     }
+    // }
 }
 
-
+           
 // void VTMain_window::load_config(QTabWidget *tab_widget) {
 //     QSettings settings("Assets/main.cfg", QSettings::IniFormat);
 //     settings.beginGroup("Tabs");

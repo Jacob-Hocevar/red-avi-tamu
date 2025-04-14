@@ -18,16 +18,16 @@ QT += core
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 # Input
-HEADERS += Headers/Connector.h \
-           Headers/Csv_Tab.h \
+HEADERS += Headers/Csv_Tab.h \
            Headers/CSVProcessor.h \
            Headers/Virtual_Teensy.h \
            Headers/VT_Sensor.h \
-           Headers/VTMain_window.h
-SOURCES += Sources/Connector.cpp \
-           Sources/Csv_Tab.cpp \
+           Headers/VTMain_window.h \
+           Headers/Globals.h
+SOURCES += Sources/Csv_Tab.cpp \
            Sources/CSVProcessor.cpp \
            Sources/main.cpp \
            Sources/Virtual_Teensy.cpp \
            Sources/VT_Sensor.cpp \
-           Sources/VTMain_window.cpp
+           Sources/VTMain_window.cpp \
+           Sources/Globals.cpp

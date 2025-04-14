@@ -13,12 +13,17 @@ public:
     void readCSV();
     void Process_line(const QString& line);
     static void delay(int millisecondsToWait); // isnt chaning across instances
+    
 private:
     QString filePath;
     int delay_ms;
-
+    bool running;
+public slots:
+    void stop();
+    void start();
 signals:
     void new_pressure(const QString &Pressure);
+
 };
 
 

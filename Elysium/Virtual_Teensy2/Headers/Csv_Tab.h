@@ -22,14 +22,17 @@ class Csv_Tab : public QWidget{
         QPushButton *run;
         QComboBox *csv_options;
         QComboBox *delay;
-        Connector* connector;
-        QSerialPort* ser;
+
+        //QSerialPort* ser;
 
     private slots:
         void run_slot();
         void write_data(QString line);
+        void read_data();
     signals:
         void run_pressed();
+        void stop_running();
+        void start_running();
 
 };
     

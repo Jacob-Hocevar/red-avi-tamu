@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QGridLayout>
 #include <QTabWidget>
+#include  <QSerialPort>
 #include <QFile>
 
 class VTMain_window : public QMainWindow{
@@ -16,6 +17,7 @@ private:
     QTabWidget *tab_widget;
     QGridLayout *layout;
     QFile *config;
+    //QSerialPort *shared_ser;
 private slots:
     void onTabChange(int tab);
     //void load_config(QTabWidget *tab_widget);

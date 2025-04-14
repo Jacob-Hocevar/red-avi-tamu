@@ -1,6 +1,7 @@
 #include "Csv_Tab.h"
-#include "Connector.h"
+
 #include "CSVProcessor.h"
+#include "Globals.h"
 
 #include <QString>
 #include <QLabel>
@@ -12,15 +13,18 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QSpacerItem>
+#include <QTextStream>
+
+#include <iostream>
+using std::cout;
+using std::endl;
+
+// const QString PORT = "/dev/Virtual_Teensy";
+// const int BAUD = 115200;
 
 Csv_Tab::Csv_Tab(QWidget *parent) : QWidget(parent) {
-    // Window properties
-    setWindowTitle("Configure Test Run");
-    //QPalette palette = this->palette();
-    //palette.setColor(QPalette::Window, Qt::gray);
-    //this->setPalette(palette);
-    //this->setAutoFillBackground(true);
 
+    setWindowTitle("Configure Test Run");
     // Layout Setup
     QVBoxLayout *mainLayout = new QVBoxLayout(this);  // Main vertical layout
     QFormLayout *formLayout = new QFormLayout();      // Form style layout for input fields
@@ -53,7 +57,6 @@ Csv_Tab::Csv_Tab(QWidget *parent) : QWidget(parent) {
     setLayout(mainLayout);
 
     //this->layout->addWidget(exit, 2, 0);
-    this->connector = nullptr;
     this->CSV = nullptr;
     //csv_options
     QString dirPath = "Data";
@@ -76,19 +79,30 @@ Csv_Tab::Csv_Tab(QWidget *parent) : QWidget(parent) {
     }
     //run config
     QObject::connect(this->run, &QPushButton::clicked, this, &Csv_Tab::run_slot);
+    QObject::connect(shared_ser, SIGNAL(readyRead()), this, SLOT(read_data())); // added frin vt.cpp
 
 
-    //connect to gui
-    //  const QString PORT = "/dev/Virtual_Teensy";
-    //  const int BAUD = 115200;
-
-
-
-    //  connector = new Connector(PORT, BAUD, this);
-    //  ser = connector->connect();
     
 }
+void Csv_Tab::read_data(){
+    QTextStream in(shared_ser->readAll());
+    bool first = true;
+    while (!in.atEnd()) {
+        QString text = in.readLine();
+        if ("nop" == text) {
+            continue;
+        }
+        if (first) {
+            cout << "Read:";
+            first = false;
+        }
 
+        cout << '\t' << text.toStdString() << "\r\n";
+    }
+    if (!first) {
+        cout << endl;
+    }   
+}
 void Csv_Tab::run_slot(){
     if (this->CSV) {
         delete this->CSV;
@@ -99,6 +113,9 @@ void Csv_Tab::run_slot(){
     qDebug()<< "running with: "<< selected_csv <<" Baud Rate: "<< selected_delay;
     this->CSV = new CSVProcessor(selected_csv, selected_delay, this);
     QObject::connect(this->CSV, &CSVProcessor::new_pressure, this, &Csv_Tab::write_data);
+    QObject::connect(this, &Csv_Tab::stop_running, this->CSV, &CSVProcessor::stop);
+    QObject::connect(this, &Csv_Tab::start_running, this->CSV, &CSVProcessor::start);
+
     this->CSV->readCSV();
 
 }
@@ -107,17 +124,26 @@ void Csv_Tab::run_slot(){
 void Csv_Tab::write_data(QString line){
     qDebug() << line;
     line += "\r\n";
-    //ser->write(line.toUtf8());
+    shared_ser->write(line.toUtf8());
 }
 
 void Csv_Tab::pause() {
-    if (CSV) {
-        disconnect(CSV, &CSVProcessor::new_pressure, this, &Csv_Tab::write_data);
+    emit stop_running();
+    if (shared_ser->isOpen()) {
+        shared_ser->close();
+        qDebug() << "csv closed";
+
+
+        // add method to stop the csv reading 
     }
 }
 
 void Csv_Tab::start() {
-    if (CSV) {
-        connect(CSV, &CSVProcessor::new_pressure, this, &Csv_Tab::write_data);
+    emit start_running();
+    if (!shared_ser->isOpen()) {
+        shared_ser->setPortName(PORT);
+        shared_ser->setBaudRate(BAUD);
+        shared_ser->open(QSerialPort::ReadWrite);
+        qDebug() << "csv connected";
     }
 }

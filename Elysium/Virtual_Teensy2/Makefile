@@ -37,7 +37,7 @@ MOVE          = mv -f
 TAR           = tar -cf
 COMPRESS      = gzip -9f
 DISTNAME      = Virtual_Teensy2.01.0.0
-DISTDIR = /root/Virtual_Teensy2.0/.tmp/Virtual_Teensy2.01.0.0
+DISTDIR = /root/red-avi-tamu/Elysium/Virtual_Teensy2/.tmp/Virtual_Teensy2.01.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1
 LIBS          = $(SUBLIBS) /usr/lib/x86_64-linux-gnu/libQt5Widgets.so /usr/lib/x86_64-linux-gnu/libQt5Gui.so /usr/lib/x86_64-linux-gnu/libQt5SerialPort.so /usr/lib/x86_64-linux-gnu/libQt5Core.so -lGL -lpthread   
@@ -52,26 +52,24 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = Sources/Connector.cpp \
-		Sources/Csv_Tab.cpp \
+SOURCES       = Sources/Csv_Tab.cpp \
 		Sources/CSVProcessor.cpp \
 		Sources/main.cpp \
 		Sources/Virtual_Teensy.cpp \
 		Sources/VT_Sensor.cpp \
-		Sources/VTMain_window.cpp moc_Connector.cpp \
-		moc_Csv_Tab.cpp \
+		Sources/VTMain_window.cpp \
+		Sources/Globals.cpp moc_Csv_Tab.cpp \
 		moc_CSVProcessor.cpp \
 		moc_Virtual_Teensy.cpp \
 		moc_VT_Sensor.cpp \
 		moc_VTMain_window.cpp
-OBJECTS       = Connector.o \
-		Csv_Tab.o \
+OBJECTS       = Csv_Tab.o \
 		CSVProcessor.o \
 		main.o \
 		Virtual_Teensy.o \
 		VT_Sensor.o \
 		VTMain_window.o \
-		moc_Connector.o \
+		Globals.o \
 		moc_Csv_Tab.o \
 		moc_CSVProcessor.o \
 		moc_Virtual_Teensy.o \
@@ -162,18 +160,18 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		Virtual_Teensy2.0.pro Headers/Connector.h \
-		Headers/Csv_Tab.h \
+		Virtual_Teensy2.0.pro Headers/Csv_Tab.h \
 		Headers/CSVProcessor.h \
 		Headers/Virtual_Teensy.h \
 		Headers/VT_Sensor.h \
-		Headers/VTMain_window.h Sources/Connector.cpp \
-		Sources/Csv_Tab.cpp \
+		Headers/VTMain_window.h \
+		Headers/Globals.h Sources/Csv_Tab.cpp \
 		Sources/CSVProcessor.cpp \
 		Sources/main.cpp \
 		Sources/Virtual_Teensy.cpp \
 		Sources/VT_Sensor.cpp \
-		Sources/VTMain_window.cpp
+		Sources/VTMain_window.cpp \
+		Sources/Globals.cpp
 QMAKE_TARGET  = Virtual_Teensy2.0
 DESTDIR       = 
 TARGET        = Virtual_Teensy2.0
@@ -373,8 +371,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents Headers/Connector.h Headers/Csv_Tab.h Headers/CSVProcessor.h Headers/Virtual_Teensy.h Headers/VT_Sensor.h Headers/VTMain_window.h $(DISTDIR)/
-	$(COPY_FILE) --parents Sources/Connector.cpp Sources/Csv_Tab.cpp Sources/CSVProcessor.cpp Sources/main.cpp Sources/Virtual_Teensy.cpp Sources/VT_Sensor.cpp Sources/VTMain_window.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents Headers/Csv_Tab.h Headers/CSVProcessor.h Headers/Virtual_Teensy.h Headers/VT_Sensor.h Headers/VTMain_window.h Headers/Globals.h $(DISTDIR)/
+	$(COPY_FILE) --parents Sources/Csv_Tab.cpp Sources/CSVProcessor.cpp Sources/main.cpp Sources/Virtual_Teensy.cpp Sources/VT_Sensor.cpp Sources/VTMain_window.cpp Sources/Globals.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -406,41 +404,35 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 	g++ -pipe -O2 -Wall -Wextra -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_Connector.cpp moc_Csv_Tab.cpp moc_CSVProcessor.cpp moc_Virtual_Teensy.cpp moc_VT_Sensor.cpp moc_VTMain_window.cpp
+compiler_moc_header_make_all: moc_Csv_Tab.cpp moc_CSVProcessor.cpp moc_Virtual_Teensy.cpp moc_VT_Sensor.cpp moc_VTMain_window.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_Connector.cpp moc_Csv_Tab.cpp moc_CSVProcessor.cpp moc_Virtual_Teensy.cpp moc_VT_Sensor.cpp moc_VTMain_window.cpp
-moc_Connector.cpp: Headers/Connector.h \
-		moc_predefs.h \
-		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/Virtual_Teensy2.0/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/Virtual_Teensy2.0 -I/root/Virtual_Teensy2.0/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Connector.h -o moc_Connector.cpp
-
+	-$(DEL_FILE) moc_Csv_Tab.cpp moc_CSVProcessor.cpp moc_Virtual_Teensy.cpp moc_VT_Sensor.cpp moc_VTMain_window.cpp
 moc_Csv_Tab.cpp: Headers/Csv_Tab.h \
 		Headers/CSVProcessor.h \
-		Headers/Connector.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/Virtual_Teensy2.0/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/Virtual_Teensy2.0 -I/root/Virtual_Teensy2.0/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Csv_Tab.h -o moc_Csv_Tab.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/red-avi-tamu/Elysium/Virtual_Teensy2/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/red-avi-tamu/Elysium/Virtual_Teensy2 -I/root/red-avi-tamu/Elysium/Virtual_Teensy2/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Csv_Tab.h -o moc_Csv_Tab.cpp
 
 moc_CSVProcessor.cpp: Headers/CSVProcessor.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/Virtual_Teensy2.0/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/Virtual_Teensy2.0 -I/root/Virtual_Teensy2.0/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/CSVProcessor.h -o moc_CSVProcessor.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/red-avi-tamu/Elysium/Virtual_Teensy2/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/red-avi-tamu/Elysium/Virtual_Teensy2 -I/root/red-avi-tamu/Elysium/Virtual_Teensy2/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/CSVProcessor.h -o moc_CSVProcessor.cpp
 
 moc_Virtual_Teensy.cpp: Headers/Virtual_Teensy.h \
 		Headers/VT_Sensor.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/Virtual_Teensy2.0/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/Virtual_Teensy2.0 -I/root/Virtual_Teensy2.0/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Virtual_Teensy.h -o moc_Virtual_Teensy.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/red-avi-tamu/Elysium/Virtual_Teensy2/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/red-avi-tamu/Elysium/Virtual_Teensy2 -I/root/red-avi-tamu/Elysium/Virtual_Teensy2/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/Virtual_Teensy.h -o moc_Virtual_Teensy.cpp
 
 moc_VT_Sensor.cpp: Headers/VT_Sensor.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/Virtual_Teensy2.0/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/Virtual_Teensy2.0 -I/root/Virtual_Teensy2.0/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/VT_Sensor.h -o moc_VT_Sensor.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/red-avi-tamu/Elysium/Virtual_Teensy2/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/red-avi-tamu/Elysium/Virtual_Teensy2 -I/root/red-avi-tamu/Elysium/Virtual_Teensy2/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/VT_Sensor.h -o moc_VT_Sensor.cpp
 
 moc_VTMain_window.cpp: Headers/VTMain_window.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/Virtual_Teensy2.0/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/Virtual_Teensy2.0 -I/root/Virtual_Teensy2.0/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/VTMain_window.h -o moc_VTMain_window.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /root/red-avi-tamu/Elysium/Virtual_Teensy2/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/root/red-avi-tamu/Elysium/Virtual_Teensy2 -I/root/red-avi-tamu/Elysium/Virtual_Teensy2/Headers -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include Headers/VTMain_window.h -o moc_VTMain_window.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -458,12 +450,9 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 
 ####### Compile
 
-Connector.o: Sources/Connector.cpp Headers/Connector.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Connector.o Sources/Connector.cpp
-
 Csv_Tab.o: Sources/Csv_Tab.cpp Headers/Csv_Tab.h \
 		Headers/CSVProcessor.h \
-		Headers/Connector.h
+		Headers/Globals.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Csv_Tab.o Sources/Csv_Tab.cpp
 
 CSVProcessor.o: Sources/CSVProcessor.cpp Headers/CSVProcessor.h
@@ -473,7 +462,8 @@ main.o: Sources/main.cpp Headers/VTMain_window.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o Sources/main.cpp
 
 Virtual_Teensy.o: Sources/Virtual_Teensy.cpp Headers/Virtual_Teensy.h \
-		Headers/VT_Sensor.h
+		Headers/VT_Sensor.h \
+		Headers/Globals.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Virtual_Teensy.o Sources/Virtual_Teensy.cpp
 
 VT_Sensor.o: Sources/VT_Sensor.cpp Headers/VT_Sensor.h
@@ -482,11 +472,13 @@ VT_Sensor.o: Sources/VT_Sensor.cpp Headers/VT_Sensor.h
 VTMain_window.o: Sources/VTMain_window.cpp Headers/VTMain_window.h \
 		Headers/Csv_Tab.h \
 		Headers/CSVProcessor.h \
-		Headers/Connector.h
+		Headers/Virtual_Teensy.h \
+		Headers/VT_Sensor.h \
+		Headers/Globals.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o VTMain_window.o Sources/VTMain_window.cpp
 
-moc_Connector.o: moc_Connector.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_Connector.o moc_Connector.cpp
+Globals.o: Sources/Globals.cpp Headers/Globals.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Globals.o Sources/Globals.cpp
 
 moc_Csv_Tab.o: moc_Csv_Tab.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_Csv_Tab.o moc_Csv_Tab.cpp

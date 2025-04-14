@@ -18,8 +18,6 @@
 using std::cout;
 using std::endl;
 
-extern const QString PORT;
-extern const int BAUD;
 
 class Virtual_Teensy : public QWidget {
     Q_OBJECT
@@ -38,7 +36,7 @@ private:
 
     QLabel* interval_label;
     QSlider* interval_slider;
-    QSerialPort* ser;
+    //QSerialPort* ser;
     QTimer* timer;
 
 private slots:

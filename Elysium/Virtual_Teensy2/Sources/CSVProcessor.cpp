@@ -15,11 +15,10 @@
 CSVProcessor::CSVProcessor(const QString& filePath, int delay_ms, QWidget *parent)
     :QWidget(parent), filePath(filePath), delay_ms(delay_ms){
 
-    //QObject::connect(this, &CSVProcessor::pressureUpdated, this, &CSVProcessor::edit);
-    //QTimer *delayTimer = new QTimer(this);
 
+    
 
-} //base class must be initalized first
+} 
 
 
 
@@ -34,15 +33,15 @@ void CSVProcessor::readCSV(){
         msg.exec();
         return;
     }
+    running = true;
     //  read line by line csv
     QTextStream in(&file);
-    while (!in.atEnd()) {
+    while (!in.atEnd() && running) {
         QString line = in.readLine();
-        //qDebug() << qUtf8Printable(line);
-        //Process_line(line);
+  
         emit new_pressure(line);
         delay(delay_ms);
-       //emmit new_data(data thats processed)
+
     }
 }
 
@@ -57,4 +56,9 @@ void CSVProcessor::delay(int millisecondsToWait ){
     }
 }
 
-// for real VT no need to process line just send new_pressure(line) 
+void CSVProcessor::stop(){
+    running = false;
+}
+void CSVProcessor::start(){
+    running = true;
+}
