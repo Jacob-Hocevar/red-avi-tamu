@@ -37,10 +37,13 @@ VALVE SETUP
 const int NCS1_PIN = 7;           // <-- USER INPUT
 const int NCS2_PIN = 8;           // <-- USER INPUT
 const int NCS4_PIN = 11;           // <-- USER INPUT
+const int NCS4_PIN = 11;           // <-- USER INPUT
 const int LABV1_PIN = 5;          // <-- USER INPUT
 const int LABV2_PIN = 6;          // <-- USER INPUT
 
 // Igniter
+const int IGN1_PIN = 10;          // <-- USER INPUT
+const int IGN2_PIN = 9;          // <-- USER INPUT
 const int IGN1_PIN = 10;          // <-- USER INPUT
 const int IGN2_PIN = 9;          // <-- USER INPUT
 
@@ -98,12 +101,22 @@ void output_float(unsigned int port, float to_write) {
 }
 
 String input_until(char stop_character) {
+  // Check each character until the stop_character is encountered
+  // The stop_character is not included in the returned message
   String ret = "";
   char c = udp.read();
+
   while (c != stop_character) {
     ret += c;
     c = udp.read();
+
+    // If the packet ends before the stop_character is encountered, read returns -1 or 255 unsigned
+    if (c == 255) {
+      Serial.println("Error: No terminator recieved");
+      break;
+    }
   }
+
   return ret;
 }
 
