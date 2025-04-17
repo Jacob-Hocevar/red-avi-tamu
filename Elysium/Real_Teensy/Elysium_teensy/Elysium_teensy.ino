@@ -7,21 +7,21 @@ VARIABLES & USER INPUT
 #include <Arduino.h>
 
 // time variables
-long unsigned LAST_SENSOR_UPDATE = 0;                     // Timestamp of last sensor reading (microsec)
-const long unsigned SENSOR_UPDATE_INTERVAL = 1000;        // sensor update interval (microsec)              <-- USER INPUT
+unsigned long LAST_SENSOR_UPDATE = 0;                     // Timestamp of last sensor reading (microsec)
+const unsigned long SENSOR_UPDATE_INTERVAL = 1000;        // sensor update interval (microsec)              <-- USER INPUT
 
-long unsigned LAST_LC_UPDATE = 0;                         // Timestamp of last Load Cell reading (microsec)
-const long unsigned LC_UPDATE_INTERVAL = 100000;          // Load Cell update interval (microsec)           <-- USER INPUT
+unsigned long LAST_LC_UPDATE = 0;                         // Timestamp of last Load Cell reading (microsec)
+const unsigned long LC_UPDATE_INTERVAL = 100000;          // Load Cell update interval (microsec)           <-- USER INPUT
 
-long unsigned LAST_COMMUNICATION_TIME = 0;                // Timestamp of last communication of any type (microsec)
-const long unsigned CONNECTION_TIMEOUT = 200000;          // automated shutdown timeout for complete comms failure (microsec)           <-- USER INPUT
+unsigned long LAST_COMMUNICATION_TIME = 0;                // Timestamp of last communication of any type (microsec)
+const unsigned long CONNECTION_TIMEOUT = 200000;          // automated shutdown timeout for complete comms failure (microsec)           <-- USER INPUT
 
-long unsigned LAST_HUMAN_UPDATE = 0;                      // Timestamp of last human communication(microsec)
-const long unsigned HUMAN_CONNECTION_TIMEOUT = 300000000; // automated shutdown timeout for human comms failure (microsec)              <-- USER INPUT
+unsigned long LAST_HUMAN_UPDATE = 0;                      // Timestamp of last human communication(microsec)
+const unsigned long HUMAN_CONNECTION_TIMEOUT = 300000000; // automated shutdown timeout for human comms failure (microsec)              <-- USER INPUT
 
-long unsigned ABORT_TIME_TRACKING = 0;
-const long unsigned ABORTED_TIME_INTERVAL = 500000;       // microsec between printing "aborted" (when aborted)
-const long unsigned SHUTDOWN_PURGE_TIME = 2000;           // duration of purge for shutdown, in milliseconds
+unsigned long ABORT_TIME_TRACKING = 0;
+const unsigned long ABORTED_TIME_INTERVAL = 500000;       // microsec between printing "aborted" (when aborted)
+const unsigned long SHUTDOWN_PURGE_TIME = 2000;           // duration of purge for shutdown, in milliseconds
 
 // BAUD rate 
 const int BAUD = 115200;                   // serial com in bits per second     <-- USER INPUT
@@ -37,13 +37,10 @@ VALVE SETUP
 const int NCS1_PIN = 7;           // <-- USER INPUT
 const int NCS2_PIN = 8;           // <-- USER INPUT
 const int NCS4_PIN = 11;           // <-- USER INPUT
-const int NCS4_PIN = 11;           // <-- USER INPUT
 const int LABV1_PIN = 5;          // <-- USER INPUT
 const int LABV2_PIN = 6;          // <-- USER INPUT
 
 // Igniter
-const int IGN1_PIN = 10;          // <-- USER INPUT
-const int IGN2_PIN = 9;          // <-- USER INPUT
 const int IGN1_PIN = 10;          // <-- USER INPUT
 const int IGN2_PIN = 9;          // <-- USER INPUT
 
@@ -425,7 +422,7 @@ void loop() {
     float t_loc = (HUMAN_CONNECTION_TIMEOUT - (LAST_SENSOR_UPDATE -LAST_HUMAN_UPDATE)) / 1000000.0;
     output_float(PORT, t_loc);
     output_string(PORT, "\n");
-    delay(10);
+    //delay(10);
     // Serial.print("t:"); Serial.print(LAST_SENSOR_UPDATE);                             // print time reading in microseconds
     // Serial.print(",P1:"); Serial.print(pressureCalculation(pt1_analog, 1));           // print pressure calculation in psi
     // Serial.print(",P2:"); Serial.print(pressureCalculation(pt2_analog, 2));           // print pressure calculation in psi
