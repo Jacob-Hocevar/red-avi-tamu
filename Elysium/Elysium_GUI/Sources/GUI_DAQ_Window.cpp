@@ -137,6 +137,7 @@ void GUI_DAQ_Window::update_derived(const QString& ID) {
 }
 
 void GUI_DAQ_Window::update_sensors() {
+    // cout << "Data recieved: " << this->ser->readAll().toStdString() << endl;
     // TODO: Use the local data solution
     
     // Text streams are far easier to handle than the raw data stream (auto converts to QString, nicer readLine())
